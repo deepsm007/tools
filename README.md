@@ -11,6 +11,8 @@ automation.
 
 ## Using The Tools
 
+There are a few different options for installing the tools.
+
 ### Make Install
 
 ```
