@@ -45,7 +45,7 @@ git config --bool hooks.checkSecrets false
 Please subscribe to the [patterns server user guide](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server)
 for information about updates and changes.
 
-## Ways To Install The Command
+## Ways To Install The Commands
 
 * Add dev-tools/rh-pre-commit/bin to your path
 * Add dev-tools/bin to your path (This will install rh-gitleaks too)
@@ -58,9 +58,9 @@ getting set up with a API token for accessing leak patterns.
 run it from a small folder like an existing project rather than from your home
 folder.
 
-## Ways To Install As A Hook
+## Ways To Setup Hooks
 
-Thes options assume you have `rh-pre-commit` somewhere on your path. If you
+These options assume you have `rh-pre-commit` somewhere on your path. If you
 need help getting this set up, feel free send an email to infosec@redhat.com
 with "InfoSec Dev Tools Support" in the subject.
 
@@ -84,7 +84,7 @@ mkdir -p .git/hooks && ln -snf $(which rh-pre-commit) .git/hooks/pre-commit
 * This doesn't handle new projects
 
 
-### Install For All New Projects (Good If you Only Want These Hooks)
+### Install For All New Projects (Good If You Only Want These Hooks)
 
 ```sh
 git config --global init.templateDir ~/.git-template
@@ -118,15 +118,13 @@ in the project. Before installing pre-commit through pip, check to see if it's
 already available as a package for your OS (e.g. `sudo dnf install
 pre-commit`).
 
-You may be wondering why use this instead of pre-commit directly. There are
-some gotchas with using it the way it's meant to be used by default. Generally
-the pre-commit framework prefers to work with `.pre-commit-config.yaml`s inside
-the repo and if you're working with an open-source project that you expect
-others out side of Red Hat to contribute to, enabling `rh-pre-commit` won't be
-an option because they won't have access to rh-pre-commit or the patterns it
-uses.
+You may be wondering why create a wrapper around pre-commit. Generally the
+pre-commit framework prefers to work with `.pre-commit-config.yaml`s inside the
+repo and if you're working with an open-source project that you expect others
+out side of Red Hat to contribute to, enabling `rh-pre-commit` won't be an
+option because they won't have access to rh-pre-commit or the patterns it uses.
 
-rh-multi-pre-commit solves this by runing pre-commit on the following
+rh-multi-pre-commit solves this by ruining pre-commit on the following
 paths if they exist:
 
 ```
