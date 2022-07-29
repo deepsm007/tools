@@ -20,8 +20,7 @@ cd ../{{tooldir}}/
 
 # Read the README
 
-make install
-{{tool}} --help
+sudo make install
 ```
 
 ### Add `./bin` to Your Path
