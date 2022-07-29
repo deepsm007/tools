@@ -32,7 +32,7 @@ missing, please check the project's README or file an issue on the project.
 
 ### Install RPM
 
-Coming soon!
+Planned
 
 ## Contributing
 

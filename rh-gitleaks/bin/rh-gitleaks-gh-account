@@ -1,0 +1,6 @@
+#! /bin/bash
+
+for repo in $(curl https://api.github.com/users/$1/repos 2> /dev/null | jq -r 'map(.html_url)[]'); do
+  echo "Scanning $repo" >&2
+  rh-gitleaks -q --repo-url=$repo 2> /dev/null | jq
+done
