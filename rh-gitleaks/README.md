@@ -3,6 +3,10 @@
 These tools provide wrappers around [gitleaks](https://github.com/zricethezav/gitleaks)
 to make it easier to use within Red Hat.
 
+## Status
+
+Currently in testing in our preprod env. If you're interested in testing it early reach out to bplaxco.
+
 ## Contents
 
 [[_TOC_]]
