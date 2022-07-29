@@ -13,7 +13,7 @@ function check-secrets {
     additional_config=""
   fi
 
-  rh-gitleaks -v --no-git "${additional_config}" --path=.
+  rh-gitleaks "${additional_config}" --verbose --redact --format=json --path=.
 }
 
 #
