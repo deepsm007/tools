@@ -13,6 +13,7 @@ function check-secrets {
     additional_config=""
   fi
 
+  # Allow this to fail so that we can capture the error code
   set +e
   rh-gitleaks "${additional_config}" --leaks-exit-code=42 --verbose --no-git --redact --format=json --path=.
   rh_gitleaks_exit_code="$?"
