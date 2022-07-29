@@ -1,0 +1,24 @@
+#! /bin/bash
+
+set -euo pipefail
+
+#
+# Checks
+#
+
+function check-secrets {
+  if [[ -f .gitleaks.toml ]]
+  then
+    additional_config="--additional-config=.gitleaks.toml"
+  else
+    additional_config=""
+  fi
+
+  rh-gitleaks -v --no-git "${additional_config}" --path=.
+}
+
+#
+# Run Checks
+#
+
+check-secrets
