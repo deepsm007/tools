@@ -13,11 +13,17 @@ function check-secrets {
     additional_config=""
   fi
 
-  rh-gitleaks "${additional_config}" --verbose --redact --format=json --path=.
+  rh-gitleaks "${additional_config}" --verbose --no-git --redact --format=json --path=.
 }
 
 #
 # Run Checks
 #
+# Make sure that each of these are configurable
 
-check-secrets
+if [[ "$(git config --bool hooks.checkSecrets)" != "false" ]]
+then
+  check-secrets
+else
+  echo "Skipping secrets check because hooks.checkSecrets is set to false"
+fi

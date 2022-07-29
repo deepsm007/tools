@@ -25,6 +25,17 @@ regexes = [
 And you can run the `rh-pre-commit` command from the root of your repo
 to test to see if the changes work.
 
+## Turning On/Off Checks
+
+These options allow you to turn on/off different checks provided by this
+package without having to remove the entire hook.
+
+### Secrets Check (Default: On)
+
+```sh
+git config --bool hooks.checkSecrets false
+```
+
 ## Requires
 
 * [rh-gitleaks](../rh-gitleaks) (which is handled during a `make install`)
