@@ -1,0 +1,64 @@
+#! /bin/bash
+set -euo pipefail
+
+#
+# Checks
+#
+
+function check-secrets {
+  if [[ -f .gitleaks.toml ]]
+  then
+    additional_config="--additional-config=.gitleaks.toml"
+  else
+    additional_config=""
+  fi
+
+  # Allow this to fail so that we can capture the error code
+  set +e
+  rh-gitleaks "${additional_config}" --leaks-exit-code=42 --verbose --no-git --redact --format=json --path=.
+  rh_gitleaks_exit_code="$?"
+  set -e
+
+  case ${rh_gitleaks_exit_code} in
+    42) cat >&2 <<\EOF
+ERROR: gitleaks has detected sensitive information in your changes and will not
+allow the commit to proceed. We recommend removing the sensitive information
+described above or creating a .gitleaks.toml in your repo base directory with
+an added allowlist for the item.
+
+For example, if the the pattern 'redhat.com' and file
+'some/file/here.txt' are causing the problem, your .gitleaks.toml will
+look like:
+
+[allowlist]
+description = "Global Allowlist"
+paths = [
+  '''some\/file\/here\.txt''',
+]
+regexes = [
+  '''redhat\.com''',
+]
+
+For assistance or questions about this tool or to report a potential data leak
+contact infosec@redhat.com.
+EOF
+    exit 1
+    ;;
+    0)
+    ;;
+    *) exit 1
+    ;;
+  esac
+}
+
+#
+# Run Checks
+#
+# Make sure that each of these are configurable
+
+if [[ "$(git config --bool hooks.checkSecrets)" != "false" ]]
+then
+  check-secrets
+else
+  echo "Skipping secrets check because hooks.checkSecrets is set to false"
+fi

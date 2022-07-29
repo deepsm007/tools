@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+function try-run {
+  if [[ -f "$1" ]]
+  then
+    pre-commit run --config $1
+  else
+    echo "No pre-commit config at $1"
+  fi
+}
+
+try-run "${HOME}/.config/pre-commit/config.yaml"
+try-run .pre-commit-config.yaml
