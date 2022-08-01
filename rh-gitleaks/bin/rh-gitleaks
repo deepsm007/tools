@@ -81,7 +81,7 @@ then
   exit 2
 fi
 
-if ! find "${gitleaks_config_path}" -mmin "-${refresh_interval_min}" &> /dev/null
+if ! find "${gitleaks_config_path}" -mmin "-${refresh_interval_min}" | grep . &> /dev/null
 then
   info 'Patterns cache missing or outdated'
   update-patterns-cache
