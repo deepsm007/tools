@@ -13,8 +13,8 @@ Currently in testing in our preprod env. If you're interested in testing it earl
 
 ## Ways To Install
 
-* Add dev-tools/rh-gitleaks/bin to your path
-* Add dev-tools/bin to your path
+* Add tools/rh-gitleaks/bin to your path
+* Add tools/bin to your path
 * Run `sudo make install` to install them system wide
 
 ## Tools

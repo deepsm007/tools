@@ -51,8 +51,8 @@ for information about updates and changes.
 
 ## Ways To Install The Commands
 
-* Add dev-tools/rh-pre-commit/bin to your path
-* Add dev-tools/bin to your path (This will install rh-gitleaks too)
+* Add tools/rh-pre-commit/bin to your path
+* Add tools/bin to your path (This will install rh-gitleaks too)
 * Run `sudo make install` to install them system wide (This will install rh-gitleaks too)
 
 Then you'll want to run `rh-pre-commit`[1] and follow the steps outlined for
