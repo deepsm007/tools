@@ -6,6 +6,10 @@ A set of standard pre-commit hooks to run on your projects.
 
 Currently in testing in our preprod env. If you're interested in testing it early reach out to bplaxco.
 
+## Contents
+
+[[_TOC_]]
+
 ## Ignoring False Leak Positives
 
 This pre-commit hook will look for a `.gitleaks.toml` in the root of your
