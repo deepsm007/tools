@@ -132,7 +132,7 @@ repo and if you're working with an open-source project that you expect others
 out side of Red Hat to contribute to, enabling `rh-pre-commit` won't be an
 option because they won't have access to rh-pre-commit or the patterns it uses.
 
-rh-multi-pre-commit solves this by ruining pre-commit on the following
+rh-multi-pre-commit solves this by running pre-commit on the following
 paths if they exist:
 
 ```
