@@ -1,12 +1,13 @@
 #! /bin/bash
 set -euo pipefail
 
-config_dir="${HOME}/.config/rh-gitleaks"
+config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/rh-gitleaks"
+cache_dir="${XDG_CACHE_HOME:-${HOME}/.cache}/rh-gitleaks"
 auth_token_path="${config_dir}/auth.jwt"
 gitleaks_version="7.6.1"
 gitleaks_bin_checksum="ab3d667982b2bfb00e846bd7b751c640216d2bbe0f71e2c53c4514ca415d99ec"
-gitleaks_bin_path="${config_dir}/gitleaks-${gitleaks_version}"
-gitleaks_config_path="${config_dir}/config.toml"
+gitleaks_bin_path="${cache_dir}/gitleaks-${gitleaks_version}"
+gitleaks_patterns_path="${cache_dir}/patterns.toml"
 patterns_server="${RH_GITLEAKS_PATTERNS_SERVER:-https://patterns.security.redhat.com}"
 refresh_interval_min='720'
 
@@ -42,7 +43,7 @@ function update-patterns-cache {
     warn 'Pattern cache could not be refreshed'
     error "${api_response}"
   else
-    echo "${api_response}" > "${gitleaks_config_path}"
+    echo "${api_response}" > "${gitleaks_patterns_path}"
     info 'Pattern cache updated'
   fi
 }
@@ -53,13 +54,14 @@ then
   export https_proxy='http://squid.corp.redhat.com:3128'
 fi
 
-# Make sure the config dir exists
+# Make sure the config and cache dirs exists
 mkdir -p "${config_dir}"
+mkdir -p "${cache_dir}"
 
 # Fetch the right version of gitleaks
 if [[ ! -f "${gitleaks_bin_path}" ]]
 then
-  info "Pulling gitleaks-${gitleaks_version}"
+  info "Fetching gitleaks-${gitleaks_version}"
   curl -Lo "${gitleaks_bin_path}" "https://github.com/zricethezav/gitleaks/releases/download/v${gitleaks_version}/gitleaks-linux-amd64" &> /dev/null
 
   if echo "${gitleaks_bin_checksum} ${gitleaks_bin_path}" | sha256sum -c - &> /dev/null
@@ -81,7 +83,7 @@ then
   exit 2
 fi
 
-if ! find "${gitleaks_config_path}" -mmin "-${refresh_interval_min}" | grep . &> /dev/null
+if ! find "${gitleaks_patterns_path}" -mmin "-${refresh_interval_min}" 2> /dev/null | grep . &> /dev/null
 then
   info 'Patterns cache missing or outdated'
   update-patterns-cache
@@ -89,4 +91,4 @@ else
   info 'Patterns cache is up-to-date'
 fi
 
-exec "${gitleaks_bin_path}" "--config-path=${gitleaks_config_path}" $@
+exec "${gitleaks_bin_path}" "--config-path=${gitleaks_patterns_path}" $@

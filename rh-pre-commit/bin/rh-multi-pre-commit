@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/pre-commit"
+
 function try-run {
   if [[ -f "$1" ]]
   then
@@ -10,5 +12,5 @@ function try-run {
   fi
 }
 
-try-run "${HOME}/.config/pre-commit/config.yaml"
+try-run "${config_dir}/config.yaml"
 try-run .pre-commit-config.yaml
