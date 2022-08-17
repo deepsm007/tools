@@ -41,7 +41,12 @@ function update-patterns-cache {
   if [[ "${api_response_code}" -ne 0 ]]
   then
     warn 'Pattern cache could not be refreshed'
-    error "${api_response}"
+    error "API Response: ${api_response}"
+
+    if [[ ! -f "${gitleaks_patterns_path}" ]]
+    then
+      exit 1
+    fi
   else
     echo "${api_response}" > "${gitleaks_patterns_path}"
     info 'Pattern cache updated'
