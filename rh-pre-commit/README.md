@@ -2,13 +2,131 @@
 
 A set of standard pre-commit hooks to run on your projects.
 
-## Status
-
-Currently in testing in our preprod env. If you're interested in testing it early reach out to bplaxco.
-
 ## Contents
 
 [[_TOC_]]
+
+## Supported Operating Systems
+
+* Linux (amd64)
+
+For additional OS support reach out to infosec@redhat.com
+
+## Updates
+
+Please subscribe to the [patterns server user guide](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server)
+for information about changes.
+
+The installing and updating section below covers how to update the CLI tool if
+there's been a change.
+
+## Installing and Updating
+
+All of these steps are expected to be ran from the directory that this
+README.md is in.
+
+To update an existing install pull this repo and run `sudo make install`.  The
+quickstart below covers how to do a full initial install and set up access to
+the patterns server on Fedora.
+
+Install the hooks
+
+```sh
+sudo make install
+```
+
+Install pre-commit
+
+If not available through dnf, see [this site](https://pre-commit.com/#install)
+for other ways to install.
+
+```sh
+sudo dnf install -y pre-commit
+```
+
+Configure pre-commit
+
+```sh
+install -Dm=600 ./etc/pre-commit/config.yaml ~/.config/pre-commit/config.yaml
+```
+
+Make the hooks the default for all new repos (cloned or created).
+
+```sh
+git config --global init.templateDir ~/.git-template
+mkdir -p ~/.git-template/hooks && ln -snf $(which rh-multi-pre-commit) ~/.git-template/hooks/pre-commit
+```
+
+Configure the patterns server
+
+```sh
+mkdir -p ~/.config/rh-gitleaks
+```
+
+* Go to https://patterns.security.redhat.com/token
+* Copy the token and put it at ~/.config/rh-gitleaks/auth.jwt
+
+Confirm you see the help options and no errors
+
+```sh
+rh-gitleaks --help
+```
+
+Set up the hook for existing projects
+
+```sh
+find ~/ -name .git -type d -exec bash -c "mkdir -p {}/hooks && ln -snf $(which rh-multi-pre-commit) {}/hooks/pre-commit" \; 2> /dev/null
+```
+
+And you should be set up and ready to go! If want to check you can do a `ls -l
+.git/hooks/pre-commit` in one of your exsting projects and it should look
+something like this:
+
+```
+.git/hooks/pre-commit -> /usr/local/bin/rh-multi-pre-commit
+```
+
+If you need to reset your install and start over, run the following commands
+first:
+
+```sh
+rm -rf ~/.config/rh-gitleaks/
+rm -rf ~/.cache/rh-gitleaks/
+```
+
+### Install Notes
+
+You may be wondering why create a wrapper around pre-commit. Generally the
+pre-commit framework prefers to work with `.pre-commit-config.yaml`s inside the
+repo and if you're working with an open-source project that you expect others
+outside of Red Hat to contribute to, enabling `rh-pre-commit` won't be an
+option because they won't have access to rh-pre-commit or the patterns it uses.
+
+rh-multi-pre-commit solves this by running pre-commit on the following
+paths if they exist:
+
+```
+${HOME}/.config/pre-commit/config.yaml
+.pre-commit-config.yaml
+```
+
+### One-Off Installs (Not Recommended)
+
+If you don't want to default to installing one of these hooks on all of your
+projects. It is possible to do one-off installs. The danger here is that you
+may forget to do it on new projects and that could result in something slipping
+by.
+
+```sh
+# (Option 1) rh-pre-commit
+cd /path/to/project
+mkdir -p .git/hooks && ln -snf $(which rh-pre-commit) .git/hooks/pre-commit
+
+# (Option 2) rh-multi-pre-commit
+cd /path/to/project
+mkdir -p .git/hooks && ln -snf $(which rh-multi-pre-commit) .git/hooks/pre-commit
+# You will still need the pre-commit steps from the quickstart above.
+```
 
 ## Ignoring False Leak Positives
 
@@ -42,143 +160,4 @@ package without having to remove the entire hook.
 
 ```sh
 git config --bool hooks.checkSecrets false
-```
-
-## Requires
-
-* [rh-gitleaks](../rh-gitleaks) (which is handled during a `make install`)
-
-## Updates
-
-Please subscribe to the [patterns server user guide](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server)
-for information about updates and changes.
-
-## Ways To Install The Commands
-
-* Add tools/rh-pre-commit/bin to your path
-* Add tools/bin to your path (This will install rh-gitleaks too)
-* Run `sudo make install` to install them system wide (This will install rh-gitleaks too)
-
-Then you'll want to run `rh-pre-commit`[1] and follow the steps outlined for
-getting set up with a API token for accessing leak patterns.
-
-[1] This will kick off a scan once everything is set up so it would be good to
-run it from a small folder like an existing project rather than from your home
-folder.
-
-## Ways To Setup Hooks
-
-These options assume you have `rh-pre-commit` somewhere on your path. If you
-need help getting this set up, feel free send an email to infosec@redhat.com
-with "InfoSec Dev Tools Support" in the subject.
-
-It's also recommended to read through the git's documentation on hooks if you
-want a deeper understanding of how these work.
-
-### One-Off Install (Not Optimal)
-
-```sh
-cd /path/to/project
-mkdir -p .git/hooks && ln -snf $(which rh-pre-commit) .git/hooks/pre-commit
-```
-
-#### Pros
-
-* Easy to set up for a project
-
-#### Cons
-
-* This becomes the only pre-commit hook installed on your project
-* This doesn't handle new projects
-
-
-### Install For All New Projects (Good If You Only Want These Hooks)
-
-```sh
-git config --global init.templateDir ~/.git-template
-mkdir -p ~/.git-template/hooks && ln -snf $(which rh-pre-commit) ~/.git-template/hooks/pre-commit
-```
-
-#### Pros
-
-* Handles setting it up for all new projects
-
-#### Cons
-
-* This becomes the only pre-commit hook installed on your new projects
-* This doesn't handle exiting projects[1]
-
-[1] But you could always run something like this to get it set up on
-all of your existing projects:
-
-```sh
-# replace workspace with the path to where you store your projects
-find workspace -name .git -type d -exec bash -c "mkdir -p {}/hooks && ln -snf $(which rh-pre-commit) {}/hooks/pre-commit" \;
-```
-
-### Use rh-multi-pre-commit (Recommended)
-
-There is a pre-commit manager called [pre-commit](https://pre-commit.com/)
-that makes managing multiple pre-commit hooks at once much easier. The
-`rh-multi-pre-commit` script leverages that to allow you to place the config
-outside of the project while still using `.pre-commit-config.yaml`s defined
-in the project. Before installing pre-commit through pip, check to see if it's
-already available as a package for your OS (e.g. `sudo dnf install
-pre-commit`).
-
-You may be wondering why create a wrapper around pre-commit. Generally the
-pre-commit framework prefers to work with `.pre-commit-config.yaml`s inside the
-repo and if you're working with an open-source project that you expect others
-out side of Red Hat to contribute to, enabling `rh-pre-commit` won't be an
-option because they won't have access to rh-pre-commit or the patterns it uses.
-
-rh-multi-pre-commit solves this by running pre-commit on the following
-paths if they exist:
-
-```
-${HOME}/.config/pre-commit/config.yaml
-.pre-commit-config.yaml
-```
-
-Here is an example `${HOME}/.config/pre-commit/config.yaml` file that could be
-used with this tool:
-
-```yaml
-repos:
-  - repo: local
-    hooks:
-      - id: rh-pre-commit
-        name: Run standard RH pre-commit checks
-        language: system
-        entry: rh-pre-commit
-```
-
-#### One Off Install
-
-```sh
-cd /path/to/project
-mkdir -p .git/hooks && ln -snf $(which rh-multi-pre-commit) .git/hooks/pre-commit
-```
-
-#### Install For All New Projects
-
-```sh
-git config --global init.templateDir ~/.git-template
-mkdir -p ~/.git-template/hooks && ln -snf $(which rh-multi-pre-commit) ~/.git-template/hooks/pre-commit
-```
-
-#### Pros
-
-* You can manage multiple pre-commit hooks in and outside of projects
-
-#### Cons
-
-* You have to run the one-off installs inside existing projects[1]
-
-[1] But you could always run something like this to get it set up on
-all of your projects:
-
-```sh
-# replace workspace with the path to where you store your projects
-find workspace -name .git -type d -exec bash -c "mkdir -p {}/hooks && ln -snf $(which rh-multi-pre-commit) {}/hooks/pre-commit" \;
 ```
