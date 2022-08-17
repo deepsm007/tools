@@ -3,19 +3,13 @@
 These tools provide wrappers around [gitleaks](https://github.com/zricethezav/gitleaks)
 to make it easier to use within Red Hat.
 
-## Status
-
-Currently in testing in our preprod env. If you're interested in testing it early reach out to bplaxco.
-
 ## Contents
 
 [[_TOC_]]
 
-## Ways To Install
+## How to Install
 
-* Add tools/rh-gitleaks/bin to your path
-* Add tools/bin to your path
-* Run `sudo make install` to install them system wide
+Run `sudo make install` to install them system wide
 
 ## Tools
 
