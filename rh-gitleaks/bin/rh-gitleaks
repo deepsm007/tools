@@ -27,6 +27,10 @@ function warn {
   log "WARN" "$1"
 }
 
+function debug {
+  log "DEBUG" "$1"
+}
+
 function update-patterns-cache {
   info 'Updating patterns cache...'
   auth_header="Authorization: Bearer $(cat "${auth_token_path}" | tr -d '\n')"
@@ -34,14 +38,13 @@ function update-patterns-cache {
 
   # Allow this to fail
   set +e
-  api_response="$(curl --fail-with-body -H "${auth_header}" "${patterns_url}" 2> /dev/null)"
-  api_response_code="$?"
+  api_response="$(curl --fail -H "${auth_header}" "${patterns_url}" 2> /dev/null)"
   set -e
 
-  if [[ "${api_response_code}" -ne 0 ]]
+  if [[ -z "${api_response}" ]]
   then
-    warn 'Pattern cache could not be refreshed'
-    error "API Response: ${api_response}"
+    warn 'Pattern cache could not be refreshed.'
+    debug "To see the error, run: curl -H \"Authorization: Bearer \$(cat "${auth_token_path}" | tr -d '\n')\" ${patterns_url}"
 
     if [[ ! -f "${gitleaks_patterns_path}" ]]
     then
