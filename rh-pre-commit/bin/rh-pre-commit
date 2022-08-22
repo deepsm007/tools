@@ -39,8 +39,8 @@ regexes = [
   '''redhat\.com''',
 ]
 
-For assistance or questions about this tool or to report a potential data leak
-contact infosec@redhat.com.
+If you have any questions, issues, or want to report a potential data
+leak, checkout these docs: https://patterns.security.redhat.com/docs
 EOF
     exit 1
     ;;
