@@ -116,14 +116,6 @@ something like this:
 .git/hooks/pre-commit -> /usr/local/bin/rh-multi-pre-commit
 ```
 
-If you need to reset your install and start over, run the following commands
-first:
-
-```sh
-rm -rf ~/.config/rh-gitleaks/
-rm -rf ~/.cache/rh-gitleaks/
-```
-
 ### Install Notes
 
 You may be wondering why create a wrapper around pre-commit. Generally the
@@ -138,6 +130,13 @@ paths if they exist:
 ```
 ${HOME}/.config/pre-commit/config.yaml
 .pre-commit-config.yaml
+```
+
+#### Resetting Config
+
+```sh
+rm -rf ~/.config/rh-gitleaks/
+rm -rf ~/.cache/rh-gitleaks/
 ```
 
 #### Advanced Options
