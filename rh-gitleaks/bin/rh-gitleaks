@@ -5,7 +5,6 @@ config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/rh-gitleaks"
 cache_dir="${XDG_CACHE_HOME:-${HOME}/.cache}/rh-gitleaks"
 auth_token_path="${config_dir}/auth.jwt"
 gitleaks_version="7.6.1"
-gitleaks_bin_checksum="ab3d667982b2bfb00e846bd7b751c640216d2bbe0f71e2c53c4514ca415d99ec"
 gitleaks_bin_path="${cache_dir}/gitleaks-${gitleaks_version}"
 gitleaks_patterns_path="${cache_dir}/patterns.toml"
 patterns_server="${RH_GITLEAKS_PATTERNS_SERVER:-https://patterns.security.redhat.com}"
@@ -29,6 +28,39 @@ function warn {
 
 function debug {
   log "DEBUG" "$1"
+}
+
+function os-and-arch {
+  case "${OSTYPE}" in
+    linux*)
+      echo -n "linux-"
+    ;;
+    darwin*)
+      echo -n "darwin-"
+    ;;
+    *)
+      exit 1
+    ;;
+  esac
+
+  case "$(uname -m)" in
+    x86_64)   echo -n "amd64"   ;;
+    *)        exit 1            ;;
+  esac
+}
+
+function gitleaks-checksum {
+  case "$(os-and-arch)-${gitleaks_version}" in
+    linux-amd64-7.6.1)
+      echo -n "ab3d667982b2bfb00e846bd7b751c640216d2bbe0f71e2c53c4514ca415d99ec"
+    ;;
+    darwin-amd64-7.6.1)
+      echo -n "5e51a33beb6f358970815ecbbc40c6c28fb785ef6342da9a689713f99fece54f"
+    ;;
+    *)
+      exit 1
+    ;;
+  esac
 }
 
 function update-patterns-cache {
@@ -70,9 +102,9 @@ mkdir -p "${cache_dir}"
 if [[ ! -f "${gitleaks_bin_path}" ]]
 then
   info "Fetching gitleaks-${gitleaks_version}"
-  curl -Lo "${gitleaks_bin_path}" "https://github.com/zricethezav/gitleaks/releases/download/v${gitleaks_version}/gitleaks-linux-amd64" &> /dev/null
+  curl -Lo "${gitleaks_bin_path}" "https://github.com/zricethezav/gitleaks/releases/download/v${gitleaks_version}/gitleaks-$(os-and-arch)" &> /dev/null
 
-  if echo "${gitleaks_bin_checksum} ${gitleaks_bin_path}" | sha256sum -c - &> /dev/null
+  if echo "$(gitleaks-checksum) ${gitleaks_bin_path}" | sha256sum -c - &> /dev/null
   then
     chmod +x "${gitleaks_bin_path}"
   else
