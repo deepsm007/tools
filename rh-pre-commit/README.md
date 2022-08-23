@@ -89,7 +89,17 @@ rh-gitleaks --help
 Set up the hook for existing projects
 
 ```sh
-find ~/ -name .git -type d -exec bash -c "mkdir -p {}/hooks && ln -snf $(which rh-multi-pre-commit) {}/hooks/pre-commit" \; 2> /dev/null
+# (Optional but recommended) run this to see what changes the following command
+# will make and review the output to make sure there's nothing unexpected
+# there. If there is, you can change the `~/` part of these commands to be the
+# path to where you keep your projects and test again until you're happy with
+# the output. Then, you can run the follwing command (i.e. the one with
+# `bash -c` instead of `echo`) with the same `~/` change to enable the hook in
+# those existing repos.
+find ~/ -name .git -type d -exec echo "mkdir -p '{}/hooks' && ln -snf '$(which rh-multi-pre-commit)' '{}/hooks/pre-commit'" \; 2> /dev/null
+
+# Run the command to make the change
+find ~/ -name .git -type d -exec bash -c "mkdir -p '{}/hooks' && ln -snf '$(which rh-multi-pre-commit)' '{}/hooks/pre-commit'" \; 2> /dev/null
 ```
 
 And you should be set up and ready to go! If want to check you can do a `ls -l
