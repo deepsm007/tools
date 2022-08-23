@@ -9,6 +9,7 @@ A set of standard pre-commit hooks to run on your projects.
 ## Supported Operating Systems
 
 * Linux (amd64)
+* [WIP] Darwin (amd64)
 
 For additional OS support reach out to infosec@redhat.com
 
@@ -23,7 +24,7 @@ there's been a change.
 ## Installing and Updating
 
 The quickstart below covers how to do a full initial install and set up access
-to the patterns server on Fedora.
+to the patterns server.
 
 Go to the folder where you want to clone this repo
 
@@ -45,23 +46,28 @@ cd ./infosec-dev-tools/rh-pre-commit/
 
 Install the hooks (if doing an update, stop after this step)
 
+If you don't have sudo access on your system, see "Advanced Options" below.
+
 ```sh
 sudo make install
 ```
 
-Install pre-commit
-
-If not available through dnf, see [this site](https://pre-commit.com/#install)
-for other ways to install.
+Install pre-commit (Fedora)
 
 ```sh
 sudo dnf install -y pre-commit
 ```
 
-Configure pre-commit
+Install pre-commit (Other OS)
+
+Follow [pre-commit's instructions](https://pre-commit.com/#install)
+for other ways to install.
+
+Configure rh-multi-pre-commit
 
 ```sh
-install -Dm=600 ./etc/pre-commit/config.yaml ~/.config/pre-commit/config.yaml
+mkdir -p ~/.config/pre-commit/
+cp ./etc/pre-commit/config.yaml ~/.config/pre-commit/config.yaml
 ```
 
 Make the hooks the default for all new repos (cloned or created).
@@ -93,8 +99,8 @@ Set up the hook for existing projects
 # will make and review the output to make sure there's nothing unexpected
 # there. If there is, you can change the `~/` part of these commands to be the
 # path to where you keep your projects and test again until you're happy with
-# the output. Then, you can run the follwing command (i.e. the one with
-# `bash -c` instead of `echo`) with the same `~/` change to enable the hook in
+# the output. Then, you can run the following command (i.e. the one with
+# `bash -c` instead of `echo`), changing `~/`, to enable the hook in
 # those existing repos.
 find ~/ -name .git -type d -exec echo "mkdir -p '{}/hooks' && ln -snf '$(which rh-multi-pre-commit)' '{}/hooks/pre-commit'" \; 2> /dev/null
 
@@ -103,7 +109,7 @@ find ~/ -name .git -type d -exec bash -c "mkdir -p '{}/hooks' && ln -snf '$(whic
 ```
 
 And you should be set up and ready to go! If want to check you can do a `ls -l
-.git/hooks/pre-commit` in one of your exsting projects and it should look
+.git/hooks/pre-commit` in one of your existing projects and it should look
 something like this:
 
 ```
@@ -133,6 +139,36 @@ paths if they exist:
 ${HOME}/.config/pre-commit/config.yaml
 .pre-commit-config.yaml
 ```
+
+#### Advanced Options
+
+The quickstart covers a basic install but in some cases folks might not
+have sudo access on their system. In this case you can override the `PREFIX`
+variable to have it install in a different location.
+
+**IMPORTANT:** Make sure that the bin directory under the prefix that you
+define is on your path before doing any of the other commands to enable it for
+your repositories.
+
+For example:
+
+```sh
+make install PREFIX="${HOME}/.local"
+```
+
+Now if that directory is on your path, the output of the `which` command should
+look something like this:
+
+```sh
+$ which rh-pre-commit rh-gitleaks rh-multi-pre-commit
+~/.local/bin/rh-pre-commit
+~/.local/bin/rh-gitleaks
+~/.local/bin/rh-multi-pre-commit
+```
+
+If you are moving an existing install to a local dir, you will need to
+re-run the commands containing `ln -snf` above to update the links in
+your projects.
 
 ### One-Off Installs (Not Recommended)
 
