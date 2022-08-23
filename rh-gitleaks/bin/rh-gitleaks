@@ -39,13 +39,37 @@ function os-and-arch {
       echo -n "darwin-"
     ;;
     *)
+      log "Unrecognized OS: OSTYPE=${OSTYPE}"
       exit 1
     ;;
   esac
 
   case "$(uname -m)" in
-    x86_64)   echo -n "amd64"   ;;
-    *)        exit 1            ;;
+    x86_64)
+      echo -n "amd64"
+    ;;
+    *)
+      log "Unrecognized Arch: arch=$(uname -m)"
+      exit 1
+    ;;
+  esac
+}
+
+function verify-checksum {
+  checksum_file="$(mktemp)"
+  echo "$(gitleaks-checksum) ${gitleaks_bin_path}" > "${checksum_file}"
+
+  case "${OSTYPE}" in
+    linux*)
+      sha256sum -c "${checksum_file}"
+    ;;
+    darwin*)
+      shasum -a 256 -c "${checksum_file}"
+    ;;
+    *)
+      log "Unrecognized OS: OSTYPE=${OSTYPE}"
+      exit 1
+    ;;
   esac
 }
 
@@ -104,7 +128,7 @@ then
   info "Fetching gitleaks-${gitleaks_version}"
   curl -Lo "${gitleaks_bin_path}" "https://github.com/zricethezav/gitleaks/releases/download/v${gitleaks_version}/gitleaks-$(os-and-arch)" &> /dev/null
 
-  if echo "$(gitleaks-checksum) ${gitleaks_bin_path}" | sha256sum -c - &> /dev/null
+  if verify-checksum &> /dev/null
   then
     chmod +x "${gitleaks_bin_path}"
   else

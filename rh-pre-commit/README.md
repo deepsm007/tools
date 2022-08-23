@@ -9,7 +9,7 @@ A set of standard pre-commit hooks to run on your projects.
 ## Supported Operating Systems
 
 * Linux (amd64)
-* [WIP] Darwin (amd64)
+* Mac (amd64)
 
 For additional OS support reach out to infosec@redhat.com
 
