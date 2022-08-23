@@ -22,14 +22,28 @@ there's been a change.
 
 ## Installing and Updating
 
-All of these steps are expected to be ran from the directory that this
-README.md is in.
+The quickstart below covers how to do a full initial install and set up access
+to the patterns server on Fedora.
 
-To update an existing install pull this repo and run `sudo make install`.  The
-quickstart below covers how to do a full initial install and set up access to
-the patterns server on Fedora.
+Go to the folder where you want to clone this repo
 
-Install the hooks
+```sh
+cd ~/
+```
+
+Clone the repo (if the repo is already cloned, do a `git pull` from inside the repo instead)
+
+```sh
+git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git infosec-dev-tools
+```
+
+Go to the `rh-pre-commit` folder
+
+```
+cd ./infosec-dev-tools/rh-pre-commit/
+```
+
+Install the hooks (if doing an update, stop after this step)
 
 ```sh
 sudo make install
