@@ -39,7 +39,7 @@ function os-and-arch {
       echo -n "darwin-"
     ;;
     *)
-      log "Unrecognized OS: OSTYPE=${OSTYPE}"
+      error "Unrecognized OS: OSTYPE=${OSTYPE}"
       exit 1
     ;;
   esac
@@ -49,7 +49,7 @@ function os-and-arch {
       echo -n "amd64"
     ;;
     *)
-      log "Unrecognized Arch: arch=$(uname -m)"
+      error "Unrecognized Arch: arch=$(uname -m)"
       exit 1
     ;;
   esac
@@ -69,7 +69,7 @@ function verify-checksum {
       shasum -a 256 -c "${checksum_file}"
     ;;
     *)
-      log "Unrecognized OS: OSTYPE=${OSTYPE}"
+      error "Unrecognized OS: OSTYPE=${OSTYPE}"
       exit 1
     ;;
   esac
