@@ -1,3 +1,6 @@
+PREFIX := /usr/local
+
 install:
-	install -D ./bin/rh-gitleaks $(DESTDIR)/usr/local/bin/rh-gitleaks
-	install -D ./bin/rh-gitleaks-gh-account $(DESTDIR)/usr/local/bin/rh-gitleaks-gh-account
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	install ./bin/rh-gitleaks $(DESTDIR)$(PREFIX)/bin/rh-gitleaks
+	install ./bin/rh-gitleaks-gh-account $(DESTDIR)$(PREFIX)/bin/rh-gitleaks-gh-account

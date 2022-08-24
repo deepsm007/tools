@@ -9,7 +9,13 @@ to make it easier to use within Red Hat.
 
 ## How to Install
 
-Run `sudo make install` to install them system wide
+Supported Operating Systems:
+
+* Linux (amd64)
+* Mac (amd64)
+
+Run `sudo make install` to install them system wide. Checkout the README in
+rh-pre-commit for more detailed install steps.
 
 ## Tools
 
@@ -26,11 +32,6 @@ because that is managed by the wrapper.
 
 Run `rh-gitleaks --help` for initial setup instructions. Then once you are
 set up you can run it again to see the command line options for gitleaks.
-
-Supported Operating Systems:
-
-* Linux (amd64)
-* (Looking to collaborate with someone for Mac support)
 
 This script pulls its own copy of gitleaks to ensure it matches the
 versions supported by the patterns server.
