@@ -1,6 +1,6 @@
 # rh-pre-commit
 
-A set of standard pre-commit hooks to run on your projects.
+A set of standard [pre-commit hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to run on your projects.
 
 ## Contents
 
@@ -26,58 +26,57 @@ there's been a change.
 The quickstart below covers how to do a full initial install and set up access
 to the patterns server.
 
-Go to the folder where you want to clone this repo
+**Go to the folder where you want to clone this repo**
 
 ```sh
 cd ~/
 ```
 
-Clone the repo (if the repo is already cloned, do a `git pull` from inside the repo instead)
+**Clone the repo** (if the repo is already cloned, do a `git pull` from inside the repo instead)
 
 ```sh
 git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git infosec-dev-tools
 ```
 
-Go to the `rh-pre-commit` folder
+**Go to the `rh-pre-commit` folder**
 
 ```
 cd ./infosec-dev-tools/rh-pre-commit/
 ```
 
-Install the hooks (if doing an update, stop after this step)
+**Install the hooks** (if doing an update, stop after this step)
 
-If you don't have sudo access on your system, see "Advanced Options" below.
+If you don't have sudo access on your system, see "Local Install" below.
 
 ```sh
 sudo make install
 ```
 
-Install pre-commit (Fedora)
+**Install pre-commit** 
+
+For Fedora
 
 ```sh
 sudo dnf install -y pre-commit
 ```
 
-Install pre-commit (Other OS)
+For Other Operating Systems follow [pre-commit's instructions](https://pre-commit.com/#install).
 
-Follow [pre-commit's instructions](https://pre-commit.com/#install)
-for other ways to install.
-
-Configure rh-multi-pre-commit
+**Configure rh-multi-pre-commit**
 
 ```sh
 mkdir -p ~/.config/pre-commit/
 cp ./etc/pre-commit/config.yaml ~/.config/pre-commit/config.yaml
 ```
 
-Make the hooks the default for all new repos (cloned or created).
+**Make the hooks the default for all new repos** (cloned or created).
 
 ```sh
 git config --global init.templateDir ~/.git-template
 mkdir -p ~/.git-template/hooks && ln -snf $(which rh-multi-pre-commit) ~/.git-template/hooks/pre-commit
 ```
 
-Configure the patterns server
+**Configure the patterns server**
 
 ```sh
 mkdir -p ~/.config/rh-gitleaks
@@ -86,27 +85,31 @@ mkdir -p ~/.config/rh-gitleaks
 * Go to https://patterns.security.redhat.com/token
 * Copy the token and put it at ~/.config/rh-gitleaks/auth.jwt
 
-Confirm you see the help options and no errors
+**Confirm you see the help options and no errors**
 
 ```sh
 rh-gitleaks --help
 ```
 
-Set up the hook for existing projects
+**Set up the hook for existing projects**
+
+If you don't want to enable it for all repos see the "Enabling for Ad-Hoc Repos" section.
 
 ```sh
-# (Optional but recommended) run this to see what changes the following command
-# will make and review the output to make sure there's nothing unexpected
-# there. If there is, you can change the `~/` part of these commands to be the
-# path to where you keep your projects and test again until you're happy with
-# the output. Then, you can run the following command (i.e. the one with
-# `bash -c` instead of `echo`), changing `~/`, to enable the hook in
-# those existing repos.
+# You can run this first command to see what WOULD be updated before actually making the change. 
+# If you don't like the repos it touches, you can change the starting-point (i.e. ~/) to 
+# be the path to where you store your repos and run it again and review the output.
+# 
+# After you are happy with the output, run the comamnd containing "bash -c" below
+# with the starting-point you want to use to enable the pre-commit hook for all 
+# of the repos under that folder.
 find ~/ -name .git -type d -exec echo "mkdir -p '{}/hooks' && ln -snf '$(which rh-multi-pre-commit)' '{}/hooks/pre-commit'" \; 2> /dev/null
 
 # Run the command to make the change
 find ~/ -name .git -type d -exec bash -c "mkdir -p '{}/hooks' && ln -snf '$(which rh-multi-pre-commit)' '{}/hooks/pre-commit'" \; 2> /dev/null
 ```
+
+**Confirming the setup**
 
 And you should be set up and ready to go! If want to check you can do a `ls -l
 .git/hooks/pre-commit` in one of your existing projects and it should look
@@ -116,43 +119,42 @@ something like this:
 .git/hooks/pre-commit -> /usr/local/bin/rh-multi-pre-commit
 ```
 
-### Install Notes
-
-You may be wondering why create a wrapper around pre-commit. Generally the
-pre-commit framework prefers to work with `.pre-commit-config.yaml`s inside the
-repo and if you're working with an open-source project that you expect others
-outside of Red Hat to contribute to, enabling `rh-pre-commit` won't be an
-option because they won't have access to rh-pre-commit or the patterns it uses.
-
-rh-multi-pre-commit solves this by running pre-commit on the following
-paths if they exist:
-
+You could also create a new local repo with a file containing
 ```
-${HOME}/.config/pre-commit/config.yaml
-.pre-commit-config.yaml
+secret="8P+eZAqUb4q24DsPf30A3NqkHGw7ZkItbp77z8X8zmxS+IDO9hQH9mh68h309LLou4rz1ZtyNg/0S81YWtuPUA=="
 ```
+in it and try to commit it. If things are set up properly you should get a message
+saying that you have a leak and if it's a fals positive you will need to add a 
+`.gitleaks.toml` to your repo.
 
-#### Resetting Config
+**And Your Done!**
+
+If you want to test i
+
+### Resetting Config
 
 ```sh
 rm -rf ~/.config/rh-gitleaks/
 rm -rf ~/.cache/rh-gitleaks/
 ```
 
-#### Advanced Options
+### Local Install
 
 The quickstart covers a basic install but in some cases folks might not
 have sudo access on their system. In this case you can override the `PREFIX`
-variable to have it install in a different location.
+variable to have it install in a different location. It will install it
+under `${PREFIX}/bin`
 
-**IMPORTANT:** Make sure that the bin directory under the prefix that you
-define is on your path before doing any of the other commands to enable it for
-your repositories.
+**IMPORTANT:** If you do this, you'll want to make sure that the bin folder is on your
+path before running the commands to enable it for your repos. Otherwise `which rh-multi-pre-commit`
+won't return the path to the script.
 
 For example:
 
 ```sh
 make install PREFIX="${HOME}/.local"
+
+# In this case you will want to make sure to have PATH="${HOME}/.local/bin:${PATH}" in your .bashrc or .zshrc
 ```
 
 Now if that directory is on your path, the output of the `which` command should
@@ -169,10 +171,10 @@ If you are moving an existing install to a local dir, you will need to
 re-run the commands containing `ln -snf` above to update the links in
 your projects.
 
-### One-Off Installs (Not Recommended)
+### Enabling for Ad-Hoc Repos (Not Recommended)
 
-If you don't want to default to installing one of these hooks on all of your
-projects. It is possible to do one-off installs. The danger here is that you
+If you don't want to default to enabling one of these hooks on all of your
+projects. It is possible to do one-off enables. The danger here is that you
 may forget to do it on new projects and that could result in something slipping
 by.
 
@@ -185,6 +187,22 @@ mkdir -p .git/hooks && ln -snf $(which rh-pre-commit) .git/hooks/pre-commit
 cd /path/to/project
 mkdir -p .git/hooks && ln -snf $(which rh-multi-pre-commit) .git/hooks/pre-commit
 # You will still need the pre-commit steps from the quickstart above.
+```
+
+### Reason for rh-multi-pre-commit
+
+You may be wondering why create a wrapper around pre-commit. Generally the
+pre-commit framework prefers to work with `.pre-commit-config.yaml`s inside the
+repo and if you're working with an open-source project that you expect others
+outside of Red Hat to contribute to, enabling `rh-pre-commit` won't be an
+option because they won't have access to rh-pre-commit or the patterns it uses.
+
+rh-multi-pre-commit solves this by running pre-commit on the following
+paths if they exist:
+
+```
+${HOME}/.config/pre-commit/config.yaml
+.pre-commit-config.yaml
 ```
 
 ## Ignoring False Leak Positives
