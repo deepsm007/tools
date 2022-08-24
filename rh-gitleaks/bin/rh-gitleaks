@@ -57,7 +57,9 @@ function os-and-arch {
 
 function verify-checksum {
   checksum_file="$(mktemp)"
-  echo "$(gitleaks-checksum) ${gitleaks_bin_path}" > "${checksum_file}"
+  # This needs to be two spaces between the checksum and the fil for Mac's
+  # shasum command to work
+  echo "$(gitleaks-checksum)  ${gitleaks_bin_path}" > "${checksum_file}"
 
   case "${OSTYPE}" in
     linux*)
