@@ -60,7 +60,17 @@ For Fedora
 sudo dnf install -y pre-commit
 ```
 
-For Other Operating Systems follow [pre-commit's instructions](https://pre-commit.com/#install).
+For Macs with brew
+
+```
+brew install pre-commit
+```
+
+For Other Operating Systems
+
+```
+pip install pre-commit # and make sure it's on your path when you're done
+```
 
 **Configure rh-multi-pre-commit**
 
