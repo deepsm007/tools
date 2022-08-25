@@ -139,8 +139,6 @@ saying that you have a leak and if it's a fals positive you will need to add a
 
 **And Your Done!**
 
-If you want to test i
-
 ### Resetting Config
 
 ```sh
