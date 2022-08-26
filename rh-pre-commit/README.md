@@ -243,6 +243,12 @@ package without having to remove the entire hook.
 
 ### Secrets Check (Default: On)
 
+To turn off checks in a repo
 ```sh
 git config --bool hooks.checkSecrets false
+```
+
+To turn on checks in a repo
+```sh
+git config --bool hooks.checkSecrets true
 ```
