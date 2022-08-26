@@ -179,7 +179,7 @@ If you are moving an existing install to a local dir, you will need to
 re-run the commands containing `ln -snf` above to update the links in
 your projects.
 
-### Enabling for Ad-Hoc Repos (Not Recommended)
+### Enabling for Ad-Hoc Repos
 
 If you don't want to default to enabling one of these hooks on all of your
 projects. It is possible to do one-off enables. The danger here is that you
