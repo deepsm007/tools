@@ -89,6 +89,10 @@ function gitleaks-checksum {
   esac
 }
 
+function user-agent {
+  echo -n "rh-gitleaks/${gitleaks_version} ($(os-and-arch))"
+}
+
 function update-patterns-cache {
   info 'Updating patterns cache...'
   auth_header="Authorization: Bearer $(cat "${auth_token_path}" | tr -d '\n')"
@@ -96,7 +100,7 @@ function update-patterns-cache {
 
   # Allow this to fail
   set +e
-  api_response="$(curl --fail -H "${auth_header}" "${patterns_url}" 2> /dev/null)"
+  api_response="$(curl --fail -H "User-Agent: $(user-agent)" -H "${auth_header}" "${patterns_url}" 2> /dev/null)"
   set -e
 
   if [[ -z "${api_response}" ]]
