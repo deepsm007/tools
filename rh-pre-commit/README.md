@@ -62,14 +62,18 @@ sudo dnf install -y pre-commit
 
 For Macs with brew
 
-```
+```sh
+# Note brew may upgrade your Python version
+# If you do not want this to happen, follow the steps 
+# for other operating systems below
 brew install pre-commit
 ```
 
 For Other Operating Systems
 
-```
-pip install pre-commit # and make sure it's on your path when you're done
+```sh
+pip install pre-commit 
+# and then make sure it's on your path when you're done
 ```
 
 **Configure rh-multi-pre-commit**
