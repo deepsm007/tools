@@ -52,7 +52,7 @@ If you don't have sudo access on your system, see "Local Install" below.
 sudo make install
 ```
 
-**Install pre-commit** 
+**Install pre-commit**
 
 For Fedora
 
@@ -96,17 +96,13 @@ rh-gitleaks --help
 If you don't want to enable it for all repos see the "Enabling for Ad-Hoc Repos" section.
 
 ```sh
-# You can run this first command to see what WOULD be updated before actually making the change. 
-# If you don't like the repos it touches, you can change the starting-point (i.e. ~/) to 
-# be the path to where you store your repos and run it again and review the output.
-# 
-# After you are happy with the output, run the comamnd containing "bash -c" below
-# with the starting-point you want to use to enable the pre-commit hook for all 
-# of the repos under that folder.
-find ~/ -name .git -type d -exec echo "mkdir -p '{}/hooks' && ln -snf '$(which rh-multi-pre-commit)' '{}/hooks/pre-commit'" \; 2> /dev/null
+# Check what this would be enabled for
+./scripts/enable-for --check ~/
 
-# Run the command to make the change
-find ~/ -name .git -type d -exec bash -c "mkdir -p '{}/hooks' && ln -snf '$(which rh-multi-pre-commit)' '{}/hooks/pre-commit'" \; 2> /dev/null
+# Adjust the path if you don't like the output
+
+# Run the command with the path you want to enable it for existing repos
+./scripts/enable-for ~/
 ```
 
 **Confirming the setup**
@@ -124,7 +120,7 @@ You could also create a new local repo with a file containing
 secret="8P+eZAqUb4q24DsPf30A3NqkHGw7ZkItbp77z8X8zmxS+IDO9hQH9mh68h309LLou4rz1ZtyNg/0S81YWtuPUA=="
 ```
 in it and try to commit it. If things are set up properly you should get a message
-saying that you have a leak and if it's a fals positive you will need to add a 
+saying that you have a leak and if it's a fals positive you will need to add a
 `.gitleaks.toml` to your repo.
 
 **And Your Done!**
