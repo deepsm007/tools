@@ -44,9 +44,7 @@ leak, checkout these docs: https://patterns.security.redhat.com/docs
 EOF
     exit 1
     ;;
-    0)
-    ;;
-    *) exit 1
+    *) # If it isn't a leak, exit cleanly so gitleaks quirks won't stop work
     ;;
   esac
 }
