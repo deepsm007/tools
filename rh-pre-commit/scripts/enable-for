@@ -1,8 +1,6 @@
 #! /bin/bash
 set -euo pipefail
 
-hook="rh-multi-pre-commit"
-
 if [[ "$1" == "--check" ]]
 then
   shift
@@ -12,10 +10,11 @@ else
 fi
 
 prefix="$1"
+hook="$(which rh-multi-pre-commit)"
 
 function enable-hook {
   echo "Enabling in $1"
-  mkdir -p $1/hooks && ln -snf "$(which "${hook}")" $1/hooks/pre-commit || true
+  mkdir -p "$1/hooks" && ln -snf "${hook}" "$1/hooks/pre-commit" || true
 }
 
 function find-repos {
