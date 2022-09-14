@@ -120,7 +120,7 @@ You could also create a new local repo with a file containing
 secret="8P+eZAqUb4q24DsPf30A3NqkHGw7ZkItbp77z8X8zmxS+IDO9hQH9mh68h309LLou4rz1ZtyNg/0S81YWtuPUA=="
 ```
 in it and try to commit it. If things are set up properly you should get a message
-saying that you have a leak and if it's a fals positive you will need to add a
+saying that you have a leak and if it's a false positive you will need to add a
 `.gitleaks.toml` to your repo.
 
 **And Your Done!**
