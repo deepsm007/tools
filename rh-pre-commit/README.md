@@ -233,6 +233,9 @@ regexes = [
 ]
 ```
 
+Also you can add a comment containing `gitleaks:allow` to the line showing
+up as a leak to ignore it.
+
 And you can run the `rh-pre-commit` command from the root of your repo
 to test to see if the changes work.
 
