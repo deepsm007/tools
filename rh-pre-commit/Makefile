@@ -1,5 +1,8 @@
 PREFIX := /usr/local
 
+clean:
+	rm -rf dist
+
 install:
 	cd ../rh-gitleaks && make install
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
