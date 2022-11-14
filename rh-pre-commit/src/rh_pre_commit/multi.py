@@ -1,7 +1,45 @@
+import os
+
 from argparse import ArgumentParser
 
 
+def read_modfile(path):
+    """
+    Read the contents of a .git file and return the gitdir value if it exists
+    """
+    try:
+        with open(os.path.join(path, ".git"), encoding="UTF-8") as modfile:
+            for line in modfile:
+                if line.startswith("gitdir: "):
+                    return line.split(None, 1)[1]
+
+        return None
+    except Exception:
+        return None
+
+
+def find_repos(prefix):
+    """
+    Find all git repos under a given prefix.
+
+    Returns a collection of strings
+    """
+    target = f"{os.path.sep}.git"
+
+    for path, _, files in os.walk(prefix):
+        if path.endswith(target):
+            yield path
+
+        elif ".git" in files:
+            modpath = read_modfile(path)
+            if modpath:
+                yield os.path.join(path, modpath)
+
+
 def create_parser():
+    """
+    Create an argparser to handle the arguments for the program
+    """
     parser = ArgumentParser(
         prog="rh-multi-pre-commit",
         description="Manage multiple pre-commit hooks for Red Hatters",

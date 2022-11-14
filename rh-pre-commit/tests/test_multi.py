@@ -1,3 +1,6 @@
+import os
+
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from rh_pre_commit import multi
@@ -37,3 +40,30 @@ class MultiPreCommitHookTest(TestCase):
                 recursive,
                 f"recursive: {ns.recursive} != {recursive} for {args}",
             )
+
+    def test_find_repos(self):
+        """
+        Find repos under a given structure
+        """
+        with TemporaryDirectory() as tmp_dir:
+            expected = [
+                os.path.join(tmp_dir, "foo", "bar", "baz", ".git"),
+                os.path.join(tmp_dir, ".git"),
+                os.path.join(tmp_dir, "test", ".git"),
+            ]
+
+            for d in expected:
+                os.makedirs(d)
+                os.makedirs(d + "-not-git")
+
+            # Have a file named .git
+            file_test = os.path.join(tmp_dir, "git-file")
+            modfile = os.path.join(file_test, ".git")
+
+            os.makedirs(file_test)
+            with open(modfile, "w", encoding="UTF-8") as module:
+                module.write("gitdir: ../.git/modules/git-file")
+
+            expected.append(os.path.join(file_test, "../.git/modules/git-file"))
+
+            self.assertEqual(sorted(expected), sorted(multi.find_repos(tmp_dir)))
