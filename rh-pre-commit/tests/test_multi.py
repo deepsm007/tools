@@ -47,14 +47,14 @@ class MultiPreCommitHookTest(TestCase):
         """
         with TemporaryDirectory() as tmp_dir:
             expected = [
-                os.path.join(tmp_dir, "foo", "bar", "baz", ".git"),
-                os.path.join(tmp_dir, ".git"),
-                os.path.join(tmp_dir, "test", ".git"),
+                ("R", os.path.join(tmp_dir, "foo", "bar", "baz", ".git")),
+                ("R", os.path.join(tmp_dir, ".git")),
+                ("R", os.path.join(tmp_dir, "test", ".git")),
             ]
 
             for d in expected:
-                os.makedirs(d)
-                os.makedirs(d + "-not-git")
+                os.makedirs(d[1])
+                os.makedirs(d[1] + "-not-git")
 
             # Have a file named .git
             file_test = os.path.join(tmp_dir, "git-file")
@@ -64,6 +64,6 @@ class MultiPreCommitHookTest(TestCase):
             with open(modfile, "w", encoding="UTF-8") as module:
                 module.write("gitdir: ../.git/modules/git-file")
 
-            expected.append(os.path.join(file_test, "../.git/modules/git-file"))
+            expected.append(("M", os.path.join(file_test, "../.git/modules/git-file")))
 
             self.assertEqual(sorted(expected), sorted(multi.find_repos(tmp_dir)))

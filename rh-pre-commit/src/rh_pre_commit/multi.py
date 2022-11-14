@@ -1,3 +1,4 @@
+import sys
 import os
 
 from argparse import ArgumentParser
@@ -11,7 +12,7 @@ def read_modfile(path):
         with open(os.path.join(path, ".git"), encoding="UTF-8") as modfile:
             for line in modfile:
                 if line.startswith("gitdir: "):
-                    return line.split(None, 1)[1]
+                    return line.split(None, 1)[1].strip()
 
         return None
     except Exception:
@@ -22,18 +23,19 @@ def find_repos(prefix):
     """
     Find all git repos under a given prefix.
 
-    Returns a collection of strings
+    Returns a collection of tuples:
+        ("Repo Type", "Path")
     """
     target = f"{os.path.sep}.git"
 
     for path, _, files in os.walk(prefix):
         if path.endswith(target):
-            yield path
+            yield ("R", path)
 
         elif ".git" in files:
             modpath = read_modfile(path)
             if modpath:
-                yield os.path.join(path, modpath)
+                yield ("M", os.path.join(path, modpath))
 
 
 def create_parser():
@@ -45,7 +47,7 @@ def create_parser():
         description="Manage multiple pre-commit hooks for Red Hatters",
     )
 
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(dest="command")
 
     install_parser = subparsers.add_parser(
         "install",
@@ -64,9 +66,16 @@ def create_parser():
     install_parser.add_argument(
         "--force", action="store_true", help="Overwrite existing pre-commit hooks"
     )
+    install_parser.add_argument(
+        "--path",
+        default=".",
+        required=False,
+        help="The path to install the hooks in"
+    )
 
     subparsers.add_parser(
-        "configure", help="Configure the pre-commit hooks with the default config"
+        "configure",
+        help="Configure the pre-commit hooks with the default config",
     )
 
     subparsers.add_parser(
@@ -77,5 +86,34 @@ def create_parser():
     return parser
 
 
+def list_repos(args):
+    """
+    List all of the repos that would be impacted by the change
+    """
+    for r_type, r_path, in sorted(find_repos(args.path), key=lambda r: r[1]):
+        print(r_type, r_path)
+
+    return 0
+
+def pick_handler(args):
+    """
+    Figure out how the args should be handled.
+
+    A handler must take the args from the arg parser and return an exit code.
+    """
+
+    if args.command == "install":
+        if args.check:
+            return list_repos
+
+    return lambda args: 0
+
 def main():
-    create_parser().parse_args()
+    try:
+        args = create_parser().parse_args()
+        handler = pick_handler(args)
+
+        sys.exit(handler(args))
+    except KeyboardInterrupt:
+        print("Exiting...")
+        sys.exit(1)
