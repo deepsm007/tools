@@ -14,7 +14,13 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
+dependencies = [
+  'pre-commit >= 2',
+]
 
 [project.urls]
 "Homepage" = "https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/tree/main/rh-pre-commit"
 "Bug Tracker" = "https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/issues"
+
+[project.scripts]
+rh-multi-pre-commit = "rh_pre_commit.multi:main"
