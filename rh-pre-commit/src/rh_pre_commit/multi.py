@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+
 def create_parser():
     parser = ArgumentParser(
         prog="rh-multi-pre-commit",
@@ -23,21 +24,20 @@ def create_parser():
         help="Check sub directories for git repos as well",
     )
     install_parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Overwrite existing pre-commit hooks"
+        "--force", action="store_true", help="Overwrite existing pre-commit hooks"
     )
 
     subparsers.add_parser(
-        "configure",
-        help="Configure the pre-commit hooks with the default config"
+        "configure", help="Configure the pre-commit hooks with the default config"
     )
 
     subparsers.add_parser(
-        "login", help="Login to the pattern distribution server",
+        "login",
+        help="Login to the pattern distribution server",
     )
 
     return parser
+
 
 def main():
     create_parser().parse_args()
