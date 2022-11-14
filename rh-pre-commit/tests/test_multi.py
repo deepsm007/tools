@@ -16,14 +16,14 @@ class MultiPreCommitHookTest(TestCase):
 
         # Test install args because we don't want to mess these up
         tests = [
-            ("--check --force --recursive", True, True, True),
-            ("--force --recursive", False, True, True),
-            ("--check --recursive", True, False, True),
-            ("--check", True, False, False),
-            ("", False, False, False),
+            ("--check --force", True, True),
+            ("--force", False, True),
+            ("--check", True, False),
+            ("--check", True, False),
+            ("", False, False),
         ]
 
-        for args, check, force, recursive in tests:
+        for args, check, force in tests:
             ns = parser.parse_args(["install", *args.split()])
             self.assertEqual(
                 ns.check,
@@ -34,11 +34,6 @@ class MultiPreCommitHookTest(TestCase):
                 ns.force,
                 force,
                 f"force: {ns.force} != {force} for {args}",
-            )
-            self.assertEqual(
-                ns.recursive,
-                recursive,
-                f"recursive: {ns.recursive} != {recursive} for {args}",
             )
 
     def test_find_repos(self):

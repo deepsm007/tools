@@ -23,4 +23,7 @@ dependencies = [
 "Bug Tracker" = "https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/issues"
 
 [project.scripts]
+# The pre-commit manager
 rh-multi-pre-commit = "rh_pre_commit.multi:main"
+# The pre-commit impl
+# rh-pre-commit = "rh_pre_commit.pre_commit:main"

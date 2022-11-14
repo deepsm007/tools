@@ -49,6 +49,13 @@ def create_parser():
 
     subparsers = parser.add_subparsers(dest="command")
 
+    subparsers.add_parser(
+        "update",
+        help="Update the tool, "
+        "force a patterns refresh, "
+        "and update pre-commit hooks (global and current dir)",
+    )
+
     install_parser = subparsers.add_parser(
         "install",
         help="Install the pre-commit hook in a project or projects",
@@ -59,23 +66,18 @@ def create_parser():
         help="Check to see where the hook would be installed, but don't install it",
     )
     install_parser.add_argument(
-        "--recursive",
-        action="store_true",
-        help="Check sub directories for git repos as well",
-    )
-    install_parser.add_argument(
         "--force", action="store_true", help="Overwrite existing pre-commit hooks"
     )
     install_parser.add_argument(
-        "--path",
-        default=".",
-        required=False,
-        help="The path to install the hooks in"
+        "--path", default=".", required=False, help="The path to install the hooks in"
     )
 
-    subparsers.add_parser(
+    configure_parser = subparsers.add_parser(
         "configure",
-        help="Configure the pre-commit hooks with the default config",
+        help="Reset the global rh-multi-pre-commit config",
+    )
+    configure_parser.add_argument(
+        "--force", action="store_true", help="Do not prompt if existing config exists"
     )
 
     subparsers.add_parser(
@@ -90,10 +92,14 @@ def list_repos(args):
     """
     List all of the repos that would be impacted by the change
     """
-    for r_type, r_path, in sorted(find_repos(args.path), key=lambda r: r[1]):
+    for (
+        r_type,
+        r_path,
+    ) in sorted(find_repos(args.path), key=lambda r: r[1]):
         print(r_type, r_path)
 
     return 0
+
 
 def pick_handler(args):
     """
@@ -107,6 +113,7 @@ def pick_handler(args):
             return list_repos
 
     return lambda args: 0
+
 
 def main():
     try:
