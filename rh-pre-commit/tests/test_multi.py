@@ -119,7 +119,7 @@ class MultiPreCommitHookTest(TestCase):
                     continue
 
                 # Touch the file
-                with open(path, "w+", encoding="UTF-8"):
+                with open(path, "w", encoding="UTF-8"):
                     pass
 
             status = multi.run_pre_commit(Namespace())
