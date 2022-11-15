@@ -1,5 +1,3 @@
 #! /bin/sh
 
-for req_file in $(find ./src/ -name requirements.txt); do
-  $PIP_INSTALL -r $req_file;
-done
+$PIP_INSTALL .

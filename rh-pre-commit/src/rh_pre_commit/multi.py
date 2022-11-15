@@ -3,6 +3,10 @@ import os
 
 from argparse import ArgumentParser
 
+from pre_commit import main as pre_commit
+
+from rh_pre_commit import config
+
 
 def read_modfile(path):
     """
@@ -90,15 +94,37 @@ def create_parser():
 
 def list_repos(args):
     """
-    List all of the repos that would be impacted by the change
+    A handler that lists all of the repos that would be impacted by the change
     """
-    for (
-        r_type,
-        r_path,
-    ) in sorted(find_repos(args.path), key=lambda r: r[1]):
+    repos = sorted(find_repos(args.path), key=lambda r: r[1])
+
+    for r_type, r_path in repos:
         print(r_type, r_path)
 
     return 0
+
+
+def run_pre_commit(_):
+    """
+    A handler that runs the pre_commit package
+    """
+    status = 0
+
+    for path in config.RH_MULTI_CONFIG_PATHS:
+        if not os.path.exists(path):
+            continue
+
+        status = pre_commit.main(
+            (
+                "run",
+                f"--config={path}",
+            )
+        )
+
+        if status:
+            return status
+
+    return status
 
 
 def pick_handler(args):
@@ -112,7 +138,7 @@ def pick_handler(args):
         if args.check:
             return list_repos
 
-    return lambda args: 0
+    return run_pre_commit
 
 
 def main():
