@@ -117,9 +117,16 @@ def install_hooks(args):
                 print(f"Could not create hooks dir: {hooks_dir}")
                 continue
 
-        if not args.force and os.path.exists(hook_path):
-            print(f"{hook_path} already exists. Use --force to overwrite it.")
-            continue
+        if os.path.exists(hook_path):
+            if not args.force:
+                print(f"{hook_path} already exists. Use --force to overwrite it.")
+                continue
+
+            try:
+                os.unlink(hook_path)
+            except Exception:
+                print(f"Could not unlink {hook_path}")
+                continue
 
         try:
             with open(hook_path, "w", encoding="UTF-8") as hook_file:

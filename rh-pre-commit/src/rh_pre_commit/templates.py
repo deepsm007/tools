@@ -14,7 +14,8 @@ if [ -x "$INSTALL_PYTHON" ]; then
 elif command -v rh-multi-pre-commit > /dev/null; then
     exec rh-multi-pre-commit
 else
-    echo '`rh-multi-pre-commit` not found.  Did you forget to activate your virtualenv?' 1>&2
+    echo '`rh-multi-pre-commit` not found.' 1>&2
+    echo 'For more information: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/blob/main/rh-pre-commit/README.md' 1>&2
     exit 1
 fi
 """
