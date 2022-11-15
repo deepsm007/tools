@@ -133,6 +133,9 @@ def install_hooks(args):
             os.chmod(hook_path, st.st_mode | stat.S_IXUSR)
         except Exception:
             print(f"Could not make {hook_path} executable")
+            continue
+
+        print(f"Configured {hook_path}")
 
 
 def run_pre_commit(_):
