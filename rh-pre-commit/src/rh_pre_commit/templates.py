@@ -10,7 +10,7 @@ RH_MULTI_PRE_COMMIT_HOOK = f"""#!/usr/bin/bash
 INSTALL_PYTHON={shlex.quote(sys.executable)}
 
 if [ -x "$INSTALL_PYTHON" ]; then
-    exec "$INSTALL_PYTHON" -mrh_pre_commit.multi
+    exec "$INSTALL_PYTHON" -m rh_pre_commit.multi
 elif command -v rh-multi-pre-commit > /dev/null; then
     exec rh-multi-pre-commit
 else
@@ -20,15 +20,12 @@ else
 fi
 """
 
-# TODO: See if this can be pointed directly at the repo. If not change
-# it so that it doesn't rely on rh-pre-commit being on your path. See
-# RH_MULTI_PRE_COMMIT_HOOK above
-RH_MULTI_CONIFG = """
+RH_MULTI_CONIFG = f"""\
 repos:
   - repo: local
     hooks:
       - id: rh-pre-commit
         name: Run standard RH pre-commit checks
         language: system
-        entry: rh-pre-commit
+        entry: {shlex.quote(sys.executable)} -m rh_pre_commit
 """

@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import logging
 import os
 import shlex
 import stat
@@ -10,6 +11,12 @@ from argparse import ArgumentParser
 from pre_commit import main as pre_commit  # The pre-commit.com library
 from rh_pre_commit import config
 from rh_pre_commit import templates
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    stream=sys.stdout,
+)
 
 
 def read_modfile(path):
@@ -95,7 +102,7 @@ def list_repos(args):
     repos = sorted(find_repos(args.path), key=lambda r: r[1])
 
     for r_type, r_path in repos:
-        print(r_type, r_path)
+        logging.info("%s %s", r_type, r_path)
 
     return 0
 
@@ -114,35 +121,37 @@ def install_hooks(args):
             try:
                 os.mkdir(hooks_dir)
             except Exception:
-                print(f"Could not create hooks dir: {hooks_dir}")
+                logging.error("Could not create hooks dir: %s", hooks_dir)
                 continue
 
         if os.path.exists(hook_path):
             if not args.force:
-                print(f"{hook_path} already exists. Use --force to overwrite it.")
+                logging.error(
+                    "%s already exists. Use --force to overwrite it.", hook_path
+                )
                 continue
 
             try:
                 os.unlink(hook_path)
             except Exception:
-                print(f"Could not unlink {hook_path}")
+                logging.error("Could not unlink %s", hook_path)
                 continue
 
         try:
             with open(hook_path, "w", encoding="UTF-8") as hook_file:
                 hook_file.write(templates.RH_MULTI_PRE_COMMIT_HOOK)
         except Exception:
-            print(f"Could not write {hook_path}")
+            logging.error("Could not write %s", hook_path)
             continue
 
         try:
             st = os.stat(hook_path)
             os.chmod(hook_path, st.st_mode | stat.S_IXUSR)
         except Exception:
-            print(f"Could not make {hook_path} executable")
+            logging.error("Could not make %s executable", hook_path)
             continue
 
-        print(f"Configured {hook_path}")
+        logging.error("Configured %s", hook_path)
 
 
 def run_pre_commit(_):
@@ -178,24 +187,24 @@ def configure_hooks(_):
         try:
             os.unlink(config_path)
         except Exception:
-            print(f"Could not unlink {config_path}")
+            logging.error("Could not unlink %s", config_path)
             return 1
 
     if not os.path.exists(config.CONFIG_DIR):
         try:
             os.makedirs(config.CONFIG_DIR)
         except Exception:
-            print(f"Could not create config dir {config.CONFIG_DIR}")
+            logging.error("Could not create config dir %s", config.CONFIG_DIR)
             return 1
 
     try:
         with open(config_path, "w", encoding="UTF-8") as config_file:
             config_file.write(templates.RH_MULTI_CONIFG)
     except Exception:
-        print(f"Could not write config {config_path}")
+        logging.error("Could not write config %s", config_path)
         return 1
 
-    print(f"Config updated {config_path}")
+    logging.error("Config updated %s", config_path)
     return 0
 
 
@@ -226,7 +235,7 @@ def main():
 
         return handler(args)
     except KeyboardInterrupt:
-        print("Exiting...")
+        logging.info("Exiting...")
         return 1
 
 
