@@ -72,15 +72,29 @@ class MultiPreCommitHookTest(TestCase):
         """
         tests = (
             # The default should be to run_pre_commit
-            (Namespace(command=None), multi.run_pre_commit),
+            (
+                Namespace(command=None),
+                multi.run_pre_commit,
+            ),
             # Install --check should list repos
-            (Namespace(command="install", check=True), multi.list_repos),
+            (
+                Namespace(command="install", check=True),
+                multi.list_repos,
+            ),
             # Install --check should list repos even if other flags are set
-            (Namespace(command="install", check=True, force=True), multi.list_repos),
+            (
+                Namespace(command="install", check=True, force=True),
+                multi.list_repos,
+            ),
             # Install without check should return the install command
             (
                 Namespace(command="install", check=False, force=False),
                 multi.install_hooks,
+            ),
+            # Configure should only care about the command
+            (
+                Namespace(command="configure"),
+                multi.configure_hooks,
             ),
         )
 
@@ -210,3 +224,25 @@ class MultiPreCommitHookTest(TestCase):
 
             # Not to the empty dir
             self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
+
+    def test_configure_hooks(self):
+        with TemporaryDirectory() as tmp_dir:
+            config_path = os.path.join(tmp_dir, "config.yaml")
+            config.RH_MULTI_GLOBAL_CONFIG_PATH = config_path
+
+            # It writes the config file
+            self.assertFalse(os.path.exists(config_path))
+            multi.configure_hooks(Namespace())
+            self.assertTrue(os.path.exists(config_path))
+
+            # It resets the config file
+            with open(config_path, "w", encoding="UTF-8") as conf_file:
+                conf_file.write("junk")
+
+            with open(config_path, "r", encoding="UTF-8") as conf_file:
+                self.assertIn("junk", conf_file.read())
+
+            multi.configure_hooks(Namespace())
+
+            with open(config_path, "r", encoding="UTF-8") as conf_file:
+                self.assertNotIn("junk", conf_file.read())

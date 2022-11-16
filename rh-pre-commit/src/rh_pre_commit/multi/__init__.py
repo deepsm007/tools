@@ -168,6 +168,37 @@ def run_pre_commit(_):
     return status
 
 
+def configure_hooks(_):
+    """
+    A handler that resets the config for the tool
+    """
+    config_path = config.RH_MULTI_GLOBAL_CONFIG_PATH
+
+    if os.path.exists(config_path):
+        try:
+            os.unlink(config_path)
+        except Exception:
+            print(f"Could not unlink {config_path}")
+            return 1
+
+    if not os.path.exists(config.CONFIG_DIR):
+        try:
+            os.makedirs(config.CONFIG_DIR)
+        except Exception:
+            print(f"Could not create config dir {config.CONFIG_DIR}")
+            return 1
+
+    try:
+        with open(config_path, "w", encoding="UTF-8") as config_file:
+            config_file.write(templates.RH_MULTI_CONIFG)
+    except Exception:
+        print(f"Could not write config {config_path}")
+        return 1
+
+    print(f"Config updated {config_path}")
+    return 0
+
+
 def pick_handler(args):
     """
     Figure out how the args should be handled.
@@ -178,7 +209,7 @@ def pick_handler(args):
     if args.command == "update":
         pass
     elif args.command == "configure":
-        pass
+        return configure_hooks
     elif args.command == "install":
         if args.check:
             return list_repos
