@@ -8,7 +8,10 @@ import subprocess  # nosec
 import sys
 import time
 
-from urllib import request
+from datetime import datetime
+
+import jwt
+import requests
 
 from rh_gitleaks import config
 
@@ -43,21 +46,20 @@ def _sha256sum_valid(file_path, expected):
         return hashlib.sha256(file.read()).hexdigest() == expected
 
 
-def _download_file(url, dest, headers={}, **kwargs):
+def _download_file(url, dest, headers=None, **kwargs):
     """
     Download a file
 
     Throws an exception if the response fails to write
     """
-    dl_req = request.Request(
-        url=url,
-        headers={"User-Agent": config.USER_AGENT, **headers},
-        **kwargs,
-    )
+    _headers = {"User-Agent": config.USER_AGENT}
+    _headers.update(headers or {})
 
-    with request.urlopen(dl_req) as response:  # nosec
-        with open(dest, "wb") as file:
-            file.write(response.read())
+    resp = requests.get(url, headers=_headers, timeout=120, **kwargs)
+    resp.raise_for_status()
+
+    with open(dest, "wb") as file:
+        file.write(resp.content)
 
 
 def parse_args(args):
@@ -144,7 +146,7 @@ def patterns_update_needed(path):
 
     return (
         not os.path.isfile(path)
-        or time.time() - os.stat(p_path).st_mtime > config.PATTERNS_REFRESH_INTERVAL
+        or time.time() - os.stat(path).st_mtime > config.PATTERNS_REFRESH_INTERVAL
     )
 
 
@@ -153,7 +155,7 @@ def load_auth_token():
         with open(config.PATTERNS_AUTH_JWT_PATH, "r", encoding="UTF-8") as f:
             return f.read()
     except Exception:
-        loggin.error("Could not find auth token. Try: rh-gitleaks login")
+        logging.error("Could not find auth token. Try: rh-gitleaks login")
         return None
 
 
@@ -177,7 +179,7 @@ def patterns_path():
                 headers={"Authorization": f"Bearer {auth_token}"},
             )
         except Exception as e:
-            logging.error("%s: Could now download patterns")
+            logging.error("Could Not Download Patterns: %s", e)
 
     if not os.path.isfile(config.PATTERNS_PATH):
         return None
@@ -197,18 +199,69 @@ def run_gitleaks(args):
         check=False,
         capture_output=False,
         shell=False,
+        timeout=1200,
     )
 
     return proc.returncode
+
+
+def jwt_valid(token):
+    """
+    Basic spot checks. Not meant to validate signatures, just that the
+    token was copied correctly. The server will validate signatures.
+    """
+
+    try:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        exp = datetime.utcfromtimestamp(payload["exp"])
+        iss = payload["iss"]
+
+        if exp < datetime.now():
+            logging.error("That token is expired")
+            return False
+
+        if not iss.startswith("pattern-distribution-server"):
+            logging.error("%s is an invalid token issuer", iss)
+            return False
+
+        return True
+    except Exception as e:
+        logging.error("Invalid Auth Token: %s", e)
+        return False
 
 
 def login(auth_jwt=None):
     """
     An interactive login session if auth_jwt isn't provided
     """
-    return 1 # TODO: impl login
+    if not auth_jwt:
+        logging.info(
+            "To log in, please visit %s and enter in the token below",
+            config.PATTERNS_SERVER_TOKEN_URL,
+        )
+        auth_jwt = input("Token: ").strip()
 
-def logout():
+    if not jwt_valid(auth_jwt):
+        logging.info(
+            "It seems there was an issue with the token provided. Please try again"
+        )
+        return 1
+
+    if not os.path.isdir(os.path.dirname(config.PATTERNS_AUTH_JWT_PATH)):
+        if not _ensure_dir(os.path.dirname(config.PATTERNS_AUTH_JWT_PATH)):
+            return 1
+
+    if logout(show_msg=False) != 0:
+        return 1
+
+    with open(config.PATTERNS_AUTH_JWT_PATH, "w", encoding="UTF-8") as f:
+        f.write(auth_jwt)
+
+    logging.info("Successfully logged in")
+    return 0
+
+
+def logout(show_msg=True):
     """
     Remove the auth.jwt
     """
@@ -219,8 +272,11 @@ def logout():
             logging.error("Could not remove %s", config.PATTERNS_AUTH_JWT_PATH)
             return 1
 
-    logging.info("Successfully logged out")
+    if show_msg:
+        logging.info("Successfully logged out")
+
     return 0
+
 
 def main():
     args = parse_args(sys.argv[1:])
@@ -230,7 +286,8 @@ def main():
 
         if command == "login":
             return login()
-        elif command == "logout":
+
+        if command == "logout":
             return logout()
 
         logging.error("Unrecognized command: %s", command)
@@ -238,6 +295,7 @@ def main():
 
     # TODO: clean up and test and make sure it matches the old script
     return run_gitleaks(args["gitleaks"])
+
 
 if __name__ == "__main__":
     sys.exist(main())

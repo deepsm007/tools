@@ -50,11 +50,11 @@ PATTERNS_SERVER_URL = os.environ.get(
 )
 PATTERNS_SERVER_DOCS_URL = parse.urljoin(
     PATTERNS_SERVER_URL,
-    f"docs",
+    "docs",
 )
 PATTERNS_SERVER_TOKEN_URL = parse.urljoin(
     PATTERNS_SERVER_URL,
-    f"token",
+    "token",
 )
 PATTERNS_SERVER_PATTERNS_URL = parse.urljoin(
     PATTERNS_SERVER_URL,
