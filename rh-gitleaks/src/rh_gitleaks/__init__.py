@@ -224,6 +224,7 @@ def jwt_valid(token):
             logging.error("%s is an invalid token issuer", iss)
             return False
 
+        logging.info("Token valid until %s", exp.strftime("%Y-%m-%d"))
         return True
     except Exception as e:
         logging.error("Invalid Auth Token: %s", e)
@@ -293,7 +294,6 @@ def main():
         logging.error("Unrecognized command: %s", command)
         return 1
 
-    # TODO: clean up and test and make sure it matches the old script
     return run_gitleaks(args["gitleaks"])
 
 

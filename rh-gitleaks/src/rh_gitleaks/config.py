@@ -43,7 +43,7 @@ USER_AGENT = f"rh-gitleaks/{GITLEAKS_SOURCE_ID}"
 
 PATTERNS_AUTH_JWT_PATH = os.path.join(CONFIG_DIR, "auth.jwt")
 PATTERNS_REFRESH_INTERVAL = 43200
-PATTERNS_PATH = os.path.join(CACHE_DIR, "patterns.toml")
+PATTERNS_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_VERSION}-patterns.toml")
 PATTERNS_SERVER_URL = os.environ.get(
     "RH_GITLEAKS_PATTERNS_SERVER",
     "https://patterns.security.redhat.com",

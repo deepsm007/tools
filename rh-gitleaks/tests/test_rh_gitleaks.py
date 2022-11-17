@@ -1,14 +1,27 @@
 import os
 import hashlib
 
+from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch
 from tempfile import TemporaryDirectory
 
+import jwt
 import rh_gitleaks
 
 
 class RHGitleaksTest(TestCase):
+    mock_resp = b"mock"
+    mock_sha256sum = hashlib.sha256(mock_resp).hexdigest()
+
+    mock_token = jwt.encode(
+        {
+            "iss": "pattern-distribution-server-mock",
+            "exp": int(datetime.utcnow().timestamp()) + 5000,
+        },
+        key="mock",
+    )
+
     def test_parse_args(self):
         tests = (
             # Login should ignore anything that isn't login
@@ -57,11 +70,13 @@ class RHGitleaksTest(TestCase):
             actual = rh_gitleaks.parse_args(args)
             self.assertDictEqual(actual, expected, f"test={i}")
 
-    def test_gitleaks_bin_path(self):
+    @patch("requests.get")
+    def test_gitleaks_bin_path(self, mock_requests_get):
         """
         Make sure it pulls and validates a version of gitleaks
         """
-        download_sha256sum = rh_gitleaks.config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM
+        mock_requests_get.return_value.content = self.mock_resp
+        rh_gitleaks.config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM = self.mock_sha256sum
 
         with TemporaryDirectory() as tmp_dir:
             rh_gitleaks.config.GITLEAKS_BIN_PATH = os.path.join(tmp_dir, "gitleaks")
@@ -69,28 +84,34 @@ class RHGitleaksTest(TestCase):
             with open(rh_gitleaks.gitleaks_bin_path(), "rb") as gitleaks_bin:
                 sha256sum = hashlib.sha256(gitleaks_bin.read())
 
-            self.assertEqual(sha256sum.hexdigest(), download_sha256sum)
+            self.assertEqual(sha256sum.hexdigest(), self.mock_sha256sum)
 
+    @patch("requests.get")
     @patch("subprocess.run")
-    def test_run_gitleaks(self, mock_subprocess_run):
+    def test_run_gitleaks(self, mock_subprocess_run, mock_requests_get):
         """
         Confirm the subprocess is ran properly
         """
+        mock_subprocess_run.return_value.returncode = 0
+        mock_requests_get.return_value.content = self.mock_resp
+        rh_gitleaks.config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM = self.mock_sha256sum
+
         with TemporaryDirectory() as tmp_dir:
+            # The extra dir in the middle is to confirm it will be created
+            # if it doesn't exist
             rh_gitleaks.config.PATTERNS_PATH = os.path.join(
-                tmp_dir, "foo", "patterns.toml"
+                tmp_dir, "a", "patterns.toml"
             )
             rh_gitleaks.config.GITLEAKS_BIN_PATH = os.path.join(
-                tmp_dir, "bar", "gitleaks"
+                tmp_dir, "b", "gitleaks"
+            )
+            rh_gitleaks.config.PATTERNS_AUTH_JWT_PATH = os.path.join(
+                tmp_dir, "c", "auth.jwt"
             )
 
-            mock_subprocess_run.return_value.returncode = 0
-
-            self.assertEqual(
-                rh_gitleaks.run_gitleaks(["--help"]),
-                0,
-            )
-
+            # Check the results of a login and run
+            self.assertEqual(rh_gitleaks.login(self.mock_token), 0)
+            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
             self.assertEqual(
                 mock_subprocess_run.call_args[0][0],
                 [
