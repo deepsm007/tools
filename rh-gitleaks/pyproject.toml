@@ -21,4 +21,4 @@ classifiers = [
 "Bug Tracker" = "https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/issues"
 
 [project.scripts]
-rh-gitleaks = "rh_gitleaks:main"
+rh-gitleaks = "rh_gitleaks.__main__:main"

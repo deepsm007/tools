@@ -5,86 +5,31 @@ from unittest import TestCase
 from unittest.mock import patch
 from argparse import Namespace
 
+from rh_pre_commit import common
 from rh_pre_commit import multi
 from rh_pre_commit import config
 
 
 class MultiPreCommitHookTest(TestCase):
-    def test_create_parser(self):
-        """
-        Simply spot check the arg parser
-        """
-        parser = multi.create_parser()
-        self.assertEqual(parser.prog, "rh-multi-pre-commit")
-
-        # Test install args because we don't want to mess these up
-        tests = [
-            ("--check --force", True, True),
-            ("--force", False, True),
-            ("--check", True, False),
-            ("--check", True, False),
-            ("", False, False),
-        ]
-
-        for args, check, force in tests:
-            ns = parser.parse_args(["install", *args.split()])
-            self.assertEqual(
-                ns.check,
-                check,
-                f"check: {ns.check} != {check} for {args}",
-            )
-            self.assertEqual(
-                ns.force,
-                force,
-                f"force: {ns.force} != {force} for {args}",
-            )
-
-    def test_find_repos(self):
-        """
-        Find repos under a given structure
-        """
-        with TemporaryDirectory() as tmp_dir:
-            expected = [
-                ("R", os.path.join(tmp_dir, "foo", "bar", "baz", ".git")),
-                ("R", os.path.join(tmp_dir, ".git")),
-                ("R", os.path.join(tmp_dir, "test", ".git")),
-            ]
-
-            for d in expected:
-                os.makedirs(d[1])
-                os.makedirs(d[1] + "-not-git")
-
-            # Have a file named .git
-            file_test = os.path.join(tmp_dir, "git-file")
-            modfile = os.path.join(file_test, ".git")
-
-            os.makedirs(file_test)
-            with open(modfile, "w", encoding="UTF-8") as module:
-                module.write("gitdir: ../.git/modules/git-file")
-
-            expected.append(("M", os.path.join(file_test, "../.git/modules/git-file")))
-
-            self.assertEqual(sorted(expected), sorted(multi.find_repos(tmp_dir)))
-
     def test_pick_handler(self):
         """
         Test that the right handler is selected when different args are set
         """
         tests = (
-            # The default should be to run_pre_commit
+            # The default should be to run_hooks
             (
                 Namespace(command=None),
-                multi.run_pre_commit,
+                multi.run_hooks,
             ),
             # Install --check should list repos
             (
                 Namespace(command="install", check=True),
-                multi.list_repos,
+                common.list_repos,
             ),
             # Install --check should list repos even if other flags are set
             (
                 Namespace(command="install", check=True, force=True),
-                multi.list_repos,
+                common.list_repos,
             ),
             # Install without check should return the install command
             (
@@ -102,7 +47,7 @@ class MultiPreCommitHookTest(TestCase):
             self.assertEqual(multi.pick_handler(ns), handler, f"test={i}")
 
     @patch("pre_commit.main.main")
-    def test_run_pre_commit(self, mock_pre_commit_main):
+    def test_run_hooks(self, mock_pre_commit_main):
         """
         Confirm the run command passes the right args
         """
@@ -141,7 +86,7 @@ class MultiPreCommitHookTest(TestCase):
                 with open(path, "w", encoding="UTF-8"):
                     pass
 
-            status = multi.run_pre_commit(Namespace())
+            status = multi.run_hooks(Namespace())
 
         self.assertEqual(status, 1)
 
@@ -225,7 +170,11 @@ class MultiPreCommitHookTest(TestCase):
             # Not to the empty dir
             self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
 
-    def test_configure_hooks(self):
+    @patch("subprocess.run")
+    def test_configure_hooks(self, mock_subprocess_run):
+        mock_subprocess_run.return_value.returncode = 0
+        mock_subprocess_run.return_value.stdout = "true"
+
         with TemporaryDirectory() as tmp_dir:
             config_path = os.path.join(tmp_dir, "config.yaml")
             config.RH_MULTI_GLOBAL_CONFIG_PATH = config_path

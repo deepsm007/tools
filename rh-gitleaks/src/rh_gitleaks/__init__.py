@@ -15,11 +15,6 @@ import requests
 
 from rh_gitleaks import config
 
-# Logger settings
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
 
 
 def _ensure_dir(dir_path):
@@ -279,8 +274,8 @@ def logout(show_msg=True):
     return 0
 
 
-def main():
-    args = parse_args(sys.argv[1:])
+def main(args=None):
+    args = parse_args(args or sys.argv[1:])
 
     if args["rh_gitleaks"]:
         command = args["rh_gitleaks"][0]
@@ -298,4 +293,8 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
     sys.exist(main())

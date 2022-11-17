@@ -3,4 +3,4 @@ Global unittest config
 """
 import logging
 
-# logging.basicConfig(level="CRITICAL")
+logging.basicConfig(level="CRITICAL")

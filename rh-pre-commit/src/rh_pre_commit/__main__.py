@@ -3,10 +3,11 @@
 import sys
 import logging
 
-from rh_gitleaks import main
+from rh_pre_commit import main
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
+    format="%(message)s",
+    stream=sys.stdout,
 )
 sys.exit(main())
