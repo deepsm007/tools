@@ -41,7 +41,7 @@ class Hook:
                 check=False,
                 capture_output=True,
             )
-            .stdout.strip()
+            .stdout.decode().strip()
             .lower()
             or self.default_config_value
         )
