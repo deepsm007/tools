@@ -1,5 +1,3 @@
-PREFIX := /usr/local
-
 # helptext: MAKEFILE HELPTEXT
 # helptext:
 

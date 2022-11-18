@@ -7,6 +7,6 @@ from rh_gitleaks import main
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
+    format="%(message)s",
 )
 sys.exit(main())

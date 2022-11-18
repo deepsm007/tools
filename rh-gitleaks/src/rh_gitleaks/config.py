@@ -3,18 +3,21 @@ import platform
 
 from urllib import parse
 
+# XDG Folder Info
 HOME_DIR = os.path.expanduser("~")
-
 XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME_DIR, ".config")
 XDG_CACHE_HOME = os.environ.get("XDG_CACHE_HOME") or os.path.join(HOME_DIR, ".cache")
 
-CONFIG_DIR = os.path.join(XDG_CONFIG_HOME, "rh-gitleaks")
-CACHE_DIR = os.path.join(XDG_CACHE_HOME, "rh-gitleaks")
-
+# Platform Information
 PLATFORM_SYSTEM = platform.system().lower()
 PLATFORM_MACHINE = platform.machine()
 PLATFORM_ID = f"{PLATFORM_SYSTEM}-{PLATFORM_MACHINE}"
 
+# Setting Config & Cache Dirs
+CONFIG_DIR = os.path.join(XDG_CONFIG_HOME, "rh-gitleaks")
+CACHE_DIR = os.path.join(XDG_CACHE_HOME, "rh-gitleaks")
+
+# Gitleaks Settings
 GITLEAKS_VERSION = "7.6.1"
 GITLEAKS_SOURCE_ID = f"{PLATFORM_ID}-{GITLEAKS_VERSION}"
 GITLEAKS_BIN_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_SOURCE_ID}")
@@ -39,8 +42,7 @@ GITLEAKS_BIN_DOWNLOAD_SHA256SUM = GITLEAKS_SUPPORTED_VERSIONS.get(
     {},
 ).get("sha256")
 
-USER_AGENT = f"rh-gitleaks/{GITLEAKS_SOURCE_ID}"
-
+# Pattern Server Settings
 PATTERNS_AUTH_JWT_PATH = os.path.join(CONFIG_DIR, "auth.jwt")
 PATTERNS_REFRESH_INTERVAL = 43200
 PATTERNS_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_VERSION}-patterns.toml")
@@ -60,3 +62,6 @@ PATTERNS_SERVER_PATTERNS_URL = parse.urljoin(
     PATTERNS_SERVER_URL,
     f"patterns/gitleaks/{GITLEAKS_VERSION}",
 )
+
+# Request Settings
+REQUEST_USER_AGENT = f"rh-gitleaks/{GITLEAKS_SOURCE_ID}"

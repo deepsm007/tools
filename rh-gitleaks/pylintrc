@@ -1,5 +1,4 @@
 [TYPECHECK]
-ignored-modules = ldap
 disable =
   broad-except,
   duplicate-code,

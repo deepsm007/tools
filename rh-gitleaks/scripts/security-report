@@ -4,6 +4,7 @@ set -ex
 source ./scripts/common
 PROJECT_DIR=$(pwd)
 
+$PIP_WHEEL . -w ./wheelhouse
 for req_file in $(find . -name requirements.txt); do
   $PIP_WHEEL -r $req_file -w ./wheelhouse
 done

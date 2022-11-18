@@ -24,16 +24,16 @@ def run_hooks(_):
     return 0
 
 
-def configure_hooks(_):
+def configure(_):
     """
     A handler that resets the config for the tool
     """
-
     for hook in hooks:
-        if hook.reset_config() != 0:
+        if hook.configure() != 0:
             logging.error("Error Resetting Hook: %s", hook)
-        else:
-            logging.info("Configured Hook: %s", hook)
+            return 1
+
+        logging.info("Configured Hook: %s", hook)
 
     return 0
 
@@ -58,7 +58,7 @@ def pick_handler(args):
         return common.update_package
 
     if args.command == "configure":
-        return configure_hooks
+        return configure
 
     if args.command == "install":
         if args.check:

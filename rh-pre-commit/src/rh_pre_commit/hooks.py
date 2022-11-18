@@ -14,7 +14,7 @@ class Hook:
     def __str__(self):
         return self.name
 
-    def reset_config(self):
+    def configure(self):
         return subprocess.run(
             [
                 "git",
@@ -48,7 +48,6 @@ class Hook:
 
         return config_value == "true"
 
-
 class CheckSecrets(Hook):
     """
     Run rh-gitleaks on unstaged commits
@@ -57,6 +56,12 @@ class CheckSecrets(Hook):
     name = "check-secrets"
     flag = "checkSecrets"
     default_config_value = "true"
+
+    def configure(self, *args, **kwargs):
+        """
+        Reset the flags but also log in
+        """
+        return super().configure() or rh_gitleaks.configure(*args, **kwargs)
 
     @staticmethod
     def run():

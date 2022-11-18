@@ -18,9 +18,10 @@ from rh_gitleaks import config
 
 def _ensure_dir(dir_path):
     """
-    Make sure dirs exist
+    Create a dir if it doesn't exist
 
-    Returns True if the directory exists or was created
+    Returns:
+        True if the dir exists and False if it couldn't be created
     """
     if not os.path.isdir(dir_path):
         try:
@@ -35,6 +36,9 @@ def _ensure_dir(dir_path):
 def _sha256sum_valid(file_path, expected):
     """
     Verify file sha256sums
+
+    Returns:
+        True if the contents matches the expected value
     """
     with open(file_path, "rb") as file:
         return hashlib.sha256(file.read()).hexdigest() == expected
@@ -44,9 +48,11 @@ def _download_file(url, dest, headers=None, **kwargs):
     """
     Download a file
 
-    Throws an exception if the response fails to write
+    Throws An Exception:
+        if the request fails
+        if the response fails to write
     """
-    _headers = {"User-Agent": config.USER_AGENT}
+    _headers = {"User-Agent": config.REQUEST_USER_AGENT}
     _headers.update(headers or {})
 
     resp = requests.get(url, headers=_headers, timeout=120, **kwargs)
@@ -60,10 +66,11 @@ def parse_args(args):
     """
     Parse the args for the program
 
-    Returns {
-        gitleaks: args to pass to gitleaks
-        rh_gitleaks: args to handle in this tool
-    }
+    Returns:
+        {
+            gitleaks: [args to pass to gitleaks]
+            rh_gitleaks: [args to handle in this tool]
+        }
     """
     gitleaks_args = []
     rh_gitleaks_args = []
@@ -84,8 +91,11 @@ def parse_args(args):
 
 def gitleaks_bin_path():
     """
-    Returns the path to the gitleaks bin path but downloads it if it doesn't
-    already exist.
+    Lazy pull the gitleaks bin if it doesn't exist and return the path.
+
+    Returns:
+        None if it fails to fetch/setup the bin
+        gitleaks path str if it exists or was able to be set up
     """
     bin_path = config.GITLEAKS_BIN_PATH
     bin_dir = os.path.dirname(bin_path)
@@ -104,8 +114,8 @@ def gitleaks_bin_path():
 
         try:
             _download_file(download_url, bin_path)
-            logging.info("Verifying gitleaks-%s", config.GITLEAKS_SOURCE_ID)
 
+            logging.info("Verifying gitleaks-%s", config.GITLEAKS_SOURCE_ID)
             if not _sha256sum_valid(bin_path, download_sha256sum):
                 raise Exception("Invalid sha256sum")
 
@@ -134,8 +144,10 @@ def gitleaks_bin_path():
 
 def patterns_update_needed(path):
     """
-    See if patterns file at <path> is older than the refresh interval or doesn't
-    exist
+    Helper to determine if an update is needed.
+
+    Returns:
+        True if the file doesn't exist or it's too old else False
     """
 
     return (
@@ -145,6 +157,13 @@ def patterns_update_needed(path):
 
 
 def load_auth_token():
+    """
+    Load the auth token from disk
+
+    Returns:
+        The auth token if it exists
+        None if it doesn't
+    """
     try:
         with open(config.PATTERNS_AUTH_JWT_PATH, "r", encoding="UTF-8") as f:
             return f.read()
@@ -155,7 +174,11 @@ def load_auth_token():
 
 def patterns_path():
     """
-    Returns the path to the patterns but downloads it if it doesn't already exist.
+    Lazy pull patterns and return the path
+
+    Returns:
+        The path to the patterns but downloads them if an update is needed
+        None if it couldn't be pulled
     """
     if not _ensure_dir(os.path.dirname(config.PATTERNS_PATH)):
         return None
@@ -183,7 +206,10 @@ def patterns_path():
 
 def run_gitleaks(args):
     """
-    Run the gitleaks command and return the output
+    Run the gitleaks command without capturing stdout/stderr
+
+    Returns:
+        the exit status
     """
     if not ((bin_path := gitleaks_bin_path()) and (p_path := patterns_path())):
         return 1
@@ -203,22 +229,26 @@ def jwt_valid(token):
     """
     Basic spot checks. Not meant to validate signatures, just that the
     token was copied correctly. The server will validate signatures.
+
+    Returns:
+        True if they pass else False
     """
 
     try:
         payload = jwt.decode(token, options={"verify_signature": False})
-        exp = datetime.utcfromtimestamp(payload["exp"])
-        iss = payload["iss"]
 
+        exp = datetime.fromtimestamp(payload["exp"])
         if exp < datetime.now():
             logging.error("That token is expired")
             return False
 
+        iss = payload["iss"]
         if not iss.startswith("pattern-distribution-server"):
             logging.error("%s is an invalid token issuer", iss)
             return False
 
         logging.info("Token valid until %s", exp.strftime("%Y-%m-%d"))
+        logging.info("\n^^^ Please note this date! ^^^\n")
         return True
     except Exception as e:
         logging.error("Invalid Auth Token: %s", e)
@@ -230,13 +260,20 @@ def configure(auth_jwt=None):
     Run all of the steps to configure the tool. For now it is only a login
     but it may include more steps in the future. This is also to keep the
     tool consistent with other tools in this toolchain.
+
+    Returns:
+        A return code for sys.exit
     """
     return login(auth_jwt=auth_jwt)
 
 
 def login(auth_jwt=None):
     """
-    An interactive login session if auth_jwt isn't provided
+    An interactive login session if auth_jwt isn't provided that validates
+    a token and writes it to disk.
+
+    Returns:
+        A return code for sys.exit
     """
     if not auth_jwt:
         logging.info(
@@ -258,8 +295,12 @@ def login(auth_jwt=None):
     if logout(show_msg=False) != 0:
         return 1
 
-    with open(config.PATTERNS_AUTH_JWT_PATH, "w", encoding="UTF-8") as f:
-        f.write(auth_jwt)
+    try:
+        with open(config.PATTERNS_AUTH_JWT_PATH, "w", encoding="UTF-8") as f:
+            f.write(auth_jwt)
+    except Exception:
+        logging.error("Could not save token: %s", config.PATTERNS_AUTH_JWT_PATH)
+        return 1
 
     logging.info("Successfully logged in")
     return 0
@@ -268,6 +309,9 @@ def login(auth_jwt=None):
 def logout(show_msg=True):
     """
     Remove the auth.jwt
+
+    Returns:
+        A return code for sys.exit
     """
     if os.path.exists(config.PATTERNS_AUTH_JWT_PATH):
         try:
@@ -283,29 +327,29 @@ def logout(show_msg=True):
 
 
 def main(args=None):
-    args = parse_args(args or sys.argv[1:])
+    """
+    The main entrypoint into the program. It acceps args so that other
+    programs can call this, but if none are provided it defaults to sys.argv
+    sans the program's name.
 
-    if args["rh_gitleaks"]:
-        command = args["rh_gitleaks"][0]
+    Returns:
+        A return code for sys.exit
+    """
+    try:
+        parsed_args = parse_args(args or sys.argv[1:])
 
-        if command == "configure":
-            return configure()
+        if parsed_args["rh_gitleaks"]:
+            return globals()[parsed_args["rh_gitleaks"][0]]()
 
-        if command == "login":
-            return login()
-
-        if command == "logout":
-            return logout()
-
-        logging.error("Unrecognized command: %s", command)
+        return run_gitleaks(parsed_args["gitleaks"])
+    except KeyboardInterrupt:
+        logging.error("Exiting...")
         return 1
-
-    return run_gitleaks(args["gitleaks"])
 
 
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
+        format="%(message)s",
     )
     sys.exist(main())

@@ -39,7 +39,7 @@ class MultiPreCommitHookTest(TestCase):
             # Configure should only care about the command
             (
                 Namespace(command="configure"),
-                multi.configure_hooks,
+                multi.configure,
             ),
         )
 
@@ -170,10 +170,12 @@ class MultiPreCommitHookTest(TestCase):
             # Not to the empty dir
             self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
 
+    @patch("rh_gitleaks.configure")
     @patch("subprocess.run")
-    def test_configure_hooks(self, mock_subprocess_run):
+    def test_configure(self, mock_subprocess_run, mock_rh_gitleaks_configure):
         mock_subprocess_run.return_value.returncode = 0
         mock_subprocess_run.return_value.stdout = "true"
+        mock_rh_gitleaks_configure.return_value = 0
 
         with TemporaryDirectory() as tmp_dir:
             config_path = os.path.join(tmp_dir, "config.yaml")
@@ -181,7 +183,7 @@ class MultiPreCommitHookTest(TestCase):
 
             # It writes the config file
             self.assertFalse(os.path.exists(config_path))
-            multi.configure_hooks(Namespace())
+            multi.configure(Namespace())
             self.assertTrue(os.path.exists(config_path))
 
             # It resets the config file
@@ -191,7 +193,7 @@ class MultiPreCommitHookTest(TestCase):
             with open(config_path, "r", encoding="UTF-8") as conf_file:
                 self.assertIn("junk", conf_file.read())
 
-            multi.configure_hooks(Namespace())
+            multi.configure(Namespace())
 
             with open(config_path, "r", encoding="UTF-8") as conf_file:
                 self.assertNotIn("junk", conf_file.read())

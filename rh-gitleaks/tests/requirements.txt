@@ -4,3 +4,4 @@ black
 coverage
 pylint
 wheel
+build

@@ -39,15 +39,15 @@ def run_hooks(_):
     return status
 
 
-def configure_hooks(args):
+def configure(args):
     """
     A handler that resets the config for the tool
     """
     # Apply this to the individual hooks too
-    rh_pre_commit.configure_hooks(args)
+    if rh_pre_commit.configure(args) != 0:
+        return 1
 
     config_path = config.RH_MULTI_GLOBAL_CONFIG_PATH
-
     if os.path.exists(config_path):
         try:
             os.remove(config_path)
@@ -84,7 +84,7 @@ def pick_handler(args):
         return common.update_package
 
     if args.command == "configure":
-        return configure_hooks
+        return configure
 
     if args.command == "install":
         if args.check:

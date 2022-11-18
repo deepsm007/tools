@@ -1,7 +1,7 @@
 import os
 import hashlib
+import time
 
-from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch
 from tempfile import TemporaryDirectory
@@ -17,7 +17,7 @@ class RHGitleaksTest(TestCase):
     mock_token = jwt.encode(
         {
             "iss": "pattern-distribution-server-mock",
-            "exp": int(datetime.utcnow().timestamp()) + 5000,
+            "exp": int(time.time()) + 5000,
         },
         key="mock",
     )
@@ -93,6 +93,35 @@ class RHGitleaksTest(TestCase):
                 sha256sum = hashlib.sha256(gitleaks_bin.read())
 
             self.assertEqual(sha256sum.hexdigest(), self.mock_sha256sum)
+
+    def test_jwt_valid(self):
+        """
+        Make sure it returns valid for the right things
+        """
+        tests = (
+            # Valid test case
+            (
+                "pattern-distribution-server-foo",
+                int(time.time()) + 5000,
+                True,
+            ),
+            # Invalid iss
+            (
+                "wut",
+                int(time.time()) + 5000,
+                False,
+            ),
+            # Invalid exp
+            (
+                "pattern-distribution-server-foo",
+                int(time.time()) - 5000,
+                False,
+            ),
+        )
+
+        for i, (iss, exp, expected) in enumerate(tests):
+            token = jwt.encode({"iss": iss, "exp": exp}, key="test")
+            self.assertEqual(rh_gitleaks.jwt_valid(token), expected, f"test={i}")
 
     @patch("requests.get")
     @patch("subprocess.run")
