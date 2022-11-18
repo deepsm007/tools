@@ -16,7 +16,6 @@ import requests
 from rh_gitleaks import config
 
 
-
 def _ensure_dir(dir_path):
     """
     Make sure dirs exist
@@ -70,7 +69,7 @@ def parse_args(args):
     rh_gitleaks_args = []
 
     if len(args):
-        if "login" == args[0] or "logout" == args[0]:
+        if args[0] in ("configure", "login", "logout"):
             rh_gitleaks_args.append(args[0])
         else:
             gitleaks_args = args
@@ -226,6 +225,15 @@ def jwt_valid(token):
         return False
 
 
+def configure(auth_jwt=None):
+    """
+    Run all of the steps to configure the tool. For now it is only a login
+    but it may include more steps in the future. This is also to keep the
+    tool consistent with other tools in this toolchain.
+    """
+    return login(auth_jwt=auth_jwt)
+
+
 def login(auth_jwt=None):
     """
     An interactive login session if auth_jwt isn't provided
@@ -279,6 +287,9 @@ def main(args=None):
 
     if args["rh_gitleaks"]:
         command = args["rh_gitleaks"][0]
+
+        if command == "configure":
+            return configure()
 
         if command == "login":
             return login()

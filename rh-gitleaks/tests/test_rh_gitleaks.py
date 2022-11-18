@@ -24,6 +24,14 @@ class RHGitleaksTest(TestCase):
 
     def test_parse_args(self):
         tests = (
+            # Configure should ignore anything that isn't configure
+            (
+                ["configure", "--foo"],
+                {
+                    "gitleaks": [],
+                    "rh_gitleaks": ["configure"],
+                },
+            ),
             # Login should ignore anything that isn't login
             (
                 ["login", "--foo"],
@@ -109,8 +117,8 @@ class RHGitleaksTest(TestCase):
                 tmp_dir, "c", "auth.jwt"
             )
 
-            # Check the results of a login and run
-            self.assertEqual(rh_gitleaks.login(self.mock_token), 0)
+            # Check the results of a configure and run
+            self.assertEqual(rh_gitleaks.configure(auth_jwt=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
             self.assertEqual(
                 mock_subprocess_run.call_args[0][0],
