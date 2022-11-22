@@ -59,24 +59,15 @@ your commit again.
 
 If the detection was a false positive you can either add a gitleaks:allow
 comment to the line to allow it or add a .gitleaks.toml in your repo's base
-directory with the item added to the allow list.
+directory with the item added to the allowlist.
 
-For example, if the the pattern 'redhat.com' and file
-'some/file/here.txt' are causing the problem, your .gitleaks.toml will
-look like:
+Example .gitleaks.toml:
 
-    [allowlist]
-    description = "Global Allowlist"
+    https://github.com/leaktk/fake-leaks/blob/main/.gitleaks.toml
 
-    # (Optional) If you want to allow by file path
-    paths = [
-        '''some\\/file\\/here\\.txt''',
-    ]
+Example gitleaks:allow:
 
-    # (Optional) If you want to allow by regex
-    regexes = [
-        '''redhat\\.com''',
-    ]
+    https://github.com/leaktk/fake-leaks/blob/main/examples/allow-comment.py
 
 If you have any questions, issues, or want to report a potential data
 leak, further instructions can be found in these docs:
