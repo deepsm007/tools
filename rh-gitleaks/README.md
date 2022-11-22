@@ -97,11 +97,6 @@ To remove your Pattern Distribution Server API token, run `rh-gitleaks logout`.
 
 To reset your configuration, run `rh-gitleaks configure`
 
-## Advanced Usage
-
-The patterns server used by the tool can also be changed by setting the
-`RH_GITLEAKS_PATTERNS_SERVER` env variable.
-
 ## Usage (rh-gitleaks-gh-account)
 
 This is a wrapper around rh-gitleaks that runs it against all of the repos
@@ -119,3 +114,8 @@ Example:
 # Scan all the repos under leaktk
 rh-gitleaks-gh-account leaktk
 ```
+
+## Advanced Usage
+
+The patterns server used by the tool can also be changed by setting the
+`RH_GITLEAKS_PATTERNS_SERVER` env variable.
