@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import logging
 import sys
-import subprocess
 
 from rh_pre_commit import common
 from rh_pre_commit import templates
@@ -54,8 +53,8 @@ def pick_handler(args):
     A handler must take the args from the arg parser and return an exit code.
     """
 
-    if args.command == "update":
-        return common.update_package
+    if args.command == "upgrade":
+        return common.upgrade
 
     if args.command == "configure":
         return configure

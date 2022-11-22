@@ -7,6 +7,9 @@ import stat
 
 from argparse import ArgumentParser
 
+from pre_commit import main as pre_commit  # The pre-commit.com library
+from rh_pre_commit import config
+
 
 def create_parser(prog):
     """
@@ -19,8 +22,11 @@ def create_parser(prog):
 
     subparsers = parser.add_subparsers(dest="command")
 
-    subparsers.add_parser(
-        "update", help="Update the manager and hooks (global and current dir)"
+    upgrade_parser = subparsers.add_parser(
+        "upgrade", help="Upgrade the manager and hooks (global and current dir)"
+    )
+    upgrade_parser.add_argument(
+        "--branch", required=False, help="Which branch to use for upgrades"
     )
 
     install_parser = subparsers.add_parser(
@@ -84,11 +90,30 @@ def find_repos(prefix):
                 yield ("M", os.path.join(path, modpath))
 
 
-def update_package(_):
+def upgrade(args):
     """
-    A handler for updating the packages
+    A handler for upgrading the packages
     """
-    return 1  # TODO
+    # pylint: disable=import-outside-toplevel
+    import pip  # Import done here so the whole program doesn't require pip
+
+    # upgrade pre-commit hooks
+    for path in config.RH_MULTI_CONFIG_PATHS:
+        if not os.path.isfile(path):
+            continue
+
+        logging.info("Upgrading hooks defined in %s", path)
+        status = pre_commit.main(["autoupdate", f"--config={path}"])
+
+        if status:
+            logging.info("Error upgrading hooks defined in %s", path)
+            return status
+
+    logging.info("Upgrading tooling")
+    # pylint: disable=line-too-long
+    at_branch = f"@{args.branch}" if args.branch else ""
+    url = f"git+https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git{at_branch}#subdirectory=rh-pre-commit"
+    return pip.main(["install", "--upgrade", url])
 
 
 def list_repos(args):

@@ -1,6 +1,6 @@
 import logging
 import os
-import subprocess
+import subprocess  # nosec
 
 import rh_gitleaks
 from rh_pre_commit import templates
@@ -15,7 +15,7 @@ class Hook:
         return self.name
 
     def configure(self):
-        return subprocess.run(
+        return subprocess.run(  # nosec
             [
                 "git",
                 "config",
@@ -35,18 +35,20 @@ class Hook:
         or is enabled by default
         """
         config_value = (
-            subprocess.run(
+            subprocess.run(  # nosec
                 ["git", "config", "--bool", f"rh-hooks.{self.flag}"],
                 shell=False,
                 check=False,
                 capture_output=True,
             )
-            .stdout.decode().strip()
+            .stdout.decode()
+            .strip()
             .lower()
             or self.default_config_value
         )
 
         return config_value == "true"
+
 
 class CheckSecrets(Hook):
     """
