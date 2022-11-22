@@ -219,17 +219,15 @@ def run_gitleaks(args, callback=None, **kwargs):
     if not ((bin_path := gitleaks_bin_path()) and (p_path := patterns_path())):
         return 1
 
-    # Set default kwargs
-    kwargs = {
-        "timeout": 1200,
-        "capture_output": False,
-    } | kwargs
+    # Join provided and default kwargs
+    kwargs_with_defaults = {"timeout": 1200, "capture_output": False}
+    kwargs_with_defaults.update(kwargs)
 
     proc = subprocess.run(  # nosec
         [bin_path, f"--config-path={p_path}", *args],
         check=False,
         shell=False,
-        **kwargs,
+        **kwargs_with_defaults,
     )
 
     if callback:
