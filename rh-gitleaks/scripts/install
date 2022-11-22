@@ -10,4 +10,4 @@ else
   INSTALL_FLAGS="--user"
 fi
 
-$PIP_INSTALL .
+$PIP_INSTALL $INSTALL_FLAGS .

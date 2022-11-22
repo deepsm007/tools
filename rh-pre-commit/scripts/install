@@ -4,7 +4,7 @@ set -ex
 export USE_VENV=false
 source ./scripts/common
 
-cd ../rh-gitleaks && make install
+(cd ../rh-gitleaks && make install)
 
 if [ "$VENV_ROOT" != "" ] || [ $(id -u) -eq "0" ]; then
   INSTALL_FLAGS=""
@@ -12,4 +12,4 @@ else
   INSTALL_FLAGS="--user"
 fi
 
-$PIP_INSTALL .
+$PIP_INSTALL $INSTALL_FLAGS .
