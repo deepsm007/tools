@@ -259,7 +259,6 @@ def jwt_valid(token):
             return False
 
         logging.info("Token valid until %s", exp.strftime("%Y-%m-%d"))
-        logging.info("\n^^^ Please note this date! ^^^\n")
         return True
     except Exception as e:
         logging.error("Invalid Auth Token: %s", e)
