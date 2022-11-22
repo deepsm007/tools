@@ -115,6 +115,10 @@ Example:
 rh-gitleaks-gh-account leaktk
 ```
 
+**NOTE:** rh-gitleaks-gh-account exits when a 0 exit status even when leaks are
+found. This is meant for finding leaks across an account/org rather than
+setting up in a CI pipeline.
+
 ## Advanced Usage
 
 The patterns server used by the tool can also be changed by setting the
