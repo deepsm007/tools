@@ -18,7 +18,7 @@ SYNOPSIS
 
 OPTIONS
     gh-account:      A person's username
-    gh-organization: The name of a github organization form the URL
+    gh-organization: The name of a github organization from the URL
 """
 
 
