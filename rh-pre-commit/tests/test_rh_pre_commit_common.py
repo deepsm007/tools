@@ -1,7 +1,9 @@
 import os
 
+from argparse import Namespace
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
 from rh_pre_commit import common
 
@@ -82,3 +84,24 @@ class CommonTest(TestCase):
             expected.append(("M", os.path.join(file_test, "../.git/modules/git-file")))
 
             self.assertEqual(sorted(expected), sorted(common.find_repos(tmp_dir)))
+
+    @patch("logging.info")
+    @patch("rh_pre_commit.common.find_repos")
+    def test_list_repos(self, mock_find_repos, mock_logging_info):
+        repos = [
+            ("M", "/home/user/repo/.git/modules/foo"),
+            ("R", "/home/user/repo/.git"),
+        ]
+
+        mock_find_repos.return_value = repos
+
+        common.list_repos(Namespace(path="/home/user"))
+
+        for i, repo in enumerate(sorted(repos, key=lambda r: r[1])):
+            call = mock_logging_info.call_args_list[i]
+
+            # Check the type
+            self.assertEqual(call.args[1], repo[0])
+
+            # Check the path
+            self.assertEqual(call.args[2], repo[1])
