@@ -175,7 +175,7 @@ def install_hook(args, repo_path, content):
     return 0
 
 
-def install_hooks(args, content):
+def install(args, content):
     """
     Set up the pre-commit hook for multiple repos and optionally the
     init.templateDir

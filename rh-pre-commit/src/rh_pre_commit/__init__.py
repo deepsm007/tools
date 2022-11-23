@@ -7,7 +7,7 @@ from rh_pre_commit import templates
 from rh_pre_commit.hooks import hooks
 
 
-def run_hooks(_):
+def run(_):
     """
     A handler that runs the hooks
     """
@@ -41,11 +41,11 @@ def configure(args):
     return 0
 
 
-def install_hooks(args):
+def install(args):
     """
     A handler that sets up pre-commit file in the repos
     """
-    return common.install_hooks(args, templates.RH_PRE_COMMIT_HOOK)
+    return common.install(args, templates.RH_PRE_COMMIT_HOOK)
 
 
 def pick_handler(args):
@@ -65,9 +65,9 @@ def pick_handler(args):
         if args.check:
             return common.list_repos
 
-        return install_hooks
+        return install
 
-    return run_hooks
+    return run
 
 
 def main():

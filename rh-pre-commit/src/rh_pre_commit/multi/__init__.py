@@ -12,14 +12,14 @@ from rh_pre_commit import templates
 from rh_pre_commit import common
 
 
-def install_hooks(args):
+def install(args):
     """
     A handler that sets up pre-commit file
     """
-    return common.install_hooks(args, templates.RH_MULTI_PRE_COMMIT_HOOK)
+    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOK)
 
 
-def run_hooks(_):
+def run(_):
     """
     A handler that runs the pre-commit.com package
     """
@@ -96,9 +96,9 @@ def pick_handler(args):
         if args.check:
             return common.list_repos
 
-        return install_hooks
+        return install
 
-    return run_hooks
+    return run
 
 
 def main():
