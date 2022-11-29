@@ -31,7 +31,7 @@ def init_template_dir(value=None):
 
     Returns:
         if setting:
-            sucess := (True|False)
+            success := (True|False)
         if getting:
             path := (current dir string|None)
     """
