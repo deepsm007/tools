@@ -31,7 +31,7 @@ INSTALL_PYTHON={shlex.quote(sys.executable)}
 if [ -x "$INSTALL_PYTHON" ]; then
     exec "$INSTALL_PYTHON" -m rh_pre_commit
 elif command -v rh-pre-commit > /dev/null; then
-    exec rh-multi-pre-commit
+    exec rh-pre-commit
 else
     echo '`rh-pre-commit` not found.' 1>&2
     echo 'For more information: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/blob/main/rh-pre-commit/README.md' 1>&2
