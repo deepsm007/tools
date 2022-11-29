@@ -10,6 +10,14 @@ Please read over the patterns server docs before setting this up.
 
 [[_TOC_]]
 
+## Requirments
+
+You will need the following installed on your system:
+
+* `python3`
+* `pip`
+* `make`
+
 ## Supported Operating Systems
 
 * Linux (x86\_64)
@@ -17,51 +25,37 @@ Please read over the patterns server docs before setting this up.
 
 Arm64 support for Mac is planned.
 
-For additional OS support reach out to infosec@redhat.com
+For additional OS support reach out to infosec@redhat.com.
 
-## Notifications About Updates
+## Getting Started
 
-Please follow/subscribe-to the
-[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
-doc in The Source. There is a change log at the bottom that is updated when
-there are new releases.
+**NOTE:** If you are using this tool as a part of
+[rh-pre-commit](../rh-pre-commit), installing this tool is done automatically.
 
-## Setup and Upgrades
+At the end of this (assuming the defaults are applied):
 
-This section assumes you already have Python 3 and pip installed on your system.
+* `rh-gitleaks` and `rh-gitleaks-gh-account` will be installed.
+* rh-gitleaks will be logged in and have a 2 year patterns server token
 
-**NOTE:** If you are using this tool as a part of `rh-pre-commit`,
-setup and upgrades are already covered in `rh-pre-commit`'s docs.
 
-(To upgrade the tool, just run the pip or make install steps again)
-
-(Option 1) To install/upgrade from the **default branch**:
+**Pull a fresh copy of the repo**
 
 ```sh
-python3 -m pip install --upgrade "git+https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git#subdirectory=rh-gitleaks"
+rm -rf /tmp/infosec-tools
+git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git /tmp/infosec-tools
+# The rest of the commands assume you are in this subfolder of the repo
+cd /tmp/infosec-tools/rh-gitleaks
 ```
 
-(Option 2) To install/upgrade from a **specific branch**:
-```sh
-BRANCH="replace-me-with-the-desired-branch"
-python3 -m pip install --upgrade "git+https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git@${BRANCH}#subdirectory=rh-gitleaks"
-```
-
-(Option 3) To install/upgrade **using make**:
+**Install/Update the tools**
 
 ```sh
-git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
-cd tools/rh-gitleaks
+# NOTE: If you need to install from a specific branch
+# run a "git checkout <branch-name>" here
+
+# This installs the tools but you will still need to configure them
 make install
 ```
-
-That should place `rh-gitleaks` and `rh-gitleaks-gh-account` on your path. If
-not, replace `rh-gitleaks` with `python3 -m rh_gitleaks` when running the
-commands below. You are also welcome to submit an issue on this repo if you are
-having trouble with the install process.
-
-To use the tool you'll need to configure API credentials so it can access the
-patterns provided by the Pattern Distribution Server.
 
 To have the tool walk you through the configuration:
 
@@ -74,9 +68,16 @@ to run `login` and update your token before the expiration date.
 As of writing this a token lasts 2 years, so replacing your token on a yearly
 basis is a good practice.
 
-**NOTE:** If you are using a service account, as described in the pattern
+**NOTE:** If you are using a service account as described in the pattern
 distribution server's docs, you will enter in the API token provided from that
 process instead of going to the server to get token.
+
+## Notifications About Updates
+
+Please follow/subscribe-to the
+[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
+doc in The Source. There is a change log at the bottom that is updated when
+there are new releases.
 
 ## Usage (rh-gitleaks)
 
@@ -125,3 +126,17 @@ setting up in a CI pipeline.
 
 The patterns server used by the tool can also be changed by setting the
 `RH_GITLEAKS_PATTERNS_SERVER` env variable.
+
+## Troubleshooting
+
+This section covers some basic troubleshooting steps. If you still need help,
+please email infosec@redhat.com for assistance and provide a link to this
+README for context.
+
+### Command not found
+
+If you run the command and get a `command not found` error, you can
+reference the commands through their modules directly.
+
+* `rh-gitleaks` becomes `python3 -m rh_gitleaks`
+* `rh-gitleaks-gh-account` becomes `python3 -m rh_gitleaks.gh_account`
