@@ -33,22 +33,30 @@ This section assumes you already have Python 3 and pip installed on your system.
 **NOTE:** If you are using this tool as a part of `rh-pre-commit`,
 setup and upgrades are already covered in `rh-pre-commit`'s docs.
 
-To install/upgrade from the **default branch**:
+(Option 1) To install/upgrade from the **default branch**:
 
 ```sh
 python3 -m pip install --upgrade "git+https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git#subdirectory=rh-gitleaks"
 ```
 
-To install/upgrade from a **specific branch**:
+(Option 2) To install/upgrade from a **specific branch**:
 ```sh
 BRANCH="replace-me-with-the-desired-branch"
 python3 -m pip install --upgrade "git+https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git@${BRANCH}#subdirectory=rh-gitleaks"
 ```
 
-This should place `rh-gitleaks` on your path. If not, replace `rh-gitleaks`
-with `python3 -m rh_gitleaks` when running the commands below. You are also
-welcome to submit an issue on this repo if you are having trouble with the
-install process.
+(Option 3) To install/upgrade **using make**:
+
+```sh
+git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+cd tools/rh-gitleaks
+make install
+```
+
+That should place `rh-gitleaks` and `rh-gitleaks-gh-account` on your path. If
+not, replace `rh-gitleaks` with `python3 -m rh_gitleaks` when running the
+commands below. You are also welcome to submit an issue on this repo if you are
+having trouble with the install process.
 
 To use the tool you'll need to configure API credentials so it can access the
 patterns provided by the Pattern Distribution Server.
@@ -68,7 +76,7 @@ basis is a good practice.
 distribution server's docs, you will enter in the API token provided from that
 process instead of going to the server to get token.
 
-## Usage
+## Usage (rh-gitleaks)
 
 All of the gitleaks args are expected to work except for `--config-path`
 because that is managed by the wrapper.
@@ -93,3 +101,21 @@ To reset your configuration, run `rh-gitleaks configure`
 
 The patterns server used by the tool can also be changed by setting the
 `RH_GITLEAKS_PATTERNS_SERVER` env variable.
+
+## Usage (rh-gitleaks-gh-account)
+
+This is a wrapper around rh-gitleaks that runs it against all of the repos
+under an account or org.
+
+If the cli tool was not installed on your path, you can also call it via:
+`python3 -m rh_gitleaks.gh_account`.
+
+Once rh-gitleaks is setup, you can run `rh-gitleaks-gh-account --help` for
+more info on how to use this tool.
+
+Example:
+
+```sh
+# Scan all the repos under leaktk
+rh-gitleaks-gh-account leaktk
+```

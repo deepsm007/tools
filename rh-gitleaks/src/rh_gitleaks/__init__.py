@@ -209,7 +209,7 @@ def patterns_path():
     return config.PATTERNS_PATH
 
 
-def run_gitleaks(args):
+def run_gitleaks(args, callback=None, **kwargs):
     """
     Run the gitleaks command without capturing stdout/stderr
 
@@ -219,13 +219,21 @@ def run_gitleaks(args):
     if not ((bin_path := gitleaks_bin_path()) and (p_path := patterns_path())):
         return 1
 
+    # Set default kwargs
+    kwargs = {
+        "timeout": 1200,
+        "capture_output": False,
+    } | kwargs
+
     proc = subprocess.run(  # nosec
         [bin_path, f"--config-path={p_path}", *args],
         check=False,
-        capture_output=False,
         shell=False,
-        timeout=1200,
+        **kwargs,
     )
+
+    if callback:
+        callback(proc)
 
     return proc.returncode
 
