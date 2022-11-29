@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 
 from pre_commit import main as pre_commit  # The pre-commit.com library
 from rh_pre_commit import config
+from rh_pre_commit import git
 
 
 def create_parser(prog):
@@ -42,9 +43,19 @@ def create_parser(prog):
         "--path", default=".", required=False, help="The path to install the hooks in"
     )
 
-    subparsers.add_parser(
+    configure_parser = subparsers.add_parser(
         "configure",
         help=f"Reset the global {prog} config",
+    )
+    configure_parser.add_argument(
+        "--configure-git-template",
+        action="store_true",
+        help="Set init.templateDir if not set and configure the hook for new repos",
+    )
+    configure_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing init.templateDir pre-commit hook",
     )
 
     return parser
@@ -127,37 +138,68 @@ def install_hook(args, repo_path, content):
     hooks_dir = os.path.join(repo_path, "hooks")
     hook_path = os.path.join(hooks_dir, "pre-commit")
 
-    # Make sure the hooks dir exists
+    # Make sure the path leading up to the hooks dir exists
     if not os.path.exists(hooks_dir):
         try:
-            os.mkdir(hooks_dir)
+            os.makedirs(hooks_dir)
         except Exception:
             logging.error("Could not create hooks dir: %s", hooks_dir)
-            return
+            return 1
 
     if os.path.exists(hook_path):
         if not args.force:
             logging.error("%s already exists. Use --force to overwrite it.", hook_path)
-            return
+            return 1
 
         try:
             os.unlink(hook_path)
         except Exception:
             logging.error("Could not unlink %s", hook_path)
-            return
+            return 1
 
     try:
         with open(hook_path, "w", encoding="UTF-8") as hook_file:
             hook_file.write(content)
     except Exception:
         logging.error("Could not write %s", hook_path)
-        return
+        return 1
 
     try:
         st = os.stat(hook_path)
         os.chmod(hook_path, st.st_mode | stat.S_IXUSR)
     except Exception:
         logging.error("Could not make %s executable", hook_path)
-        return
+        return 1
 
-    logging.error("Configured %s", hook_path)
+    logging.info("Configured %s", hook_path)
+    return 0
+
+
+def install_hooks(args, content):
+    """
+    Set up the pre-commit hook for multiple repos and optionally the
+    init.templateDir
+    """
+    status = 0
+
+    for _, repo_path in find_repos(args.path):
+        if install_hook(args, repo_path, content) != 0:
+            # Set the status but keep installing it in the other repos
+            status = 1
+
+    return status
+
+
+def configure_git_template(args, content):
+    template_dir = git.init_template_dir()
+
+    # Try setting it if it doesn't exist
+    if not template_dir:
+        git.init_template_dir(config.DEFAULT_GIT_INIT_TEMPLATE_DIR)
+        template_dir = git.init_template_dir()
+
+    if not template_dir:
+        logging.error("Could not configure template dir %s", template_dir)
+        return 1
+
+    return install_hook(args, template_dir, content)

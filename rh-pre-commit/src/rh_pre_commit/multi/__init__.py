@@ -16,9 +16,7 @@ def install_hooks(args):
     """
     A handler that sets up pre-commit file
     """
-
-    for _, repo_path in common.find_repos(args.path):
-        common.install_hook(args, repo_path, templates.RH_MULTI_PRE_COMMIT_HOOK)
+    return common.install_hooks(args, templates.RH_MULTI_PRE_COMMIT_HOOK)
 
 
 def run_hooks(_):
@@ -43,9 +41,12 @@ def configure(args):
     """
     A handler that resets the config for the tool
     """
-    # Apply this to the individual hooks too
-    if rh_pre_commit.configure(args) != 0:
-        return 1
+    if args.configure_git_template:
+        if common.configure_git_template(args, templates.RH_MULTI_PRE_COMMIT_HOOK) != 0:
+            return 1
+
+        # So that rh_pre_commit doesn't apply it
+        args.configure_git_template = False
 
     config_path = config.RH_MULTI_GLOBAL_CONFIG_PATH
     if os.path.exists(config_path):
@@ -70,6 +71,11 @@ def configure(args):
         return 1
 
     logging.info("Config updated %s", config_path)
+
+    # Apply this to the individual hooks too
+    if rh_pre_commit.configure(args) != 0:
+        return 1
+
     return 0
 
 

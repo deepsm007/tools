@@ -1,7 +1,7 @@
 import os
 
 HOME_DIR = os.path.expanduser("~")
-
+DEFAULT_GIT_INIT_TEMPLATE_DIR = os.path.join(HOME_DIR, ".git-template")
 XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME_DIR, ".config")
 
 XDG_CACHE_HOME = os.environ.get("XDG_CACHE_HOME") or os.path.join(HOME_DIR, ".cache")

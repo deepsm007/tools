@@ -14,16 +14,16 @@ class CommonTest(TestCase):
         parser = common.create_parser("foo-bar-baz")
         self.assertEqual(parser.prog, "foo-bar-baz")
 
-        # Test install args because we don't want to mess these up
-        tests = [
+        # Test install args because we really don't want to mess these up
+        install_tests = (
             ("--check --force", True, True),
             ("--force", False, True),
             ("--check", True, False),
             ("--check", True, False),
             ("", False, False),
-        ]
+        )
 
-        for args, check, force in tests:
+        for args, check, force in install_tests:
             ns = parser.parse_args(["install", *args.split()])
             self.assertEqual(
                 ns.check,
@@ -34,6 +34,26 @@ class CommonTest(TestCase):
                 ns.force,
                 force,
                 f"force: {ns.force} != {force} for {args}",
+            )
+
+        # Test configure args
+        configure_tests = (
+            ("--configure-git-template", True, False),
+            ("--configure-git-template --force", True, True),
+            ("", False, False),
+        )
+
+        for args, configure_git_template, force in configure_tests:
+            ns = parser.parse_args(["configure", *args.split()])
+            self.assertEqual(
+                ns.configure_git_template,
+                configure_git_template,
+                f"check: {ns.configure_git_template} != {configure_git_template} for {args}",
+            )
+            self.assertEqual(
+                ns.force,
+                force,
+                f"check: {ns.force} != {force} for {args}",
             )
 
     def test_find_repos(self):

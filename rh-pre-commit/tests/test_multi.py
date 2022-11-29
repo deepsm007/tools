@@ -170,9 +170,15 @@ class MultiPreCommitHookTest(TestCase):
             # Not to the empty dir
             self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
 
+    @patch("rh_pre_commit.git.init_template_dir")
     @patch("rh_gitleaks.configure")
     @patch("subprocess.run")
-    def test_configure(self, mock_subprocess_run, mock_rh_gitleaks_configure):
+    def test_configure(
+        self,
+        mock_subprocess_run,
+        mock_rh_gitleaks_configure,
+        mock_git_init_template_dir,
+    ):
         mock_subprocess_run.return_value.returncode = 0
         mock_subprocess_run.return_value.stdout = "true"
         mock_rh_gitleaks_configure.return_value = 0
@@ -180,11 +186,20 @@ class MultiPreCommitHookTest(TestCase):
         with TemporaryDirectory() as tmp_dir:
             config_path = os.path.join(tmp_dir, "config.yaml")
             config.RH_MULTI_GLOBAL_CONFIG_PATH = config_path
+            init_template_dir = os.path.join(tmp_dir, ".git-template")
+            hook_path = os.path.join(init_template_dir, "hooks", "pre-commit")
+            mock_git_init_template_dir.return_value = init_template_dir
+
+            # The template hook path shouldn't exist yet
+            self.assertFalse(os.path.exists(hook_path))
 
             # It writes the config file
             self.assertFalse(os.path.exists(config_path))
-            multi.configure(Namespace())
+            multi.configure(Namespace(configure_git_template=False))
             self.assertTrue(os.path.exists(config_path))
+
+            # The template hook path shouldn't exist yet
+            self.assertFalse(os.path.exists(hook_path))
 
             # It resets the config file
             with open(config_path, "w", encoding="UTF-8") as conf_file:
@@ -193,7 +208,12 @@ class MultiPreCommitHookTest(TestCase):
             with open(config_path, "r", encoding="UTF-8") as conf_file:
                 self.assertIn("junk", conf_file.read())
 
-            multi.configure(Namespace())
+            multi.configure(Namespace(configure_git_template=True))
 
             with open(config_path, "r", encoding="UTF-8") as conf_file:
                 self.assertNotIn("junk", conf_file.read())
+
+            # The template hook path should exist now that the flag was set to
+            # True
+            with open(hook_path, encoding="UTF-8") as h:
+                self.assertIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())

@@ -23,10 +23,14 @@ def run_hooks(_):
     return 0
 
 
-def configure(_):
+def configure(args):
     """
     A handler that resets the config for the tool
     """
+    if args.configure_git_template:
+        if common.configure_git_template(args, templates.RH_PRE_COMMIT_HOOK) != 0:
+            return 1
+
     for hook in hooks:
         if hook.configure() != 0:
             logging.error("Error Resetting Hook: %s", hook)
@@ -41,9 +45,7 @@ def install_hooks(args):
     """
     A handler that sets up pre-commit file in the repos
     """
-
-    for _, repo_path in common.find_repos(args.path):
-        common.install_hook(args, repo_path, templates.RH_PRE_COMMIT_HOOK)
+    return common.install_hooks(args, templates.RH_PRE_COMMIT_HOOK)
 
 
 def pick_handler(args):
