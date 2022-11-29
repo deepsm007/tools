@@ -33,6 +33,8 @@ This section assumes you already have Python 3 and pip installed on your system.
 **NOTE:** If you are using this tool as a part of `rh-pre-commit`,
 setup and upgrades are already covered in `rh-pre-commit`'s docs.
 
+(To upgrade the tool, just run the pip or make install steps again)
+
 (Option 1) To install/upgrade from the **default branch**:
 
 ```sh

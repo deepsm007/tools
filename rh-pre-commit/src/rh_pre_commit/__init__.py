@@ -53,8 +53,8 @@ def pick_handler(args):
     A handler must take the args from the arg parser and return an exit code.
     """
 
-    if args.command == "upgrade":
-        return common.upgrade
+    if args.command == "update":
+        return common.update
 
     if args.command == "configure":
         return configure

@@ -69,7 +69,7 @@ def configure(args):
         logging.error("Could not write config %s", config_path)
         return 1
 
-    logging.info("Config upgraded %s", config_path)
+    logging.info("Config updated %s", config_path)
     return 0
 
 
@@ -80,8 +80,8 @@ def pick_handler(args):
     A handler must take the args from the arg parser and return an exit code.
     """
 
-    if args.command == "upgrade":
-        return common.upgrade
+    if args.command == "update":
+        return common.update
 
     if args.command == "configure":
         return configure
