@@ -17,6 +17,15 @@ Please read over the patterns server docs before setting this up.
 
 Arm64 support for Mac is planned.
 
+For additional OS support reach out to infosec@redhat.com
+
+## Notifications About Updates
+
+Please follow/subscribe-to the
+[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
+doc in The Source. There is a change log at the bottom that is updated when
+there are new releases.
+
 ## Setup and Upgrades
 
 This section assumes you already have Python 3 and pip installed on your system.
@@ -30,7 +39,7 @@ To install/upgrade from the **default branch**:
 python3 -m pip install --upgrade "git+https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git#subdirectory=rh-gitleaks"
 ```
 
-To install from a **specific branch**:
+To install/upgrade from a **specific branch**:
 ```sh
 BRANCH="replace-me-with-the-desired-branch"
 python3 -m pip install --upgrade "git+https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git@${BRANCH}#subdirectory=rh-gitleaks"
@@ -79,13 +88,6 @@ To reset/refresh your Pattern Distribution Server API token, run
 To remove your Pattern Distribution Server API token, run `rh-gitleaks logout`.
 
 To reset your configuration, run `rh-gitleaks configure`
-
-## Notifications About Updates
-
-Please follow/subscribe-to the
-[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
-doc in The Source. There is a change log at the bottom that is updated when
-there are new releases of the tool.
 
 ## Advanced Usage
 

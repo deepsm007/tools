@@ -20,14 +20,8 @@ cd ../{{tooldir}}/
 
 # Read the README
 
-sudo make install
+make install
 ```
-
-### Add `./bin` to Your Path
-
-If you source the bin folder in this project. Most tools should be available
-to you. There might be some that can't be added this way. If you see a tool
-missing, please check the project's README or file an issue on the project.
 
 ### Install RPM
 

@@ -166,7 +166,12 @@ def load_auth_token():
     """
     try:
         with open(config.PATTERNS_AUTH_JWT_PATH, "r", encoding="UTF-8") as f:
-            return f.read()
+            auth_jwt = f.read()
+
+            if jwt_valid(auth_jwt):
+                return auth_jwt
+
+            return None
     except Exception:
         logging.error("Could not find auth token. Try: rh-gitleaks login")
         return None
