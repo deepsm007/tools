@@ -18,14 +18,16 @@ class CommonTest(TestCase):
 
         # Test install args because we really don't want to mess these up
         install_tests = (
-            ("--check --force", True, True),
-            ("--force", False, True),
-            ("--check", True, False),
-            ("--check", True, False),
-            ("", False, False),
+            ("--check --force", True, True, "."),
+            ("--force", False, True, "."),
+            ("--check", True, False, "."),
+            ("--check --force --path foo", True, True, "foo"),
+            ("--force --path=bar", False, True, "bar"),
+            ("--check --path baz", True, False, "baz"),
+            ("", False, False, "."),
         )
 
-        for args, check, force in install_tests:
+        for args, check, force, path in install_tests:
             ns = parser.parse_args(["install", *args.split()])
             self.assertEqual(
                 ns.check,
@@ -36,6 +38,11 @@ class CommonTest(TestCase):
                 ns.force,
                 force,
                 f"force: {ns.force} != {force} for {args}",
+            )
+            self.assertEqual(
+                ns.path,
+                path,
+                f"path: {ns.path} != {path} for {args}",
             )
 
         # Test configure args
