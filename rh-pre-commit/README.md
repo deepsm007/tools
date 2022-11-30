@@ -202,13 +202,13 @@ package without having to remove the entire hook.
 To turn it off a repo:
 
 ```sh
-git config --bool rh-hooks.checkSecrets false
+git config --bool rh-pre-commit.checkSecrets false
 ```
 
 To turn it on a repo:
 
 ```sh
-git config --bool rh-hooks.checkSecrets true
+git config --bool rh-pre-commit.checkSecrets true
 ```
 
 ### Updating pre-commit.com style hooks

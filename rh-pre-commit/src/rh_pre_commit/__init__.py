@@ -4,21 +4,21 @@ import sys
 
 from rh_pre_commit import common
 from rh_pre_commit import templates
-from rh_pre_commit.hooks import hooks
+from rh_pre_commit.checks import checks
 
 
 def run(_):
     """
-    A handler that runs the hooks
+    A handler that runs the checks
     """
-    for hook in hooks:
-        if hook.enabled():
-            logging.info("Running Hook: %s", hook)
+    for check in checks:
+        if check.enabled():
+            logging.info("Running Check: %s", check)
 
-            if hook.run() != 0:
+            if check.run() != 0:
                 return 1
         else:
-            logging.info("Skipping Hook: %s", hook)
+            logging.info("Skipping Check: %s", check)
 
     return 0
 
@@ -31,12 +31,12 @@ def configure(args):
         if common.configure_git_template(args, templates.RH_PRE_COMMIT_HOOK) != 0:
             return 1
 
-    for hook in hooks:
-        if hook.configure() != 0:
-            logging.error("Error Resetting Hook: %s", hook)
+    for check in checks:
+        if check.configure() != 0:
+            logging.error("Error Resetting Check: %s", check)
             return 1
 
-        logging.info("Configured Hook: %s", hook)
+        logging.info("Configured Check: %s", check)
 
     return 0
 
