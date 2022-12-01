@@ -362,4 +362,4 @@ if __name__ == "__main__":
         level=logging.INFO,
         format="%(message)s",
     )
-    sys.exist(main())
+    sys.exit(main())
