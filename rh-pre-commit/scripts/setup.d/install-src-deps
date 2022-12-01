@@ -1,0 +1,3 @@
+#! /bin/sh
+
+$PIP_INSTALL ../rh-gitleaks .

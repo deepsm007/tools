@@ -1,7 +1,0 @@
-repos:
-  - repo: local
-    hooks:
-      - id: rh-pre-commit
-        name: Run standard RH pre-commit checks
-        language: system
-        entry: rh-pre-commit
