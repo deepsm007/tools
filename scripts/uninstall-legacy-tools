@@ -50,12 +50,9 @@ def sudo_required(path):
     return not os.access(os.path.dirname(path), os.W_OK | os.X_OK)
 
 
-def remove(path):
+def uninstall_command(path):
     become = "sudo" if sudo_required(path) else ""
-    command = f"{become} rm -f {path}".strip()
-    print("Running", command)
-
-    return os.system(command)
+    return f"{become} rm -f {path}".strip()
 
 
 def main():
@@ -65,17 +62,21 @@ def main():
         print("No legacy scripts were found!")
         return 0
 
-    print("The following scripts were found:")
+    commands = []
+    print("This script will run the following commands: \n")
     for script_path in legacy_scripts:
-        print(f"*", script_path)
+        command = uninstall_command(script_path)
+        commands.append(command)
+        print(command)
 
-    if (resp := input("Uninstall [y/n]: ").lower().strip()) != "y":
+    if (resp := input("\nContinue? [y/n]: ").lower().strip()) != "y":
         print("Aborting...")
         return 1
 
     status = 0
-    for script_path in legacy_scripts:
-        if remove(script_path) != 0:
+    for command in commands:
+        print("Running", command)
+        if os.system(command) != 0:
             status = 1
 
     return status
