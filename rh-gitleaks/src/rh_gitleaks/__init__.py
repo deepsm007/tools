@@ -329,7 +329,7 @@ def logout(show_msg=True):
     Returns:
         A return code for sys.exit
     """
-    if os.path.exists(config.PATTERNS_AUTH_JWT_PATH):
+    if os.path.lexists(config.PATTERNS_AUTH_JWT_PATH):
         try:
             os.remove(config.PATTERNS_AUTH_JWT_PATH)
         except Exception:

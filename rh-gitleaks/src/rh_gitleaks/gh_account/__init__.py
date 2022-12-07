@@ -1,7 +1,7 @@
 import sys
 import json
 import logging
-import subprocess # nosec
+import subprocess  # nosec
 
 import requests
 

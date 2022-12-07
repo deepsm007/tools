@@ -121,7 +121,7 @@ class MultiPreCommitHookTest(TestCase):
                 d = os.path.join(repo_dir, "hooks")
 
                 if touch:
-                    if not os.path.exists(d):
+                    if not os.path.lexists(d):
                         os.makedirs(d)
 
                     with open(os.path.join(d, "pre-commit"), "w", encoding="UTF-8"):
@@ -149,7 +149,7 @@ class MultiPreCommitHookTest(TestCase):
                 self.assertNotIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())
 
             # Not to the empty dir
-            self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
+            self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
 
             #
             # Now with --force
@@ -168,7 +168,7 @@ class MultiPreCommitHookTest(TestCase):
                 self.assertIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())
 
             # Not to the empty dir
-            self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
+            self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
 
     @patch("rh_pre_commit.git.init_template_dir")
     @patch("rh_gitleaks.configure")
@@ -191,15 +191,15 @@ class MultiPreCommitHookTest(TestCase):
             mock_git_init_template_dir.return_value = init_template_dir
 
             # The template hook path shouldn't exist yet
-            self.assertFalse(os.path.exists(hook_path))
+            self.assertFalse(os.path.lexists(hook_path))
 
             # It writes the config file
-            self.assertFalse(os.path.exists(config_path))
+            self.assertFalse(os.path.lexists(config_path))
             multi.configure(Namespace(configure_git_template=False))
-            self.assertTrue(os.path.exists(config_path))
+            self.assertTrue(os.path.lexists(config_path))
 
             # The template hook path shouldn't exist yet
-            self.assertFalse(os.path.exists(hook_path))
+            self.assertFalse(os.path.lexists(hook_path))
 
             # It resets the config file
             with open(config_path, "w", encoding="UTF-8") as conf_file:

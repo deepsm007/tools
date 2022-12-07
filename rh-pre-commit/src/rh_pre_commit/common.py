@@ -139,14 +139,14 @@ def install_hook(args, repo_path, content):
     hook_path = os.path.join(hooks_dir, "pre-commit")
 
     # Make sure the path leading up to the hooks dir exists
-    if not os.path.exists(hooks_dir):
+    if not os.path.lexists(hooks_dir):
         try:
             os.makedirs(hooks_dir)
         except Exception:
             logging.error("Could not create hooks dir: %s", hooks_dir)
             return 1
 
-    if os.path.exists(hook_path):
+    if os.path.lexists(hook_path):
         if not args.force:
             logging.error("%s already exists. Use --force to overwrite it.", hook_path)
             return 1

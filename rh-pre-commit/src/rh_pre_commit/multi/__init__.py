@@ -49,14 +49,14 @@ def configure(args):
         args.configure_git_template = False
 
     config_path = config.RH_MULTI_GLOBAL_CONFIG_PATH
-    if os.path.exists(config_path):
+    if os.path.lexists(config_path):
         try:
             os.remove(config_path)
         except Exception:
             logging.error("Could not unlink %s", config_path)
             return 1
 
-    if not os.path.exists(config.CONFIG_DIR):
+    if not os.path.lexists(config.CONFIG_DIR):
         try:
             os.makedirs(config.CONFIG_DIR)
         except Exception:

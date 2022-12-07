@@ -90,7 +90,7 @@ class PreCommitHookTest(TestCase):
                 d = os.path.join(repo_dir, "hooks")
 
                 if touch:
-                    if not os.path.exists(d):
+                    if not os.path.lexists(d):
                         os.makedirs(d)
 
                     with open(os.path.join(d, "pre-commit"), "w", encoding="UTF-8"):
@@ -118,7 +118,7 @@ class PreCommitHookTest(TestCase):
                 self.assertNotIn("378a113b-5011-4170-9dd7-9ee9e37366b3", h.read())
 
             # Not to the empty dir
-            self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
+            self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
 
             #
             # Now with --force
@@ -137,7 +137,7 @@ class PreCommitHookTest(TestCase):
                 self.assertIn("378a113b-5011-4170-9dd7-9ee9e37366b3", h.read())
 
             # Not to the empty dir
-            self.assertFalse(os.path.exists(os.path.join(just_a_dir, ".git")))
+            self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
 
     @patch("rh_pre_commit.git.init_template_dir")
     @patch("rh_pre_commit.checks")
@@ -151,7 +151,7 @@ class PreCommitHookTest(TestCase):
             mock_git_init_template_dir.return_value = init_template_dir
 
             # The template hook path shouldn't exist yet
-            self.assertFalse(os.path.exists(hook_path))
+            self.assertFalse(os.path.lexists(hook_path))
 
             mock_check.reset_mock()
             mock_check.configure.return_value = 0
@@ -159,7 +159,7 @@ class PreCommitHookTest(TestCase):
             self.assertEqual(status, 0)
 
             # The template hook path shouldn't exist yet
-            self.assertFalse(os.path.exists(hook_path))
+            self.assertFalse(os.path.lexists(hook_path))
 
             mock_check.reset_mock()
             mock_check.configure.return_value = 1
