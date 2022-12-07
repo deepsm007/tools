@@ -66,6 +66,7 @@ cd /tmp/infosec-tools/rh-pre-commit
 # run a "git checkout <branch-name>" here
 
 # This installs the tools but you will still need to configure them
+python3 -m pip install --upgrade --user pip
 make install
 ```
 
@@ -77,7 +78,7 @@ make install
 # and configures the hook in the template dir
 # --force applies the hook to your init.templateDir even if one already exists
 
-rh-multi-pre-commit configure --configure-git-template --force
+python3 -m rh_pre_commit.multi configure --configure-git-template --force
 ```
 
 **Enable the hook in your existing repos**
@@ -93,7 +94,7 @@ rh-multi-pre-commit configure --configure-git-template --force
 # --force tells install to replace existing hooks. Without this option it
 # will skip those but note it in the output.
 
-rh-multi-pre-commit install --force --path ~/
+python3 -m rh_pre_commit.multi install --force --path ~/
 ```
 
 And you should be all set!
@@ -156,15 +157,15 @@ This section covers how to reset the config back to the defaults.
 If you're using rh-multi-pre-commit:
 
 ```sh
-# Run rh-multi-pre-commit configure --help to understand these flags
-rh-multi-pre-commit configure --configure-git-template --force
+# Run python3 -m rh_pre_commit.multi configure --help to understand these flags
+python3 -m rh_pre_commit.multi configure --configure-git-template --force
 ```
 
 If you're using rh-pre-commit:
 
 ```sh
-# Run rh-pre-commit configure --help to understand these flags
-rh-pre-commit configure --configure-git-template --force
+# Run python3 -m rh_pre_commit configure --help to understand these flags
+python3 -m rh_pre_commit configure --configure-git-template --force
 ```
 
 ### Enabling for Ad-Hoc Repos
@@ -176,15 +177,15 @@ set or want to swap out the hooks in a specific repo.
 If you're using rh-multi-pre-commit:
 
 ```sh
-# Run rh-multi-pre-commit install --help to understand these flags
-rh-multi-pre-commit install --force --path /path/to/repo
+# Run python3 -m rh_pre_commit.multi install --help to understand these flags
+python3 -m rh_pre_commit.multi install --force --path /path/to/repo
 ```
 
 If you're using rh-pre-commit:
 
 ```sh
-# Run rh-pre-commit install --help to understand these flags
-rh-pre-commit install --force --path /path/to/repo
+# Run python3 -m rh_pre_commit install --help to understand these flags
+python3 -m rh_pre_commit install --force --path /path/to/repo
 ```
 
 ### Ignoring False Leak Positives
@@ -220,7 +221,7 @@ To update the global pre-commit.com style hooks and the ones defined
 in your project's current directory run:
 
 ```
-rh-multi-pre-commit update
+python3 -m rh_pre_commit.multi update
 ```
 
 This will list the config files it found and is running updates for.
