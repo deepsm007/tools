@@ -226,7 +226,7 @@ def run_gitleaks(args, callback=None, **kwargs):
         return 1
 
     # Join provided and default kwargs
-    kwargs_with_defaults = {"timeout": 1200, "capture_output": False}
+    kwargs_with_defaults = {"timeout": 1200}
     kwargs_with_defaults.update(kwargs)
 
     proc = subprocess.run(  # nosec

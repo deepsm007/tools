@@ -5,7 +5,7 @@ def run(*args, **kwargs):
     """
     A small wrapper around git to avoid duplicating this code
     """
-    kwargs_with_defaults = {"capture_output": False, "timeout": 3600}
+    kwargs_with_defaults = {"timeout": 3600}
     kwargs_with_defaults.update(kwargs)
 
     return subprocess.run(  # nosec
@@ -22,7 +22,11 @@ def config(name, value=None, flags=None):
     if value:
         args.append(value)
 
-    return run(*args, capture_output=True)
+    return run(
+        *args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def init_template_dir(value=None):

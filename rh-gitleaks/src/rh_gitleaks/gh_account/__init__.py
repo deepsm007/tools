@@ -1,6 +1,7 @@
 import sys
 import json
 import logging
+import subprocess
 
 import requests
 
@@ -74,7 +75,8 @@ def scan_namespaces(namespaces, timeout=60):
             logging.info("Scanning %s", repo["html_url"])
             run_gitleaks(
                 ("-q", f"--repo-url={repo['html_url']}"),
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
                 callback=prety_print_output,
             )
 

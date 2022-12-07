@@ -14,8 +14,10 @@ class GitTest(TestCase):
         # Confirm some defaults
         self.assertFalse(call.kwargs["shell"])
         self.assertFalse(call.kwargs["check"])
-        self.assertFalse(call.kwargs["capture_output"])
         self.assertIn("timeout", call.kwargs)
+
+        # Py 3.6 compat
+        self.assertNotIn("capture_output", call.kwargs)
 
         # Confirm the command format
         self.assertEqual(call.args[0], ["git", "ls-remote", "foo"])
