@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A wrapper around gitleaks to integrate with Red Hat patterns"
 authors = [{ name="Red Hat InfoSec", email="infosec@redhat.com" }]
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.6"
 dependencies = ["PyJWT", "requests"]
 classifiers = [
   "Programming Language :: Python :: 3",

@@ -36,14 +36,15 @@ def is_legacy_script(script_path):
 
 
 def locate_legacy_scripts():
-    return (
-        script_path
-        for exec_path in os.environ["PATH"].split(":")
-        for path, _, files in os.walk(exec_path)
-        for file in files
-        if file in potential_legacy_scripts
-        if is_legacy_script(script_path := os.path.join(path, file))
-    )
+    for exec_path in os.environ["PATH"].split(":"):
+        for path, _, files in os.walk(exec_path):
+            for file in files:
+                if file not in potential_legacy_scripts:
+                    continue
+
+                script_path = os.path.join(path, file)
+                if is_legacy_script(script_path):
+                    yield script_path
 
 
 def sudo_required(path):
@@ -69,7 +70,8 @@ def main():
         commands.append(command)
         print(command)
 
-    if (resp := input("\nContinue? [y/n]: ").lower().strip()) != "y":
+    resp = input("\nContinue? [y/n]: ").lower().strip()
+    if resp != "y":
         print("Aborting...")
         return 1
 
