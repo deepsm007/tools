@@ -191,7 +191,8 @@ def patterns_path():
     if patterns_update_needed(config.PATTERNS_PATH):
         logging.info("Downloading patterns from %s", config.PATTERNS_SERVER_URL)
 
-        if not (auth_token := load_auth_token()):
+        auth_token = load_auth_token()
+        if not auth_token:
             return None
 
         try:
@@ -216,7 +217,12 @@ def run_gitleaks(args, callback=None, **kwargs):
     Returns:
         the exit status
     """
-    if not ((bin_path := gitleaks_bin_path()) and (p_path := patterns_path())):
+    bin_path = gitleaks_bin_path()
+    if not bin_path:
+        return 1
+
+    p_path = patterns_path()
+    if not p_path:
         return 1
 
     # Join provided and default kwargs
