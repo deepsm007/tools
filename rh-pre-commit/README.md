@@ -8,7 +8,7 @@ for your project.
 
 [[_TOC_]]
 
-## Requirments
+## Requirements
 
 You will need the following installed on your system:
 
@@ -65,8 +65,10 @@ cd /tmp/infosec-tools/rh-pre-commit
 # NOTE: If you need to install from a specific branch
 # run a "git checkout <branch-name>" here
 
-# This installs the tools but you will still need to configure them
+# (Recommended) Upgrade pip
 python3 -m pip install --upgrade --user pip
+
+# This installs the tools but you will still need to configure them
 make install
 ```
 
@@ -144,7 +146,7 @@ rh-pre-commit is just the set of checks provided in this repo.
 rh-multi-pre-commit extends [pre-commit.com](https://pre-commit.com) to
 also check a config file at `~/.config/pre-commit/config.yaml`.
 
-Any of the Getting Started steps that referecne rh-multi-pre-commit should
+Any of the Getting Started steps that reference rh-multi-pre-commit should
 also work with rh-pre-commit if you don't want support for multiple pre-commit
 hooks in a repo.
 
@@ -191,7 +193,7 @@ python3 -m rh_pre_commit install --force --path /path/to/repo
 ### Ignoring False Leak Positives
 
 The [Pattern Distribution Server Doc](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#handling-false-positives)
-has a section on how to hanlde false positives.
+has a section on how to handle false positives.
 
 ### Checks
 
