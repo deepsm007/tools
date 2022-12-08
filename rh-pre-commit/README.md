@@ -25,17 +25,31 @@ Arm64 support for Mac is planned.
 
 For additional OS support reach out to infosec@redhat.com.
 
+## Uninstalling The Legacy Scripts
+
+If you have the legacy bash versions of these scripts installed, you can use
+[this script](../scripts/uninstall-legacy-tools) to locate and remove them. It
+does not remove the symlinks created by the legacy enable-for script. The
+`--force` option included in the install command below should replace any
+legacy pre-commit symlinks under `--path`.
+
+If you are unsure if you have the legacy versions of the script installed, you
+can run the uninstall script to find out. It should only find and remove the
+legacy scripts and will prompt you before doing so.
+
 ## Getting Started
+
+**Quickstart**: If you are fine with all of the defaults here and with this
+making changes to your existing repos, there is a [quickstart.sh](quickstart.sh)
+that runs all of the commands from this section in one go. It's still good to
+at least read through this section to have a better understanding of what the
+tool does and what the quickstart accomplishes.
 
 This section covers a default install. See the comments next to the commands
 below for details about customizing the install, or if you don't want support
 for managing multiple pre-commit hooks in one repo, check out the
 [rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
 section.
-
-If you are fine with all of the defaults here and with this making changes to
-your existing repos, there is a [quickstart.sh](quickstart.sh) that runs all of
-the commands from this section in one go.
 
 Unless the
 [changelog](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#changelog)
@@ -62,8 +76,8 @@ cd /tmp/infosec-tools/rh-pre-commit
 **Install/Update the tools**
 
 ```sh
-# NOTE: If you need to install from a specific branch
-# run a "git checkout <branch-name>" here
+# If you need to install from a specific branch:
+# git checkout <branch-name>
 
 # (Recommended) Upgrade pip
 python3 -m pip install --upgrade --user pip
@@ -75,27 +89,14 @@ make install
 **Configure the tools**
 
 ```sh
-# Configure Options:
-# --configure-git-template sets init.templateDir to ~/.git-template if it isn't set
-# and configures the hook in the template dir
-# --force applies the hook to your init.templateDir even if one already exists
-
+# To understand these options, run: python3 -m rh_pre_commit.multi configure --help
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 ```
 
 **Enable the hook in your existing repos**
 
 ```sh
-# Install Options:
-# --check tells install to only list the repos it finds. This is helpful
-# if you want to preview which repos it would try to install the hook in
-# without actually applying the changes
-# --path tells the installer where to search for repos. The installer will
-# add it to every repo and submodule under that path. If there are a lot of
-# files or repos under this directory, the install command may take longer.
-# --force tells install to replace existing hooks. Without this option it
-# will skip those but note it in the output.
-
+# To understand these options, run: python3 -m rh_pre_commit.multi install --help
 python3 -m rh_pre_commit.multi install --force --path ~/
 ```
 
@@ -108,7 +109,7 @@ rm -rf /tmp/test-pre-commit && mkdir /tmp/test-pre-commit
 cd /tmp/test-pre-commit
 git init
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
-git add secret
+git add secret &&
 git commit
 ```
 
@@ -159,14 +160,14 @@ This section covers how to reset the config back to the defaults.
 If you're using rh-multi-pre-commit:
 
 ```sh
-# Run python3 -m rh_pre_commit.multi configure --help to understand these flags
+# To understand these flags, run: python3 -m rh_pre_commit.multi configure --help
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 ```
 
 If you're using rh-pre-commit:
 
 ```sh
-# Run python3 -m rh_pre_commit configure --help to understand these flags
+# To understand these flags, run: python3 -m rh_pre_commit configure --help
 python3 -m rh_pre_commit configure --configure-git-template --force
 ```
 
@@ -179,14 +180,14 @@ set or want to swap out the hooks in a specific repo.
 If you're using rh-multi-pre-commit:
 
 ```sh
-# Run python3 -m rh_pre_commit.multi install --help to understand these flags
+# To understand these flags, run: python3 -m rh_pre_commit.multi install --help
 python3 -m rh_pre_commit.multi install --force --path /path/to/repo
 ```
 
 If you're using rh-pre-commit:
 
 ```sh
-# Run python3 -m rh_pre_commit install --help to understand these flags
+# To understand these flags, run: python3 -m rh_pre_commit install --help
 python3 -m rh_pre_commit install --force --path /path/to/repo
 ```
 
