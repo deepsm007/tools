@@ -27,6 +27,18 @@ Arm64 support for Mac is planned.
 
 For additional OS support reach out to infosec@redhat.com.
 
+## Uninstalling The Legacy Scripts
+
+If you have the legacy bash versions of these scripts installed, you can use
+[this script](../scripts/uninstall-legacy-tools) to locate and remove them.
+
+If you are unsure if you have the legacy versions of the script installed, you
+can run the uninstall script to find out. It should only find and remove the
+legacy scripts and will prompt you before doing so.
+
+**NOTE**: This also removes any legacy versions of rh-pre-commit too. If those
+are removed, you will need to install [the new version](../rh-pre-commit).
+
 ## Getting Started
 
 **NOTE:** If you are using this tool as a part of
@@ -50,8 +62,8 @@ cd /tmp/infosec-tools/rh-gitleaks
 **Install/Update the tools**
 
 ```sh
-# NOTE: If you need to install from a specific branch
-# run a "git checkout <branch-name>" here
+# If you need to install from a specific branch:
+# git checkout <branch-name>
 
 # This installs the tools but you will still need to configure them
 make install
@@ -63,10 +75,10 @@ To have the tool walk you through the configuration:
 rh-gitleaks configure
 ```
 
-Please note the expiration date of the token in the output. You will need
-to run `login` and update your token before the expiration date.
-As of writing this a token lasts 2 years, so replacing your token on a yearly
-basis is a good practice.
+Please note the expiration date of the token in the output. You will need to
+run `login` and update your token before the expiration date. As of writing
+this a token lasts 2 years, so replacing your token on a yearly basis is a good
+practice.
 
 **NOTE:** If you are using a service account as described in the pattern
 distribution server's docs, you will enter in the API token provided from that

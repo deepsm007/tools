@@ -54,23 +54,11 @@ LEAK_DETECTED = f"""\
 ERROR: rh-gitleaks has detected sensitive information in your changes and will
 not allow the commit to proceed.
 
-If it the file does contain sensitive information, please remove it and try
+If it the file contains sensitive information, please remove it and try
 your commit again.
 
-If the detection was a false positive you can either add a gitleaks:allow
-comment to the line to allow it or add a .gitleaks.toml in your repo's base
-directory with the item added to the allowlist.
+If the detection was a false positive, the documentation[1] contains a section
+for handling false positives.
 
-Example .gitleaks.toml:
-
-    https://github.com/leaktk/fake-leaks/blob/main/.gitleaks.toml
-
-Example gitleaks:allow:
-
-    https://github.com/leaktk/fake-leaks/blob/main/examples/allow-comment.py
-
-If you have any questions, issues, or want to report a potential data
-leak, further instructions can be found in these docs:
-
-{rh_gitleaks.config.PATTERNS_SERVER_DOCS_URL}
+[1] {rh_gitleaks.config.PATTERNS_SERVER_DOCS_URL}
 """
