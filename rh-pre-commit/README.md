@@ -123,14 +123,14 @@ WARN[0000] leaks found: 1
 ERROR: rh-gitleaks has detected sensitive information in your changes and will
 not allow the commit to proceed.
 
-If it the file does contain sensitive information, please remove it and try
+If it the file contains sensitive information, please remove it and try
 your commit again.
 
-If the detection was a false positive you can either add a gitleaks:allow
-comment to the line to allow it or add a .gitleaks.toml in your repo's base
-directory with the item added to the allowlist.
+If the detection was a false positive, the documentation[1] contains a section
+for handling false positives.
 
-...
+[1] https://patterns.security.redhat.com/docs
+
 ```
 
 ## Notifications About Updates
