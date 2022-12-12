@@ -244,3 +244,17 @@ reference the commands through their modules directly.
 * `rh-gitleaks-gh-account` becomes `python3 -m rh_gitleaks.gh_account`
 * `rh-pre-commit` becomes `python3 -m rh_pre_commit`
 * `rh-multi-pre-commit` becomes `python3 -m rh_pre_commit.multi`
+
+**For Mac users**, the cli scripts are often installed under
+`${HOME}/Library/Python/<some version>/bin`.
+
+So say you you run `python3 --version` and see `Python 3.9.16`, then you would
+add `${HOME}/Library/Python/3.9/bin` to your PATH in your `~/.zshrc` and then
+source it.
+
+Example (Assuming 3.9.x):
+
+```sh
+echo 'export PATH="${HOME}/Library/Python/3.11/bin:${PATH}"' >> ~/.zshrc
+source ~/.zshrc
+```
