@@ -235,7 +235,7 @@ This section covers some basic troubleshooting steps. If you still need help,
 please email infosec@redhat.com for assistance and provide a link to this
 README for context.
 
-### Command not found
+### Command Not Found
 
 If you run the command and get a `command not found` error, you can
 reference the commands through their modules directly.
