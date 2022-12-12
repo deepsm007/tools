@@ -245,7 +245,7 @@ reference the commands through their modules directly.
 * `rh-pre-commit` becomes `python3 -m rh_pre_commit`
 * `rh-multi-pre-commit` becomes `python3 -m rh_pre_commit.multi`
 
-**For Mac users**, the cli scripts are often installed under
+**For Mac users**, the CLI scripts are often installed under
 `${HOME}/Library/Python/<some version>/bin`.
 
 So say you you run `python3 --version` and see `Python 3.9.16`, then you would
@@ -257,4 +257,15 @@ Example (Assuming 3.9.x):
 ```sh
 echo 'export PATH="${HOME}/Library/Python/3.11/bin:${PATH}"' >> ~/.zshrc
 source ~/.zshrc
+```
+
+### Error Upgrading Pip Due To Missing CA Bundle
+
+On a few older Linux systems, we've seen pip complain about not being able
+to find the CA bundle. Setting the `REQUESTS_CA_BUNDLE` env variable to the
+system's CA bundle was able to resolve it.
+
+```sh
+export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
+python3 -m pip install --upgrade --user pip
 ```
