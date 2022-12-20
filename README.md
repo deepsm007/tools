@@ -16,16 +16,12 @@ There are a few different options for installing the tools.
 ### Make Install
 
 ```
-cd ../{{tooldir}}/
+cd ./{{tooldir}}/
 
 # Read the README
 
 make install
 ```
-
-### Install RPM
-
-Planned
 
 ## Contributing
 

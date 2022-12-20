@@ -42,7 +42,6 @@ Each tool should:
 * Support the `--help` flag
 * Have a Makefile that implements the [standard Makefile](https://gitlab.corp.redhat.com/infosec-public/developer-workbench/guides/-/blob/main/README.md#interacting-with-projects-through-make)
 * Support `make install` for local installs
-* Support `make rpm` to package it as an RPM (nice to have)
 * Have a script in thi project's `./bin` folder to run it without installing it.
 
 [1] If it is a wrapper around an existing project or command that makes it
