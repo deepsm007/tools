@@ -24,12 +24,12 @@ GITLEAKS_BIN_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_SOURCE_ID}")
 GITLEAKS_SUPPORTED_VERSIONS = {
     "linux-x86_64-7.6.1": {
         # pylint: disable=line-too-long
-        "url": "https://github.com/zricethezav/gitleaks/releases/download/v7.6.1/gitleaks-linux-amd64",
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-linux-x86_64",
         "sha256": "ab3d667982b2bfb00e846bd7b751c640216d2bbe0f71e2c53c4514ca415d99ec",
     },
     "darwin-x86_64-7.6.1": {
         # pylint: disable=line-too-long
-        "url": "https://github.com/zricethezav/gitleaks/releases/download/v7.6.1/gitleaks-darwin-amd64",
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-darwin-x86_64",
         "sha256": "5e51a33beb6f358970815ecbbc40c6c28fb785ef6342da9a689713f99fece54f",
     },
 }
