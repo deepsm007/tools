@@ -19,18 +19,23 @@ CACHE_DIR = os.path.join(XDG_CACHE_HOME, "rh-gitleaks")
 
 # Gitleaks Settings
 GITLEAKS_VERSION = "7.6.1"
-GITLEAKS_SOURCE_ID = f"{PLATFORM_ID}-{GITLEAKS_VERSION}"
+GITLEAKS_SOURCE_ID = f"{GITLEAKS_VERSION}-{PLATFORM_ID}"
 GITLEAKS_BIN_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_SOURCE_ID}")
 GITLEAKS_SUPPORTED_VERSIONS = {
-    "linux-x86_64-7.6.1": {
+    "7.6.1-linux-x86_64": {
         # pylint: disable=line-too-long
         "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-linux-x86_64",
         "sha256": "ab3d667982b2bfb00e846bd7b751c640216d2bbe0f71e2c53c4514ca415d99ec",
     },
-    "darwin-x86_64-7.6.1": {
+    "7.6.1-darwin-x86_64": {
         # pylint: disable=line-too-long
         "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-darwin-x86_64",
         "sha256": "5e51a33beb6f358970815ecbbc40c6c28fb785ef6342da9a689713f99fece54f",
+    },
+    "7.6.1-darwin-arm64": {
+        # pylint: disable=line-too-long
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-darwin-arm64",
+        "sha256": "eb875959e5994007069490855080bb14657318e5b98cf14da39c2c5480a9f2b3",
     },
 }
 GITLEAKS_BIN_DOWNLOAD_URL = GITLEAKS_SUPPORTED_VERSIONS.get(
