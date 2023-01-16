@@ -240,17 +240,17 @@ README for context.
 If you get a `command not found` error and you know the scripts were installed,
 it's likely that the place the scripts were installed is not on your path.
 
-When you run `make install` you may see a warning like this towards the end:
+When you run `make install`, you may see a warning like this towards the end:
 
 ```
 WARNING: The scripts rh-gitleaks and rh-gitleaks-gh-account are installed in '/home/user/.local/bin' which is not on PATH.
 Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.`
 ```
 
-If you add the directory from the warning you saw (this will be different than
-the one in the example above) to your PATH, that should resolve the problem. If
-you're not sure what it means to "add a directory to your path", a quick search
-online should provide some examples to help you get set up.
+If you add the directory from the warning you saw to your PATH (this will be
+different than the one in the example above), that should resolve the problem.
+If you're not sure what it means to "add a directory to your path", a quick
+search online should provide some examples to help you get set up.
 
 Alternatively, you can reference the commands through their modules directly:
 
