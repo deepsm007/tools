@@ -22,8 +22,7 @@ You will need the following installed on your system:
 
 * Linux (x86\_64)
 * Mac (x86\_64)
-
-Arm64 support for Mac is planned.
+* Mac (arm64)
 
 For additional OS support reach out to infosec@redhat.com.
 
