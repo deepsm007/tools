@@ -1,257 +1,270 @@
 # rh-pre-commit
 
-A set of standard [pre-commit hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) to run on your projects.
+This tool provides a standard set of [checks](#checks) as a single
+[pre-commit hook](https://www.atlassian.com/git/tutorials/git-hooks)
+for your project.
 
 ## Contents
 
 [[_TOC_]]
 
+## Requirements
+
+You will need the following installed on your system:
+
+* `python3`
+* `pip`
+* `make`
+
 ## Supported Operating Systems
 
-* Linux (amd64)
-* Mac (amd64)
+* Linux (x86\_64)
+* Mac (x86\_64)
+* Mac (arm64)
 
-For additional OS support reach out to infosec@redhat.com
+For additional OS support reach out to infosec@redhat.com.
 
-## Updates
+## Uninstalling The Legacy Scripts
 
-Please subscribe to the [patterns server user guide](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server)
-for information about changes.
+If you have the legacy bash versions of these scripts installed, you can use
+[this script](../scripts/uninstall-legacy-tools) to locate and remove them. It
+does not remove the symlinks created by the legacy enable-for script. The
+`--force` option included in the install command below should replace any
+legacy pre-commit symlinks under `--path`.
 
-The installing and updating section below covers how to update the CLI tool if
-there's been a change.
+If you are unsure if you have the legacy versions of the script installed, you
+can run the uninstall script to find out. It should only find and remove the
+legacy scripts and will prompt you before doing so.
 
-## Installing and Updating
+## Getting Started
 
-The quickstart below covers how to do a full initial install and set up access
-to the patterns server.
+**Quickstart**: If you are fine with all of the defaults here and with this
+making changes to your existing repos, there is a [quickstart.sh](quickstart.sh)
+that runs all of the commands from this section in one go. It's still good to
+at least read through this section to have a better understanding of what the
+tool does and what the quickstart accomplishes.
 
-**Go to the folder where you want to clone this repo**
+This section covers a default install. See the comments next to the commands
+below for details about customizing the install, or if you don't want support
+for managing multiple pre-commit hooks in one repo, check out the
+[rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
+section.
 
-```sh
-cd ~/
-```
+Unless the
+[changelog](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#changelog)
+says to, you will not need to run the configuration steps
+again during an update.
 
-**Clone the repo** (if the repo is already cloned, do a `git pull` from inside the repo instead)
+At the end of this (assuming the defaults are applied):
 
-```sh
-git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git infosec-dev-tools
-```
+* `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and `rh-gitleaks-gh-account` will be installed.
+* You will have a global `~/.config/pre-commit/config.yaml` set up to enable rh-pre-commit
+* The hook will be enabled for all the repos in your home dir
+* The hook will be enabled by default for all new repos
+* rh-gitleaks will be logged in and have a 2 year patterns server token
 
-**Go to the `rh-pre-commit` folder**
-
-```
-cd ./infosec-dev-tools/rh-pre-commit/
-```
-
-**Install the hooks** (if doing an update, stop after this step)
-
-If you don't have sudo access on your system, see "Local Install" below.
-
-```sh
-sudo make install
-```
-
-**Install pre-commit**
-
-For Fedora
-
-```sh
-sudo dnf install -y pre-commit
-```
-
-For Macs with brew
+**Pull a fresh copy of the repo**
 
 ```sh
-# Note brew may upgrade your Python version
-# If you do not want this to happen, follow the steps 
-# for other operating systems below
-brew install pre-commit
+rm -rf /tmp/infosec-tools
+git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git /tmp/infosec-tools
+# The rest of the commands assume you are in this subfolder of the repo
+cd /tmp/infosec-tools/rh-pre-commit
 ```
 
-For Other Operating Systems
+**Install/Update the tools**
 
 ```sh
-pip install pre-commit 
-# and then make sure it's on your path when you're done
+# If you need to install from a specific branch:
+# git checkout <branch-name>
+
+# (Recommended) Upgrade pip
+python3 -m pip install --upgrade --user pip
+
+# This installs the tools but you will still need to configure them
+make install
 ```
 
-**Configure rh-multi-pre-commit**
+**Configure the tools**
 
 ```sh
-mkdir -p ~/.config/pre-commit/
-cp ./etc/pre-commit/config.yaml ~/.config/pre-commit/config.yaml
+# To understand these options, run: python3 -m rh_pre_commit.multi configure --help
+python3 -m rh_pre_commit.multi configure --configure-git-template --force
 ```
 
-**Make the hooks the default for all new repos** (cloned or created).
+**Enable the hook in your existing repos**
 
 ```sh
-git config --global init.templateDir ~/.git-template
-mkdir -p ~/.git-template/hooks && ln -snf $(which rh-multi-pre-commit) ~/.git-template/hooks/pre-commit
+# To understand these options, run: python3 -m rh_pre_commit.multi install --help
+python3 -m rh_pre_commit.multi install --force --path ~/
 ```
 
-**Configure the patterns server**
+And you should be all set!
+
+**Confirming it works**
 
 ```sh
-mkdir -p ~/.config/rh-gitleaks
+rm -rf /tmp/test-pre-commit && mkdir /tmp/test-pre-commit
+cd /tmp/test-pre-commit
+git init
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
+git add secret &&
+git commit
 ```
 
-* Go to https://patterns.security.redhat.com/token
-* Copy the token and put it at ~/.config/rh-gitleaks/auth.jwt
-
-**Confirm you see the help options and no errors**
-
-```sh
-rh-gitleaks --help
-```
-
-**Set up the hook for existing projects**
-
-If you don't want to enable it for all repos see the "Enabling for Ad-Hoc Repos" section.
-
-```sh
-# Check what this would be enabled for
-./scripts/enable-for --check ~/
-
-# Adjust the path if you don't like the output
-
-# Run the command with the path you want to enable it for existing repos
-./scripts/enable-for ~/
-```
-
-**Confirming the setup**
-
-And you should be set up and ready to go! If want to check you can do a `ls -l
-.git/hooks/pre-commit` in one of your existing projects and it should look
-something like this:
+You should see an error containing lines like this:
 
 ```
-.git/hooks/pre-commit -> /usr/local/bin/rh-multi-pre-commit
+...
+
+INFO[0000] scan time: 476 microseconds
+WARN[0000] leaks found: 1
+ERROR: rh-gitleaks has detected sensitive information in your changes and will
+not allow the commit to proceed.
+
+If it the file contains sensitive information, please remove it and try
+your commit again.
+
+If the detection was a false positive, the documentation[1] contains a section
+for handling false positives.
+
+[1] https://patterns.security.redhat.com/docs
+
 ```
 
-You could also create a new local repo with a file containing
-```
-secret="8P+eZAqUb4q24DsPf30A3NqkHGw7ZkItbp77z8X8zmxS+IDO9hQH9mh68h309LLou4rz1ZtyNg/0S81YWtuPUA=="
-```
-in it and try to commit it. If things are set up properly you should get a message
-saying that you have a leak and if it's a false positive you will need to add a
-`.gitleaks.toml` to your repo.
+## Notifications About Updates
 
-**And Your Done!**
+Please follow/subscribe-to the
+[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
+doc in The Source. There is a change log at the bottom that is updated when
+there are new releases.
+
+## rh-multi-pre-commit vs rh-pre-commit
+
+This repo actually provides two tools, rh-multi-pre-commit and rh-pre-commit.
+rh-pre-commit is just the set of checks provided in this repo.
+rh-multi-pre-commit extends [pre-commit.com](https://pre-commit.com) to
+also check a config file at `~/.config/pre-commit/config.yaml`.
+
+Any of the Getting Started steps that reference rh-multi-pre-commit should
+also work with rh-pre-commit if you don't want support for multiple pre-commit
+hooks in a repo.
+
+## Usage
 
 ### Resetting Config
 
-```sh
-rm -rf ~/.config/rh-gitleaks/
-rm -rf ~/.cache/rh-gitleaks/
-```
+This section covers how to reset the config back to the defaults.
 
-### Local Install
-
-The quickstart covers a basic install but in some cases folks might not
-have sudo access on their system. In this case you can override the `PREFIX`
-variable to have it install in a different location. It will install it
-under `${PREFIX}/bin`
-
-**IMPORTANT:** If you do this, you'll want to make sure that the bin folder is on your
-path before running the commands to enable it for your repos. Otherwise `which rh-multi-pre-commit`
-won't return the path to the script.
-
-For example:
+If you're using rh-multi-pre-commit:
 
 ```sh
-make install PREFIX="${HOME}/.local"
-
-# In this case you will want to make sure to have PATH="${HOME}/.local/bin:${PATH}" in your .bashrc or .zshrc
+# To understand these flags, run: python3 -m rh_pre_commit.multi configure --help
+python3 -m rh_pre_commit.multi configure --configure-git-template --force
 ```
 
-Now if that directory is on your path, the output of the `which` command should
-look something like this:
+If you're using rh-pre-commit:
 
 ```sh
-$ which rh-pre-commit rh-gitleaks rh-multi-pre-commit
-~/.local/bin/rh-pre-commit
-~/.local/bin/rh-gitleaks
-~/.local/bin/rh-multi-pre-commit
+# To understand these flags, run: python3 -m rh_pre_commit configure --help
+python3 -m rh_pre_commit configure --configure-git-template --force
 ```
-
-If you are moving an existing install to a local dir, you will need to
-re-run the commands containing `ln -snf` above to update the links in
-your projects.
 
 ### Enabling for Ad-Hoc Repos
 
-If you don't want to default to enabling one of these hooks on all of your
-projects. It is possible to do one-off enables. The danger here is that you
-may forget to do it on new projects and that could result in something slipping
-by.
+This section covers how to enable the hook for an ad-hoc repo. You might
+want to do this if you didn't run configure with `--configure-git-template`
+set or want to swap out the hooks in a specific repo.
+
+If you're using rh-multi-pre-commit:
 
 ```sh
-# (Option 1) rh-pre-commit
-cd /path/to/project
-mkdir -p .git/hooks && ln -snf $(which rh-pre-commit) .git/hooks/pre-commit
-
-# (Option 2) rh-multi-pre-commit
-cd /path/to/project
-mkdir -p .git/hooks && ln -snf $(which rh-multi-pre-commit) .git/hooks/pre-commit
-# You will still need the pre-commit steps from the quickstart above.
+# To understand these flags, run: python3 -m rh_pre_commit.multi install --help
+python3 -m rh_pre_commit.multi install --force --path /path/to/repo
 ```
 
-### Reason for rh-multi-pre-commit
+If you're using rh-pre-commit:
 
-You may be wondering why create a wrapper around pre-commit. Generally the
-pre-commit framework prefers to work with `.pre-commit-config.yaml`s inside the
-repo and if you're working with an open-source project that you expect others
-outside of Red Hat to contribute to, enabling `rh-pre-commit` won't be an
-option because they won't have access to rh-pre-commit or the patterns it uses.
-
-rh-multi-pre-commit solves this by running pre-commit on the following
-paths if they exist:
-
-```
-${HOME}/.config/pre-commit/config.yaml
-.pre-commit-config.yaml
+```sh
+# To understand these flags, run: python3 -m rh_pre_commit install --help
+python3 -m rh_pre_commit install --force --path /path/to/repo
 ```
 
-## Ignoring False Leak Positives
+### Ignoring False Leak Positives
 
-This pre-commit hook will look for a `.gitleaks.toml` in the root of your
-repo. You can add a global allow list that looks something like this:
+The [Pattern Distribution Server Doc](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#handling-false-positives)
+has a section on how to handle false positives.
 
-```toml
-[allowlist]
-description = "Global Allowlist"
-
-paths = [
-  # Replace this with the regex for a path
-  '''regex-for-file-path''',
-]
-
-regexes = [
-  # Replace this with the regex for an existing match
-  '''one-regex-within-the-already-matched-regex''',
-]
-```
-
-Also you can add a comment containing `gitleaks:allow` to the line showing
-up as a leak to ignore it.
-
-And you can run the `rh-pre-commit` command from the root of your repo
-to test to see if the changes work.
-
-## Turning On/Off Checks
+### Checks
 
 These options allow you to turn on/off different checks provided by this
 package without having to remove the entire hook.
 
-### Secrets Check (Default: On)
+#### Check Secrets (Default: On)
 
-To turn off checks in a repo
+To turn it off a repo:
+
 ```sh
-git config --bool hooks.checkSecrets false
+git config --bool rh-pre-commit.checkSecrets false
 ```
 
-To turn on checks in a repo
+To turn it on a repo:
+
 ```sh
-git config --bool hooks.checkSecrets true
+git config --bool rh-pre-commit.checkSecrets true
+```
+
+### Updating pre-commit.com style hooks
+
+**NOTE:** This does not update the tools in this repo, this is like running
+[pre-commit autoupdate](https://pre-commit.com/#updating-hooks-automatically)
+
+To update the global pre-commit.com style hooks and the ones defined
+in your project's current directory run:
+
+```
+python3 -m rh_pre_commit.multi update
+```
+
+This will list the config files it found and is running updates for.
+
+## Troubleshooting
+
+This section covers some basic troubleshooting steps. If you still need help,
+please email infosec@redhat.com for assistance and provide a link to this
+README for context.
+
+### Command Not Found
+
+If you get a `command not found` error and you know the scripts were installed,
+it's likely that the place the scripts were installed is not on your path.
+
+When you run `make install`, you may see a warning like this towards the end:
+
+```
+WARNING: The scripts rh-gitleaks and rh-gitleaks-gh-account are installed in '/home/user/.local/bin' which is not on PATH.
+Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.`
+```
+
+If you add the directory from the warning you saw to your PATH (this will be
+different than the one in the example above), that should resolve the problem.
+If you're not sure what it means to "add a directory to your path", a quick
+search online should provide some examples to help you get set up.
+
+Alternatively, you can reference the commands through their modules directly:
+
+* `rh-gitleaks` becomes `python3 -m rh_gitleaks`
+* `rh-gitleaks-gh-account` becomes `python3 -m rh_gitleaks.gh_account`
+* `rh-pre-commit` becomes `python3 -m rh_pre_commit`
+* `rh-multi-pre-commit` becomes `python3 -m rh_pre_commit.multi`
+
+### Error Upgrading Pip Due To Missing CA Bundle
+
+On a few older Linux systems, we've seen pip complain about not being able
+to find the CA bundle. Setting the `REQUESTS_CA_BUNDLE` env variable to the
+system's CA bundle was able to resolve it.
+
+```sh
+export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
+python3 -m pip install --upgrade --user pip
 ```
