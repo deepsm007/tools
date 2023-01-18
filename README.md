@@ -9,19 +9,11 @@ automation.
 
 [[_TOC_]]
 
-## Using The Tools
+## Installing The Tools
 
-There are a few different options for installing the tools.
+This repo contains multiple projects. To install the project, `cd` into that project's 
+folder and follow the install steps in its README.md.
 
-### Make Install
-
-```
-cd ./{{tooldir}}/
-
-# Read the README
-
-make install
-```
 
 ## Contributing
 
