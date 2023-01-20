@@ -5,6 +5,7 @@ set +x
 export PYTHON="python3"
 export PIP="$PYTHON -m pip"
 export VENV_ROOT=$($PYTHON -c 'import sys; print("" if sys.base_prefix == sys.prefix else sys.prefix)')
+export SHA256SUM="$(which sha256sum 2> /dev/null || (which shasum &> /dev/null && echo "shasum -a 256") || echo "false")"
 
 if [ "$VENV_ROOT" != "" ]; then
   export USE_VENV="false"
@@ -22,7 +23,7 @@ if [ "$USE_VENV" != "false" ]; then
       cd ./venv/etc/pki/ca-trust/extracted/pem && \
       curl -O https://nexus.corp.redhat.com/repository/infosec-raw/pki/tls-ca-bundle.pem && \
       curl -O https://nexus.corp.redhat.com/repository/infosec-raw/pki/tls-ca-bundle-checksum && \
-      sha256sum -c tls-ca-bundle-checksum && rm tls-ca-bundle-checksum
+      ${SHA256SUM} -c tls-ca-bundle-checksum && rm tls-ca-bundle-checksum
     )
   fi
 
