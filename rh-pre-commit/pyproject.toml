@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "rh_pre_commit"
-version = "0.1.0"
+name = "rh-pre-commit"
+version = "1.0.0"
 description = "Tools for managing pre-commit hooks within Red Hat"
 authors = [{ name="Red Hat InfoSec", email="infosec@redhat.com" }]
 readme = "README.md"

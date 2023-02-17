@@ -1,6 +1,7 @@
 [TYPECHECK]
 disable =
   broad-except,
+  broad-exception-raised,
   duplicate-code,
   invalid-name,
   missing-class-docstring,
