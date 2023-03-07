@@ -50,7 +50,7 @@ by the quickstart!
 * Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and `rh-gitleaks-gh-account`
 * Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your home dir
 * Set `rh-multi-pre-commit` as the pre-commit hook by default for all new repos
-* Create a `~/.config/pre-commit/config.yaml` config file for `rh-multi-pre-commit` to to enable `rh-pre-commit`
+* Create a `~/.config/pre-commit/config.yaml` config file for `rh-multi-pre-commit` to enable `rh-pre-commit`
 * Configure `rh-gitleaks` with a 2 year patterns server token
 
 **Rh-multi-pre-commit considerations:**
