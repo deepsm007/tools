@@ -39,12 +39,20 @@ class RHGitleaksTest(TestCase):
                     "rh_gitleaks": ["login"],
                 },
             ),
-            # Logout should ignore anything that isn't login
+            # Logout should ignore anything that isn't logout
             (
                 ["logout", "--foo"],
                 {
                     "gitleaks": [],
                     "rh_gitleaks": ["logout"],
+                },
+            ),
+            # Pre-cache should ignore anything that isn't pre-cache
+            (
+                ["pre-cache", "--foo"],
+                {
+                    "gitleaks": [],
+                    "rh_gitleaks": ["pre_cache"],
                 },
             ),
             # Other things should be passed to gitleaks
