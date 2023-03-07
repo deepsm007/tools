@@ -76,8 +76,8 @@ def parse_args(args):
     rh_gitleaks_args = []
 
     if len(args):
-        if args[0] in ("configure", "login", "logout"):
-            rh_gitleaks_args.append(args[0])
+        if args[0] in ("configure", "login", "logout", "pre-cache"):
+            rh_gitleaks_args.append(args[0].replace("-", "_"))
         else:
             gitleaks_args = args
     else:
@@ -339,6 +339,23 @@ def logout(show_msg=True):
     if show_msg:
         logging.info("Successfully logged out")
 
+    return 0
+
+
+def pre_cache():
+    """
+    Download the gitleaks binary if it doesn't exist
+
+    This is useful to include as an install step when installing rh-gitleaks in
+    a container image so that it doesn't have to download gitleaks each time a
+    new container starts.
+    """
+    bin_path = gitleaks_bin_path()
+
+    if not bin_path:
+        return 1
+
+    logging.info("Pre-cache Complete: gitleaks_bin_path=%s", bin_path)
     return 0
 
 

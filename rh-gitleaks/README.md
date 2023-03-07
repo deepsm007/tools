@@ -111,6 +111,11 @@ To remove your Pattern Distribution Server API token, run `rh-gitleaks logout`.
 
 To reset your configuration, run `rh-gitleaks configure`
 
+To download the gitleaks binary before the first run, run `rh-gitleaks
+pre-cache`.  This is useful to include as an install step when
+installing rh-gitleaks in a container image so that it doesn't have to
+download gitleaks each time a new container starts.
+
 ## Usage (rh-gitleaks-gh-account)
 
 This is a wrapper around rh-gitleaks that runs it against all of the repos
