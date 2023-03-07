@@ -1,8 +1,8 @@
 # rh-pre-commit
 
-This tool provides a standard set of [checks](#checks) as a single
-[pre-commit hook](https://www.atlassian.com/git/tutorials/git-hooks)
-for your project.
+This tool provides a [pre-commit hook](https://www.atlassian.com/git/tutorials/git-hooks)
+that runs a standard set of [checks](#checks) and a way to manage multiple
+pre-commit hooks in your projects.
 
 ## Contents
 
@@ -38,30 +38,43 @@ legacy scripts and will prompt you before doing so.
 
 ## Getting Started
 
-**Quickstart**: If you are fine with all of the defaults here and with this
-making changes to your existing repos, there is a [quickstart.sh](quickstart.sh)
-that runs all of the commands from this section in one go. It's still good to
-at least read through this section to have a better understanding of what the
-tool does and what the quickstart accomplishes.
+**Quickstart:**
 
-This section covers a default install. See the comments next to the commands
-below for details about customizing the install, or if you don't want support
-for managing multiple pre-commit hooks in one repo, check out the
+If you are fine with a default install, there is a [quickstart.sh](quickstart.sh)
+that runs all of the commands from this section in one go. **Please still read
+though this section** to understand the implications of the defaults applied
+by the quickstart!
+
+**A default install will:**
+
+* Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and `rh-gitleaks-gh-account`
+* Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your home dir
+* Set `rh-multi-pre-commit` as the pre-commit hook by default for all new repos
+* Create a `~/.config/pre-commit/config.yaml` config file for `rh-multi-pre-commit` to to enable `rh-pre-commit`
+* Configure `rh-gitleaks` with a 2 year patterns server token
+
+**Rh-multi-pre-commit considerations:**
+
+`rh-multi-pre-commit` builds on [pre-commit.com](https://pre-commit.com/)'s
+pre-commit framework to support a global config file in addition to hooks
+defined in a project's `.pre-commit-config.yaml`. If you don't want to support
+multiple pre-commit hooks per project (the default), `rh-pre-commit` can be
+enabled instead.
+
+**Warning:** If you are using `rh-multi-pre-commit`, make sure you trust the
+pre-commit hooks defined in a project's `.pre-commit-config.yaml` before making
+a commit. It will run them during a commit.
+
+For more info see the
 [rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
 section.
+
+**Updating:**
 
 Unless the
 [changelog](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#changelog)
 says to, you will not need to run the configuration steps
-again during an update.
-
-At the end of this (assuming the defaults are applied):
-
-* `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and `rh-gitleaks-gh-account` will be installed.
-* You will have a global `~/.config/pre-commit/config.yaml` set up to enable rh-pre-commit
-* The hook will be enabled for all the repos in your home dir
-* The hook will be enabled by default for all new repos
-* rh-gitleaks will be logged in and have a 2 year patterns server token
+again during an update—just the steps up to and including `make install`.
 
 **Pull a fresh copy of the repo**
 
@@ -141,14 +154,44 @@ there are new releases.
 
 ## rh-multi-pre-commit vs rh-pre-commit
 
-This repo actually provides two tools, rh-multi-pre-commit and rh-pre-commit.
-rh-pre-commit is just the set of checks provided in this repo.
-rh-multi-pre-commit extends [pre-commit.com](https://pre-commit.com) to
-also check a config file at `~/.config/pre-commit/config.yaml`.
+`rh-multi-pre-commit` provides a way for teams to install multiple pre-commit
+hooks in their projects. Teams that already have a good pre-commit hook
+management tool can leverage `rh-pre-commit` without `rh-multi-pre-commit`, but
+`rh-multi-pre-commit` is a supported solution for the folks who need it.
 
-Any of the Getting Started steps that reference rh-multi-pre-commit should
-also work with rh-pre-commit if you don't want support for multiple pre-commit
-hooks in a repo.
+**So why extend an existing tool?**
+
+[Pre-commit.com](https://pre-commit.com/)'s framework does 99% of what we want
+except it doesn't support the ability to have a global config file (and they
+were opposed to that feature being added to the upstream project). So
+`rh-multi-pre-commit` leverages the nifty features from pre-commit.com (like
+per-project `.pre-commit-config.yaml`s while also supporting the option to have
+global config.
+
+A global config file is needed so that we can continue leveraging internal
+tools even when working on upstream, open-source projects where all of the
+contributors might not have access to the internal tooling but the project
+might have its own pre-commit requirements. Basically we are trying to avoid
+the situation where someone has to choose between enabling our pre-commit hook
+or enabling one required by their team or community.
+
+The global config file is at `~/.config/pre-commit/config.yaml` and created/reset
+by the `rh-multi-pre-commit configure` command.
+
+**Warning:** If you are using `rh-multi-pre-commit`, make sure you trust the
+pre-commit hooks defined in a project's `.pre-commit-config.yaml` before making
+a commit. It will run them during a commit.
+
+If you often contribute to untrusted projects and/or don't want to use the
+`rh-multi-pre-commit` manager, any of the Getting Started steps that reference
+`rh-multi-pre-commit` should also work with `rh-pre-commit`. You can also
+switch between the two by running the install steps again, using the one you
+want to enable.
+
+There are plans to provide an option for telling `rh-multi-pre-commit` to use
+global config only, project-config only, or both project and local config.
+(More details will come when the feature's released).
+
 
 ## Usage
 
