@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rh-pre-commit"
-version = "1.0.0"
+version = "1.1.0"
 description = "Tools for managing pre-commit hooks within Red Hat"
 authors = [{ name="Red Hat InfoSec", email="infosec@redhat.com" }]
 readme = "README.md"

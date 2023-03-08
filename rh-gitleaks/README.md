@@ -3,7 +3,7 @@
 This provides a wrapper around
 [gitleaks 7.6.1](https://github.com/zricethezav/gitleaks/tree/v7.6.1)
 to integrate it with our
-[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
+[Pattern Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
 Please read over the patterns server docs before setting this up.
 
 ## Contents
@@ -80,13 +80,13 @@ this a token lasts 2 years, so replacing your token on a yearly basis is a good
 practice.
 
 **NOTE:** If you are using a service account as described in the pattern
-distribution server's docs, you will enter in the API token provided from that
-process instead of going to the server to get token.
+server's docs, you will enter in the API token provided from that process
+instead of going to the server to get token.
 
 ## Notifications About Updates
 
 Please follow/subscribe-to the
-[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
+[Pattern Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
 doc in The Source. There is a change log at the bottom that is updated when
 there are new releases.
 
@@ -104,10 +104,10 @@ Please be careful not to expose the patterns publicly!
 
 ### Options not listed under --help
 
-To reset/refresh your Pattern Distribution Server API token, run
+To reset/refresh your Pattern Server API token, run
 `rh-gitleaks login`.
 
-To remove your Pattern Distribution Server API token, run `rh-gitleaks logout`.
+To remove your Pattern Server API token, run `rh-gitleaks logout`.
 
 To reset your configuration, run `rh-gitleaks configure`
 
@@ -141,7 +141,7 @@ setting up in a CI pipeline.
 ## Advanced Usage
 
 The patterns server used by the tool can also be changed by setting the
-`RH_GITLEAKS_PATTERNS_SERVER` env variable.
+`LEAKTK_PATTERN_SERVER_URL` env variable.
 
 ## Troubleshooting
 

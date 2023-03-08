@@ -148,7 +148,7 @@ for handling false positives.
 ## Notifications About Updates
 
 Please follow/subscribe-to the
-[Pattern Distribution Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
+[Pattern Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
 doc in The Source. There is a change log at the bottom that is updated when
 there are new releases.
 
@@ -235,7 +235,7 @@ python3 -m rh_pre_commit install --force --path /path/to/repo
 
 ### Ignoring False Leak Positives
 
-The [Pattern Distribution Server Doc](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#handling-false-positives)
+The [Pattern Server Doc](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#handling-false-positives)
 has a section on how to handle false positives.
 
 ### Checks
