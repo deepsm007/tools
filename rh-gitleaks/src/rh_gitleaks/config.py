@@ -48,23 +48,27 @@ GITLEAKS_BIN_DOWNLOAD_SHA256SUM = GITLEAKS_SUPPORTED_VERSIONS.get(
 ).get("sha256")
 
 # Pattern Server Settings
-PATTERNS_AUTH_JWT_PATH = os.path.join(CONFIG_DIR, "auth.jwt")
+PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(CONFIG_DIR, "auth.jwt")
 PATTERNS_REFRESH_INTERVAL = 43200
 PATTERNS_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_VERSION}-patterns.toml")
-PATTERNS_SERVER_URL = os.environ.get(
-    "RH_GITLEAKS_PATTERNS_SERVER",
+PATTERN_SERVER_AUTH_TOKEN = os.environ.get("LEAKTK_PATTERN_SERVER_AUTH_TOKEN")
+PATTERN_SERVER_URL = os.environ.get(
+    "LEAKTK_PATTERN_SERVER_URL",
     "https://patterns.security.redhat.com",
 )
-PATTERNS_SERVER_DOCS_URL = parse.urljoin(
-    PATTERNS_SERVER_URL,
+PATTERN_SERVER_DOCS_URL = parse.urljoin(
+    PATTERN_SERVER_URL,
     "docs",
 )
-PATTERNS_SERVER_TOKEN_URL = parse.urljoin(
-    PATTERNS_SERVER_URL,
+# DEPRECATED: Added for compatibility with older versions of rh-pre-commit
+# remove this by/after we reach version 2.0
+PATTERNS_SERVER_DOCS_URL = PATTERN_SERVER_DOCS_URL
+PATTERN_SERVER_TOKEN_URL = parse.urljoin(
+    PATTERN_SERVER_URL,
     "token",
 )
-PATTERNS_SERVER_PATTERNS_URL = parse.urljoin(
-    PATTERNS_SERVER_URL,
+PATTERN_SERVER_PATTERNS_URL = parse.urljoin(
+    PATTERN_SERVER_URL,
     f"patterns/gitleaks/{GITLEAKS_VERSION}",
 )
 

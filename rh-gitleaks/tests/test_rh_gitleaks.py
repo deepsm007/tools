@@ -141,17 +141,17 @@ class RHGitleaksTest(TestCase):
         with TemporaryDirectory() as tmp_dir:
             # The extra dir in the middle is to confirm it will be created
             # if it doesn't exist
-            rh_gitleaks.config.PATTERNS_AUTH_JWT_PATH = os.path.join(
+            rh_gitleaks.config.PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(
                 tmp_dir, "a", "auth.jwt"
             )
 
             # Make sure it exits cleanly and loads the token
             self.assertEqual(rh_gitleaks.load_auth_token(), None)
-            self.assertEqual(rh_gitleaks.configure(auth_jwt=self.mock_token), 0)
+            self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.load_auth_token(), self.mock_token)
 
             # Make sure it can be ran twice
-            self.assertEqual(rh_gitleaks.configure(auth_jwt=self.mock_token), 0)
+            self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.load_auth_token(), self.mock_token)
 
     @patch("requests.get")
@@ -173,13 +173,13 @@ class RHGitleaksTest(TestCase):
             rh_gitleaks.config.GITLEAKS_BIN_PATH = os.path.join(
                 tmp_dir, "b", "gitleaks"
             )
-            rh_gitleaks.config.PATTERNS_AUTH_JWT_PATH = os.path.join(
+            rh_gitleaks.config.PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(
                 tmp_dir, "c", "auth.jwt"
             )
 
             # Check the results of a configure and run
             self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 1)
-            self.assertEqual(rh_gitleaks.configure(auth_jwt=self.mock_token), 0)
+            self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
             self.assertEqual(
                 mock_subprocess_run.call_args[0][0],

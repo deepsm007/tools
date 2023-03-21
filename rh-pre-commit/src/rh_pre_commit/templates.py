@@ -60,5 +60,5 @@ your commit again.
 If the detection was a false positive, the documentation[1] contains a section
 for handling false positives.
 
-[1] {rh_gitleaks.config.PATTERNS_SERVER_DOCS_URL}
+[1] {rh_gitleaks.config.PATTERN_SERVER_DOCS_URL}
 """

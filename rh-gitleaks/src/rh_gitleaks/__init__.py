@@ -165,13 +165,17 @@ def load_auth_token():
         None if it doesn't
     """
     try:
-        with open(config.PATTERNS_AUTH_JWT_PATH, "r", encoding="UTF-8") as f:
-            auth_jwt = f.read()
+        if config.PATTERN_SERVER_AUTH_TOKEN:
+            auth_token = config.PATTERN_SERVER_AUTH_TOKEN
+        else:
+            auth_token_path = config.PATTERN_SERVER_AUTH_TOKEN_PATH
+            with open(auth_token_path, "r", encoding="UTF-8") as f:
+                auth_token = f.read()
 
-            if jwt_valid(auth_jwt):
-                return auth_jwt
+        if jwt_valid(auth_token):
+            return auth_token
 
-            return None
+        return None
     except Exception:
         logging.error("Could not find auth token. Try: rh-gitleaks login")
         return None
@@ -189,7 +193,7 @@ def patterns_path():
         return None
 
     if patterns_update_needed(config.PATTERNS_PATH):
-        logging.info("Downloading patterns from %s", config.PATTERNS_SERVER_URL)
+        logging.info("Downloading patterns from %s", config.PATTERN_SERVER_URL)
 
         auth_token = load_auth_token()
         if not auth_token:
@@ -197,7 +201,7 @@ def patterns_path():
 
         try:
             _download_file(
-                config.PATTERNS_SERVER_PATTERNS_URL,
+                config.PATTERN_SERVER_PATTERNS_URL,
                 config.PATTERNS_PATH,
                 headers={"Authorization": f"Bearer {auth_token}"},
             )
@@ -271,7 +275,7 @@ def jwt_valid(token):
         return False
 
 
-def configure(auth_jwt=None):
+def configure(auth_token=None):
     """
     Run all of the steps to configure the tool. For now it is only a login
     but it may include more steps in the future. This is also to keep the
@@ -280,42 +284,42 @@ def configure(auth_jwt=None):
     Returns:
         A return code for sys.exit
     """
-    return login(auth_jwt=auth_jwt)
+    return login(auth_token=auth_token)
 
 
-def login(auth_jwt=None):
+def login(auth_token=None):
     """
-    An interactive login session if auth_jwt isn't provided that validates
+    An interactive login session if auth_token isn't provided that validates
     a token and writes it to disk.
 
     Returns:
         A return code for sys.exit
     """
-    if not auth_jwt:
+    if not auth_token:
         logging.info(
             "To log in, please visit %s and enter in the token below",
-            config.PATTERNS_SERVER_TOKEN_URL,
+            config.PATTERN_SERVER_TOKEN_URL,
         )
-        auth_jwt = input("Token: ").strip()
+        auth_token = input("Token: ").strip()
 
-    if not jwt_valid(auth_jwt):
+    if not jwt_valid(auth_token):
         logging.info(
             "It seems there was an issue with the token provided. Please try again"
         )
         return 1
 
-    if not os.path.isdir(os.path.dirname(config.PATTERNS_AUTH_JWT_PATH)):
-        if not _ensure_dir(os.path.dirname(config.PATTERNS_AUTH_JWT_PATH)):
+    if not os.path.isdir(os.path.dirname(config.PATTERN_SERVER_AUTH_TOKEN_PATH)):
+        if not _ensure_dir(os.path.dirname(config.PATTERN_SERVER_AUTH_TOKEN_PATH)):
             return 1
 
     if logout(show_msg=False) != 0:
         return 1
 
     try:
-        with open(config.PATTERNS_AUTH_JWT_PATH, "w", encoding="UTF-8") as f:
-            f.write(auth_jwt)
+        with open(config.PATTERN_SERVER_AUTH_TOKEN_PATH, "w", encoding="UTF-8") as f:
+            f.write(auth_token)
     except Exception:
-        logging.error("Could not save token: %s", config.PATTERNS_AUTH_JWT_PATH)
+        logging.error("Could not save token: %s", config.PATTERN_SERVER_AUTH_TOKEN_PATH)
         return 1
 
     logging.info("Successfully logged in")
@@ -329,11 +333,11 @@ def logout(show_msg=True):
     Returns:
         A return code for sys.exit
     """
-    if os.path.lexists(config.PATTERNS_AUTH_JWT_PATH):
+    if os.path.lexists(config.PATTERN_SERVER_AUTH_TOKEN_PATH):
         try:
-            os.remove(config.PATTERNS_AUTH_JWT_PATH)
+            os.remove(config.PATTERN_SERVER_AUTH_TOKEN_PATH)
         except Exception:
-            logging.error("Could not remove %s", config.PATTERNS_AUTH_JWT_PATH)
+            logging.error("Could not remove %s", config.PATTERN_SERVER_AUTH_TOKEN_PATH)
             return 1
 
     if show_msg:
