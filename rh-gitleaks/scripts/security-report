@@ -21,6 +21,6 @@ sha256sum --check latest-checksum
 unzip dependency-check-*-release.zip && rm dependency-check-*-release.zip
 cd $PROJECT_DIR
 
-/tmp/dependency-check/dependency-check/bin/dependency-check.sh --enableExperimental --project $(basename $PROJECT_DIR) --scan $PROJECT_DIR/wheelhouse || true
+/tmp/dependency-check/dependency-check/bin/dependency-check.sh --enableExperimental --project $(basename $PROJECT_DIR) --scan $PROJECT_DIR/wheelhouse --suppression ${PROJECT_DIR}/scripts/data/security_supression.xml || true
 rm -rf /tmp/dependency-check $PROJECT_DIR/wheelhouse
 $OPEN_FILE dependency-check-report.html
