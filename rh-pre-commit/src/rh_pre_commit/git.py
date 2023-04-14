@@ -1,3 +1,4 @@
+import os
 import subprocess  # nosec
 
 
@@ -46,6 +47,6 @@ def init_template_dir(value=None):
         return success
 
     if success:
-        return proc.stdout.decode().strip()
+        return os.path.expanduser(proc.stdout.decode().strip())
 
     return None
