@@ -85,10 +85,9 @@ instead of going to the server to get token.
 
 ## Notifications About Updates
 
-Please follow/subscribe-to the
-[Pattern Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
-doc in The Source. There is a change log at the bottom that is updated when
-there are new releases.
+Please follow the
+[LeakTK Changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/).
+blog in The Source. All important updates will be posted there.
 
 ## Usage (rh-gitleaks)
 
