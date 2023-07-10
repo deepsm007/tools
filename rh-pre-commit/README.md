@@ -72,7 +72,7 @@ section.
 **Updating:**
 
 Unless the
-[changelog](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#changelog)
+[changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
 says to, you will not need to run the configuration steps
 again during an update—just the steps up to and including `make install`.
 
@@ -147,10 +147,9 @@ for handling false positives.
 
 ## Notifications About Updates
 
-Please follow/subscribe-to the
-[Pattern Server](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server).
-doc in The Source. There is a change log at the bottom that is updated when
-there are new releases.
+Please follow the
+[LeakTK Changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/).
+blog in The Source. All important updates will be posted there.
 
 ## rh-multi-pre-commit vs rh-pre-commit
 
