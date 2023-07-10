@@ -86,8 +86,8 @@ instead of going to the server to get token.
 ## Notifications About Updates
 
 Please follow the
-[LeakTK Changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
-blog in The Source. All important updates will be posted there.
+[LeakTK Changelog blog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
+for all important updates.
 
 ## Usage (rh-gitleaks)
 
