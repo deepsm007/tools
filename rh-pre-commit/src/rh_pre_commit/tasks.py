@@ -6,11 +6,12 @@ from abc import abstractmethod
 
 import rh_gitleaks
 
-from rh_pre_commit import templates
+from rh_pre_commit import common
 from rh_pre_commit import git
+from rh_pre_commit import templates
 
 
-class Check(ABC):
+class Task(ABC):
     """
     An abstract base class for implementing a check in the rh-pre-commit
     hook.
@@ -49,14 +50,14 @@ class Check(ABC):
         return (config_value or self.default_config_value) == "true"
 
     @abstractmethod
-    def run(self):
+    def run(self, args):
         """
         Run the check and return a status code. A non-zero status code
         is considered a failure.
         """
 
 
-class SecretsCheck(Check):
+class SecretsCheck(Task):
     """
     Run rh-gitleaks on unstaged commits
     """
@@ -71,7 +72,7 @@ class SecretsCheck(Check):
         """
         return super().configure() or rh_gitleaks.configure(*args, **kwargs)
 
-    def run(self):
+    def run(self, args):
         """
         Run the check and return a status code. A non-zero status code
         is considered a failure.
@@ -99,4 +100,51 @@ class SecretsCheck(Check):
         return 0
 
 
-checks = (SecretsCheck(),)
+class SignOff(Task):
+    """
+    Add a sign-off message to the commit
+    """
+
+    name = "sign-off"
+    flag = "signOff"
+    default_config_value = "true"
+
+    _git_section = "rh-pre-commit.commit-msg"
+
+    def configure(self, *args, **kwargs):
+        """
+        Reset the flags but also log in
+        """
+        return super().configure() or rh_gitleaks.configure(*args, **kwargs)
+
+    def run(self, args):
+        """
+        Check that tasks are enabled and then append a SignOff to the commit message
+        """
+
+        if common.check_hooks():
+            return 1
+
+        # Generate sign-off text
+        sign_off_msg = [f"rh-pre-commit.version: {common.application_version()}\n"]
+        for task in tasks["pre-commit"]:
+            sign_off_msg.append(
+                f"rh-pre-commit.{task.name}: " + "OK\n" if task.enabled() else "Off\n"
+            )
+
+        # Write the sign-off to file (immediately before end/comments) - I think I can improve this.
+        with open(args.file, "r", encoding="UTF-8") as f:
+            lines = f.readlines()
+
+        insert_idx = 0
+        for idx, line in enumerate(lines):
+            if not line.lstrip().startswith("#"):
+                insert_idx = idx
+        lines[insert_idx + 1 : 1] = sign_off_msg
+        with open(args.file, "w", encoding="UTF_8") as f:
+            f.writelines(lines)
+
+        return 0
+
+
+tasks = {"pre-commit": (SecretsCheck(),), "commit-msg": (SignOff(),)}

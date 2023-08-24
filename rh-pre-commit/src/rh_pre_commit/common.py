@@ -6,10 +6,12 @@ import os
 import stat
 
 from argparse import ArgumentParser
+from importlib.metadata import version
 
 from pre_commit import main as pre_commit  # The pre-commit.com library
 from rh_pre_commit import config
 from rh_pre_commit import git
+from rh_pre_commit.tasks import tasks
 
 
 def create_parser(prog):
@@ -20,6 +22,13 @@ def create_parser(prog):
         prog=prog,
         description="Manage multiple pre-commit hooks for Red Hatters",
     )
+    parser.add_argument(
+        "--version", "-v", action="store_true", help="Print version information"
+    )
+    parser.add_argument(
+        "--hook-type", default="pre-commit", help="Set the hook type to run."
+    )
+    parser.add_argument("--file", required=False, help="Set the hook type to run.")
 
     subparsers = parser.add_subparsers(dest="command")
 
@@ -136,7 +145,7 @@ def install_hook(args, repo_path, content):
     repo_path
     """
     hooks_dir = os.path.join(repo_path, "hooks")
-    hook_path = os.path.join(hooks_dir, "pre-commit")
+    hook_path = os.path.join(hooks_dir, args.hook_type)
 
     # Make sure the path leading up to the hooks dir exists
     if not os.path.lexists(hooks_dir):
@@ -190,6 +199,28 @@ def install(args, content):
     return status
 
 
+def check_hooks():
+    # Currently only covering pre-commit hook.
+    hook_file = os.path.join(os.getcwd(), ".git/hooks/pre-commit")
+    status = 0
+
+    # Check to see if the file exists
+    if not os.path.isfile(hook_file):
+        return 1
+
+    # Check to make sure owner execution bit is set
+    if not bool(os.stat(hook_file).st_mode & 0b0100):
+        return 1
+
+    # Check to make sure this is called in the file.
+    with open(hook_file, "r", encoding="UTF-8") as f:
+        data = f.read()
+        if "rh-pre-commit" not in data and "rh-multi-pre-commit" not in data:
+            return 1
+
+    return 0
+
+
 def configure_git_template(args, content):
     template_dir = git.init_template_dir()
 
@@ -203,3 +234,10 @@ def configure_git_template(args, content):
         return 1
 
     return install_hook(args, template_dir, content)
+
+
+def application_version():
+    try:
+        return version("rh_pre_commit")
+    except:
+        return "UNKNOWN"
