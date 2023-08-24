@@ -29,9 +29,9 @@ fi
 INSTALL_PYTHON={shlex.quote(sys.executable)}
 
 if [ -x "$INSTALL_PYTHON" ]; then
-    exec "$INSTALL_PYTHON" -m rh_pre_commit.multi
+    exec "$INSTALL_PYTHON" -m rh_pre_commit.multi  --hook-type commit-msg --file $1
 elif command -v rh-multi-pre-commit > /dev/null; then
-    exec rh-multi-pre-commit
+    exec rh-multi-pre-commit  --hook-type commit-msg --file $1
 else
     echo '`rh-multi-pre-commit` not found.' 1>&2
     echo 'For more information: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/blob/main/rh-pre-commit/README.md' 1>&2
@@ -83,7 +83,14 @@ repos:
         name: Run standard RH pre-commit checks
         language: system
         entry: {shlex.quote(sys.executable)} -m rh_pre_commit
+        stages: [ pre-commit ]
         pass_filenames: false
+      - id: rh-pre-commit-msg
+        name: Append attestation to commit-msg
+        language: system
+        entry: {shlex.quote(sys.executable)} -m rh_pre_commit --hook-type commit-msg --file 
+        stages: [ commit-msg ]
+        pass_filenames: true
 """
 
 LEAK_DETECTED = f"""\

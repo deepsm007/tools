@@ -16,10 +16,10 @@ def install(args):
     """
     A handler that sets up pre-commit file
     """
-    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOK)
+    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type])
 
 
-def run(_):
+def run(args):
     """
     A handler that runs the pre-commit.com package
     """
@@ -28,9 +28,11 @@ def run(_):
     for path in config.RH_MULTI_CONFIG_PATHS:
         if not os.path.isfile(path):
             continue
-
-        status = pre_commit.main(["run", f"--config={path}"])
-
+        if args.hook_type == "pre-commit":
+            status = pre_commit.main(["run", f"--config={path}"])
+        if args.hook_type == "commit-msg":
+            status = pre_commit.main(["hook-impl", f"--config={path}", f"--hook-type={args.hook_type}",
+                                      f"--hook-dir={os.getcwd()}", "--", f"{args.file}"])
         if status:
             return status
 
@@ -42,7 +44,7 @@ def configure(args):
     A handler that resets the config for the tool
     """
     if args.configure_git_template:
-        if common.configure_git_template(args, templates.RH_MULTI_PRE_COMMIT_HOOK) != 0:
+        if common.configure_git_template(args, templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type]) != 0:
             return 1
 
         # So that rh_pre_commit doesn't apply it

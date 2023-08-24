@@ -126,7 +126,7 @@ class SignOff(Task):
             return 1
 
         # Generate sign-off text
-        sign_off_msg = [f"rh-pre-commit.version: {common.application_version()}\n"]
+        sign_off_msg = [f"\nrh-pre-commit.version: {common.application_version()}\n"]
         for task in tasks["pre-commit"]:
             sign_off_msg.append(
                 f"rh-pre-commit.{task.name}: " + "OK\n" if task.enabled() else "Off\n"
