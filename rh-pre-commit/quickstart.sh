@@ -7,13 +7,23 @@
 #
 # USAGE
 #
-#   ./quickstart.sh [branch]
+#   ./quickstart.sh -b=[branch] -s
 #
 # OPTIONS
 #
-#   branch - (optional) which branch should be installed
+#   -b branch - (optional) which branch should be installed
+#   -s - (optional) include sign-off hook (Default: false)
 #
 set -xeo pipefail
+
+while getopts b:s flag
+do
+  case "${flag}" in
+    b) branch=${OPTARG};;
+    s) signoff=True;;
+    *) echo "Invalid option."; head -n 17 "$0"; exit 1;;
+  esac
+done
 
 # Pull a fresh copy of the repo
 rm -rf /tmp/infosec-tools
@@ -21,9 +31,9 @@ git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tool
 cd /tmp/infosec-tools/rh-pre-commit
 
 # Checkout a branch if it was specified
-if [[ ! -z "$1" ]]
+if [[ ! -z "$branch" ]]
 then
-  git checkout $1
+  git checkout $branch
 fi
 
 # Upgrade pip
@@ -38,5 +48,15 @@ make install
 # Configure it with the default settings
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 
+if [[ ! -z "$signoff" ]]
+then
+  python3 -m rh_pre_commit.multi --hook-type commit-msg configure --configure-git-template --force
+fi
+
 # Enable it for all existing projects under the home directory
 python3 -m rh_pre_commit.multi install --force --path "${HOME}"
+
+if [[ ! -z "$signoff" ]]
+then
+  python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path "${HOME}"
+fi
