@@ -1,0 +1,6 @@
+---
+- id: rh-pre-commit
+  name: RH-pre-commit
+  description: Run standard rh-pre-commit checks
+  entry: scripts/rh-pre-commit-entry
+  language: script

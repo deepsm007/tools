@@ -1,0 +1,27 @@
+#! /bin/bash
+# NAME
+#
+#   rh-pre-commit-entry
+#
+# DESCRIPTION
+#
+#   This script provides an entry point for .pre-commit-hooks.yaml to use for
+#   rh-pre-commit. The "python" language type won't work since this repo has
+#   multiple projects in it.
+#
+#   This script should:
+#
+#   - Ensure there is a env with the versions of rh-pre-commit and rh-gitleaks
+#     on this branch installed in it
+#   - Exec /path/to/venv/bin/python -m rh_pre_commit and pass any cli args to it
+#
+# NOTES
+#
+#   - Once the rh-pre-commit code is open sourced, this script will probably
+#     point at the open source packages and set Red Hat specific configuration
+#     for backwards compatibility.
+#
+#   - This script currently does not auto-login rh-gitleaks. Please see the
+#     docs for more info:
+#
+#       https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit
