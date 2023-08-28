@@ -25,3 +25,50 @@
 #     docs for more info:
 #
 #       https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit
+#
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-"${HOME}/.cache"}"
+RH_PRE_COMMIT_CACHE_DIR="${XDG_CACHE_HOME}/rh-pre-commit"
+VENV_DIR="${RH_PRE_COMMIT_CACHE_DIR}/venv"
+SCRIPTS_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+
+# Lazy set up and run the venv python
+function venv_python {
+  # Ensure the cache dir exists
+  if [[ ! -d "${VENV_DIR}" ]]
+  then
+    python3 -m venv "${VENV_DIR}"
+  fi
+
+  "${VENV_DIR}/bin/python3" $@
+}
+
+# Determine what's in this branch of the repo
+function pyproject_version {
+  pyproject_toml="${SCRIPTS_DIR}/../${1}/pyproject.toml"
+  grep -Pzo '\[\s?project\s?\][\S\s]+?\[' "${pyproject_toml}" 2> /dev/null | grep -a version | grep -oP "\d\.\d\.\d"
+}
+
+# Make sure the version of the package in the venv matches whats in this
+# branch of the repo
+function sync_version {
+  project="${1}"
+  expected="$(pyproject_version "${project}")"
+  actual="$(venv_python -m pip list 2> /dev/null | grep "^${project}\s" | awk '{print $2}')"
+
+  if [[ "${actual}" != "${expected}" ]]
+  then
+    if [[ ! -z "${actual}" ]]
+    then
+      # Start fresh if an older version exists
+      rm --preserve-root -rf "${VENV_DIR}"
+    fi
+
+    venv_python -m pip install "${SCRIPTS_DIR}/../${project}"
+  fi
+}
+
+sync_version rh-gitleaks
+sync_version rh-pre-commit
+venv_python -m rh_pre_commit $@
+# TODO:
+# - Make sure everything errors out the right way and exit codes are handled
