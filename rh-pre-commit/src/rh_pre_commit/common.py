@@ -11,7 +11,6 @@ from importlib.metadata import version
 from pre_commit import main as pre_commit  # The pre-commit.com library
 from rh_pre_commit import config
 from rh_pre_commit import git
-from rh_pre_commit.tasks import tasks
 
 
 def create_parser(prog):
@@ -28,7 +27,11 @@ def create_parser(prog):
     parser.add_argument(
         "--hook-type", default="pre-commit", help="Set the hook type to run."
     )
-    parser.add_argument("--commit-msg-filename", required=False, help="Provide the commit message filename.")
+    parser.add_argument(
+        "--commit-msg-filename",
+        required=False,
+        help="Provide the commit message filename.",
+    )
 
     subparsers = parser.add_subparsers(dest="command")
 
@@ -202,7 +205,6 @@ def install(args, content):
 def check_hooks():
     # Currently only covering pre-commit hook.
     hook_file = os.path.join(os.getcwd(), ".git/hooks/pre-commit")
-    status = 0
 
     # Check to see if the file exists
     if not os.path.isfile(hook_file):
@@ -239,5 +241,5 @@ def configure_git_template(args, content):
 def application_version():
     try:
         return version("rh_pre_commit")
-    except:
+    except Exception:
         return "UNKNOWN"

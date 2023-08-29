@@ -114,12 +114,6 @@ class SignOff(Task):
 
     _git_section = "rh-pre-commit.commit-msg"
 
-    def configure(self, *args, **kwargs):
-        """
-        Reset the flags but also log in
-        """
-        return super().configure()
-
     def run(self, args):
         """
         Check that tasks are enabled and then append a SignOff to the commit message

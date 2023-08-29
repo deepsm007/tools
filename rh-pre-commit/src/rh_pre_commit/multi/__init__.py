@@ -31,8 +31,16 @@ def run(args):
         if args.hook_type == "pre-commit":
             status = pre_commit.main(["run", f"--config={path}"])
         if args.hook_type == "commit-msg":
-            status = pre_commit.main(["hook-impl", f"--config={path}", f"--hook-type={args.hook_type}",
-                                      f"--hook-dir={os.getcwd()}", "--", f"{args.commit_msg_filename}"])
+            status = pre_commit.main(
+                [
+                    "hook-impl",
+                    f"--config={path}",
+                    f"--hook-type={args.hook_type}",
+                    f"--hook-dir={os.getcwd()}",
+                    "--",
+                    f"{args.commit_msg_filename}",
+                ]
+            )
         if status:
             return status
 
@@ -44,7 +52,12 @@ def configure(args):
     A handler that resets the config for the tool
     """
     if args.configure_git_template:
-        if common.configure_git_template(args, templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type]) != 0:
+        if (
+            common.configure_git_template(
+                args, templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type]
+            )
+            != 0
+        ):
             return 1
 
         # So that rh_pre_commit doesn't apply it

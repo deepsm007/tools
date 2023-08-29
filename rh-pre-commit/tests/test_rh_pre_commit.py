@@ -18,27 +18,31 @@ class PreCommitHookTest(TestCase):
         tests = (
             # The default should be to run
             (
-                Namespace(command=None),
+                Namespace(command=None, hook_type="pre-commit"),
                 pre.run,
             ),
             # Install --check should list repos
             (
-                Namespace(command="install", check=True),
+                Namespace(command="install", check=True, hook_type="pre-commit"),
                 common.list_repos,
             ),
             # Install --check should list repos even if other flags are set
             (
-                Namespace(command="install", check=True, force=True),
+                Namespace(
+                    command="install", check=True, force=True, hook_type="pre-commit"
+                ),
                 common.list_repos,
             ),
             # Install without check should return the install command
             (
-                Namespace(command="install", check=False, force=False),
+                Namespace(
+                    command="install", check=False, force=False, hook_type="pre-commit"
+                ),
                 pre.install,
             ),
             # Configure should only care about the command
             (
-                Namespace(command="configure"),
+                Namespace(command="configure", hook_type="pre-commit"),
                 pre.configure,
             ),
         )
@@ -46,13 +50,13 @@ class PreCommitHookTest(TestCase):
         for i, (ns, handler) in enumerate(tests):
             self.assertEqual(pre.pick_handler(ns), handler, f"test={i}")
 
-    @patch("rh_pre_commit.checks")
-    def test_run(self, mock_rh_pre_commit_checks):
+    @patch("rh_pre_commit.tasks")
+    def test_run(self, mock_rh_pre_commit_tasks):
         """
         Confirm the run command passes the right args
         """
         mock_check = Mock()
-        mock_rh_pre_commit_checks.__iter__.return_value = [mock_check]
+        mock_rh_pre_commit_tasks["pre-commit"].__iter__.return_value = [mock_check]
 
         tests = (
             # Success
@@ -67,7 +71,9 @@ class PreCommitHookTest(TestCase):
             mock_check.reset_mock()
             mock_check.enabled.return_value = enabled
             mock_check.run.return_value = run
-            self.assertEqual(pre.run(Namespace()), expected, f"test={i}")
+            self.assertEqual(
+                pre.run(Namespace(hook_type="pre-commit")), expected, f"test={i}"
+            )
 
     def test_install(self):
         """
@@ -106,7 +112,9 @@ class PreCommitHookTest(TestCase):
             #
 
             # Run the install now that things are setup
-            args = Namespace(check=False, force=False, path=tmp_dir)
+            args = Namespace(
+                check=False, force=False, path=tmp_dir, hook_type="pre-commit"
+            )
             pre.install(args)
 
             # Was added to the clean repo
@@ -125,7 +133,9 @@ class PreCommitHookTest(TestCase):
             #
 
             # Run the install now that things are setup
-            args = Namespace(check=False, force=True, path=tmp_dir)
+            args = Namespace(
+                check=False, force=True, path=tmp_dir, hook_type="pre-commit"
+            )
             pre.install(args)
 
             # Was added to the clean repo
@@ -140,10 +150,10 @@ class PreCommitHookTest(TestCase):
             self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
 
     @patch("rh_pre_commit.git.init_template_dir")
-    @patch("rh_pre_commit.checks")
-    def test_configure(self, mock_rh_pre_commit_checks, mock_git_init_template_dir):
+    @patch("rh_pre_commit.tasks")
+    def test_configure(self, mock_rh_pre_commit_tasks, mock_git_init_template_dir):
         mock_check = Mock()
-        mock_rh_pre_commit_checks.__iter__.return_value = [mock_check]
+        mock_rh_pre_commit_tasks["pre-commit"].__iter__.return_value = [mock_check]
 
         with TemporaryDirectory() as tmp_dir:
             init_template_dir = os.path.join(tmp_dir, ".git-template")
@@ -155,7 +165,9 @@ class PreCommitHookTest(TestCase):
 
             mock_check.reset_mock()
             mock_check.configure.return_value = 0
-            status = pre.configure(Namespace(configure_git_template=False))
+            status = pre.configure(
+                Namespace(configure_git_template=False, hook_type="pre-commit")
+            )
             self.assertEqual(status, 0)
 
             # The template hook path shouldn't exist yet
@@ -163,7 +175,9 @@ class PreCommitHookTest(TestCase):
 
             mock_check.reset_mock()
             mock_check.configure.return_value = 1
-            status = pre.configure(Namespace(configure_git_template=True))
+            status = pre.configure(
+                Namespace(configure_git_template=True, hook_type="pre-commit")
+            )
             self.assertEqual(status, 1)
 
             # The template hook path should exist now that the flag was set to

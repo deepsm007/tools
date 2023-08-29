@@ -18,27 +18,31 @@ class MultiPreCommitHookTest(TestCase):
         tests = (
             # The default should be to run
             (
-                Namespace(command=None),
+                Namespace(command=None, hook_type="pre-commit"),
                 multi.run,
             ),
             # Install --check should list repos
             (
-                Namespace(command="install", check=True),
+                Namespace(command="install", check=True, hook_type="pre-commit"),
                 common.list_repos,
             ),
             # Install --check should list repos even if other flags are set
             (
-                Namespace(command="install", check=True, force=True),
+                Namespace(
+                    command="install", check=True, force=True, hook_type="pre-commit"
+                ),
                 common.list_repos,
             ),
             # Install without check should return the install command
             (
-                Namespace(command="install", check=False, force=False),
+                Namespace(
+                    command="install", check=False, force=False, hook_type="pre-commit"
+                ),
                 multi.install,
             ),
             # Configure should only care about the command
             (
-                Namespace(command="configure"),
+                Namespace(command="configure", hook_type="pre-commit"),
                 multi.configure,
             ),
         )
@@ -86,7 +90,7 @@ class MultiPreCommitHookTest(TestCase):
                 with open(path, "w", encoding="UTF-8"):
                     pass
 
-            status = multi.run(Namespace())
+            status = multi.run(Namespace(hook_type="pre-commit"))
 
         self.assertEqual(status, 1)
 
@@ -137,7 +141,9 @@ class MultiPreCommitHookTest(TestCase):
             #
 
             # Run the install now that things are setup
-            args = Namespace(check=False, force=False, path=tmp_dir)
+            args = Namespace(
+                check=False, force=False, path=tmp_dir, hook_type="pre-commit"
+            )
             multi.install(args)
 
             # Was added to the clean repo
@@ -156,7 +162,9 @@ class MultiPreCommitHookTest(TestCase):
             #
 
             # Run the install now that things are setup
-            args = Namespace(check=False, force=True, path=tmp_dir)
+            args = Namespace(
+                check=False, force=True, path=tmp_dir, hook_type="pre-commit"
+            )
             multi.install(args)
 
             # Was added to the clean repo
@@ -195,7 +203,9 @@ class MultiPreCommitHookTest(TestCase):
 
             # It writes the config file
             self.assertFalse(os.path.lexists(config_path))
-            multi.configure(Namespace(configure_git_template=False))
+            multi.configure(
+                Namespace(configure_git_template=False, hook_type="pre-commit")
+            )
             self.assertTrue(os.path.lexists(config_path))
 
             # The template hook path shouldn't exist yet
@@ -208,7 +218,9 @@ class MultiPreCommitHookTest(TestCase):
             with open(config_path, "r", encoding="UTF-8") as conf_file:
                 self.assertIn("junk", conf_file.read())
 
-            multi.configure(Namespace(configure_git_template=True))
+            multi.configure(
+                Namespace(configure_git_template=True, hook_type="pre-commit")
+            )
 
             with open(config_path, "r", encoding="UTF-8") as conf_file:
                 self.assertNotIn("junk", conf_file.read())
