@@ -29,9 +29,9 @@ fi
 INSTALL_PYTHON={shlex.quote(sys.executable)}
 
 if [ -x "$INSTALL_PYTHON" ]; then
-    exec "$INSTALL_PYTHON" -m rh_pre_commit.multi  --hook-type commit-msg --file $1
+    exec "$INSTALL_PYTHON" -m rh_pre_commit.multi  --hook-type commit-msg --commit-msg-filename $1
 elif command -v rh-multi-pre-commit > /dev/null; then
-    exec rh-multi-pre-commit  --hook-type commit-msg --file $1
+    exec rh-multi-pre-commit  --hook-type commit-msg --commit-msg-filename $1
 else
     echo '`rh-multi-pre-commit` not found.' 1>&2
     echo 'For more information: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/blob/main/rh-pre-commit/README.md' 1>&2
@@ -64,9 +64,9 @@ fi
 INSTALL_PYTHON={shlex.quote(sys.executable)}
 
 if [ -x "$INSTALL_PYTHON" ]; then
-    exec "$INSTALL_PYTHON" -m rh_pre_commit --hook-type commit-msg --file $1
+    exec "$INSTALL_PYTHON" -m rh_pre_commit --hook-type commit-msg --commit-msg-filename $1
 elif command -v rh-pre-commit > /dev/null; then
-    exec rh-pre-commit --hook-type commit-msg --file $1
+    exec rh-pre-commit --hook-type commit-msg --commit-msg-filename $1
 else
     echo '`rh-pre-commit` not found.' 1>&2
     echo 'For more information: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/blob/main/rh-pre-commit/README.md' 1>&2
@@ -88,7 +88,7 @@ repos:
       - id: rh-pre-commit-msg
         name: Append attestation to commit-msg
         language: system
-        entry: {shlex.quote(sys.executable)} -m rh_pre_commit --hook-type commit-msg --file 
+        entry: {shlex.quote(sys.executable)} -m rh_pre_commit --hook-type commit-msg --commit-msg-filename 
         stages: [ commit-msg ]
         pass_filenames: true
 """

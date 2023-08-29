@@ -70,6 +70,9 @@ class SecretsCheck(Task):
         """
         Reset the flags but also log in
         """
+        if rh_gitleaks.load_auth_token():
+            return super().configure()
+
         return super().configure() or rh_gitleaks.configure(*args, **kwargs)
 
     def run(self, args):
@@ -115,7 +118,7 @@ class SignOff(Task):
         """
         Reset the flags but also log in
         """
-        return super().configure() or rh_gitleaks.configure(*args, **kwargs)
+        return super().configure()
 
     def run(self, args):
         """
@@ -133,7 +136,7 @@ class SignOff(Task):
             )
 
         # Write the sign-off to file (immediately before end/comments) - I think I can improve this.
-        with open(args.file, "r", encoding="UTF-8") as f:
+        with open(args.commit_msg_filename, "r", encoding="UTF-8") as f:
             lines = f.readlines()
 
         insert_idx = 0
@@ -141,7 +144,7 @@ class SignOff(Task):
             if not line.lstrip().startswith("#"):
                 insert_idx = idx
         lines[insert_idx + 1 : 1] = sign_off_msg
-        with open(args.file, "w", encoding="UTF_8") as f:
+        with open(args.commit_msg_filename, "w", encoding="UTF_8") as f:
             f.writelines(lines)
 
         return 0

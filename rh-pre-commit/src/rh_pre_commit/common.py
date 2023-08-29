@@ -28,7 +28,7 @@ def create_parser(prog):
     parser.add_argument(
         "--hook-type", default="pre-commit", help="Set the hook type to run."
     )
-    parser.add_argument("--file", required=False, help="Set the hook type to run.")
+    parser.add_argument("--commit-msg-filename", required=False, help="Provide the commit message filename.")
 
     subparsers = parser.add_subparsers(dest="command")
 

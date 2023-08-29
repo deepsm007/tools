@@ -42,7 +42,7 @@ legacy scripts and will prompt you before doing so.
 
 If you are fine with a default install, there is a [quickstart.sh](quickstart.sh)
 that runs all of the commands from this section in one go. **Please still read
-though this section** to understand the implications of the defaults applied
+through this section** to understand the implications of the defaults applied
 by the quickstart!
 
 **A default install will:**
