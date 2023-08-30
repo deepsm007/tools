@@ -24,8 +24,12 @@ def run(_):
     A handler that runs the pre-commit.com package
     """
     status = 0
+    if config.local_config_enabled():
+        paths = config.RH_MULTI_CONFIG_PATHS
+    else:
+        paths = (config.RH_MULTI_CONFIG_PATHS[0],)
 
-    for path in config.RH_MULTI_CONFIG_PATHS:
+    for path in paths:
         if not os.path.isfile(path):
             continue
 
@@ -49,12 +53,14 @@ def configure(args):
         args.configure_git_template = False
 
     config_path = config.RH_MULTI_GLOBAL_CONFIG_PATH
-    if os.path.lexists(config_path):
-        try:
+    try:
+        if os.path.lexists(config_path):
             os.remove(config_path)
-        except Exception:
-            logging.error("Could not unlink %s", config_path)
-            return 1
+        with open(config_path, "w", encoding="UTF-8") as config_file:
+            config_file.write(templates.RH_MULTI_CONIFG)
+    except Exception:
+        logging.error("Could not unlink or write config %s", config_path)
+        return 1
 
     if not os.path.lexists(config.CONFIG_DIR):
         try:
@@ -63,14 +69,11 @@ def configure(args):
             logging.error("Could not create config dir %s", config.CONFIG_DIR)
             return 1
 
-    try:
-        with open(config_path, "w", encoding="UTF-8") as config_file:
-            config_file.write(templates.RH_MULTI_CONIFG)
-    except Exception:
-        logging.error("Could not write config %s", config_path)
-        return 1
-
     logging.info("Config updated %s", config_path)
+
+    # Set secure default for local pre-commit config
+    if config.configure_global_git_config():
+        return 1
 
     # Apply this to the individual hooks too
     if rh_pre_commit.configure(args) != 0:

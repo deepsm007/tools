@@ -63,7 +63,13 @@ enabled instead.
 
 **Warning:** If you are using `rh-multi-pre-commit`, make sure you trust the
 pre-commit hooks defined in a project's `.pre-commit-config.yaml` before making
-a commit. It will run them during a commit.
+a commit. The hooks defined are disabled by default during `rh-multi-pre-commit`
+configuration.
+
+**Enabling .pre-commit-config.yaml per repo**
+```sh
+git config --bool rh-pre-commit.enableLocalConfig true
+```
 
 For more info see the
 [rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
