@@ -27,7 +27,7 @@ def run(_):
     if config.local_config_enabled():
         paths = config.RH_MULTI_CONFIG_PATHS
     else:
-        paths = (config.RH_MULTI_CONFIG_PATHS[0],)
+        paths = (config.RH_MULTI_GLOBAL_CONFIG_PATH,)
 
     for path in paths:
         if not os.path.isfile(path):
@@ -66,9 +66,8 @@ def configure(args):
 
     logging.info("Config updated %s", config_path)
 
-    # Set secure default for local pre-commit config
-    if config.configure_global_git_config():
-        return 1
+    if config.disable_local_config():
+          return 1
 
     # Apply this to the individual hooks too
     if rh_pre_commit.configure(args) != 0:
