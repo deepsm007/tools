@@ -67,7 +67,7 @@ def configure(args):
     logging.info("Config updated %s", config_path)
 
     if config.disable_local_config():
-          return 1
+        return 1
 
     # Apply this to the individual hooks too
     if rh_pre_commit.configure(args) != 0:

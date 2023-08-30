@@ -24,7 +24,7 @@ DEFAULT_ENABLE_LOCAL_CONFIG_VALUE = "false"
 DEFAULT_ENABLE_LOCAL_CONFIG_NAME = "enableLocalConfig"
 
 
-def configure_global_git_config():
+def disable_local_config():
     return git.config(
         f"{DEFAULT_GIT_SECTION}.{DEFAULT_ENABLE_LOCAL_CONFIG_NAME}",
         DEFAULT_ENABLE_LOCAL_CONFIG_VALUE,
@@ -33,6 +33,8 @@ def configure_global_git_config():
 
 
 def local_config_enabled():
-    proc = git.config(f"{DEFAULT_GIT_SECTION}.{DEFAULT_ENABLE_LOCAL_CONFIG_NAME}", flags=["bool"])
+    proc = git.config(
+        f"{DEFAULT_GIT_SECTION}.{DEFAULT_ENABLE_LOCAL_CONFIG_NAME}", flags=["bool"]
+    )
     config_value = proc.stdout.decode().strip().lower()
     return (config_value or DEFAULT_ENABLE_LOCAL_CONFIG_VALUE) == "true"
