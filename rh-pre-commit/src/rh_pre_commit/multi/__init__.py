@@ -56,18 +56,13 @@ def configure(args):
     try:
         if os.path.lexists(config_path):
             os.remove(config_path)
+        if not os.path.lexists(config.CONFIG_DIR):
+            os.makedirs(config.CONFIG_DIR)
         with open(config_path, "w", encoding="UTF-8") as config_file:
             config_file.write(templates.RH_MULTI_CONIFG)
     except Exception:
-        logging.error("Could not unlink or write config %s", config_path)
+        logging.error("Could not remove or write config %s", config_path)
         return 1
-
-    if not os.path.lexists(config.CONFIG_DIR):
-        try:
-            os.makedirs(config.CONFIG_DIR)
-        except Exception:
-            logging.error("Could not create config dir %s", config.CONFIG_DIR)
-            return 1
 
     logging.info("Config updated %s", config_path)
 
