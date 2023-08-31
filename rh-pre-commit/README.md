@@ -52,22 +52,7 @@ by the quickstart!
 * Set `rh-multi-pre-commit` as the pre-commit hook by default for all new repos
 * Create a `~/.config/pre-commit/config.yaml` config file for `rh-multi-pre-commit` to enable `rh-pre-commit`
 * Configure `rh-gitleaks` with a 2 year patterns server token
-
-**Rh-multi-pre-commit considerations:**
-
-`rh-multi-pre-commit` builds on [pre-commit.com](https://pre-commit.com/)'s
-pre-commit framework to support a global config file in addition to hooks
-defined in a project's `.pre-commit-config.yaml`. If you don't want to support
-multiple pre-commit hooks per project (the default), `rh-pre-commit` can be
-enabled instead.
-
-**Warning:** If you are using `rh-multi-pre-commit`, make sure you trust the
-pre-commit hooks defined in a project's `.pre-commit-config.yaml` before making
-a commit. It will run them during a commit.
-
-For more info see the
-[rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
-section.
+* Disable `rh-multi-pre-commit` from automatically running local pre-commit hooks defined in a repositories `.pre-commit-config.yaml`. 
 
 **Updating:**
 
@@ -113,6 +98,36 @@ python3 -m rh_pre_commit.multi install --force --path ~/
 ```
 
 And you should be all set!
+
+**Rh-multi-pre-commit considerations:**
+
+`rh-multi-pre-commit` builds on [pre-commit.com](https://pre-commit.com/)'s
+pre-commit framework to support a global config file in addition to hooks
+defined in a project's `.pre-commit-config.yaml`. If you don't want to support
+multiple pre-commit hooks per project (the default), `rh-pre-commit` can be
+enabled instead.
+
+**Warning:** If you are using `rh-multi-pre-commit` with `rh-pre-commit.enableLocalConfig = true`,
+make sure you trust the hooks defined in the repo's `.pre-commit-config.yaml`. It is disabled by 
+default to avoid executing a malicious hook.
+
+**To enable running hooks defined in a repo's .pre-commit-config.yaml**
+
+```sh
+# Run from inside the repo you want to enable it on
+git config --bool rh-pre-commit.enableLocalConfig true
+```
+**To enable running hooks defined in all repos' .pre-commit-config.yaml (use with caution)**
+
+```sh
+git config --bool --global rh-pre-commit.enableLocalConfig true
+```
+
+(**Note:** The global setting is disabled every time you run `configure`)
+
+For more info see the
+[rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
+section.
 
 **Confirming it works**
 
