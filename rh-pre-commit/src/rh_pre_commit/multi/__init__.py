@@ -36,14 +36,7 @@ def run(args):
             status = pre_commit.main(["run", f"--config={path}"])
         if args.hook_type == "commit-msg":
             status = pre_commit.main(
-                [
-                    "hook-impl",
-                    f"--config={path}",
-                    f"--hook-type={args.hook_type}",
-                    f"--hook-dir={os.path.join(os.getcwd(),'.git/hooks')}",
-                    "--",
-                    f"{args.commit_msg_filename}",
-                ]
+                ["run", f"--config={path}", f"--hook-stage={args.hook_type}", f"--commit-msg-filename={args.commit_msg_filename}"]
             )
         if status:
             return status
