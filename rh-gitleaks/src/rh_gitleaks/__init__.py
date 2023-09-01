@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import os
+import shlex
 import stat
 import subprocess  # nosec
 import sys
@@ -177,7 +178,11 @@ def load_auth_token():
 
         return None
     except Exception:
-        logging.error("Could not find auth token. Try: rh-gitleaks login")
+        logging.error("Could not find pattern server auth token!")
+        logging.info(
+            "\nPlease log in with this command and try again:\n\n%s\n",
+            f"{shlex.quote(sys.executable)} -m rh_gitleaks login",
+        )
         return None
 
 
