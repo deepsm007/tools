@@ -29,8 +29,6 @@
 set -euo pipefail
 
 SCRIPTS_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
-XDG_CACHE_HOME="${XDG_CACHE_HOME:-"${HOME}/.cache"}"
-RH_PRE_COMMIT_CACHE_DIR="${XDG_CACHE_HOME}/rh-pre-commit"
 VENV_DIR="${SCRIPTS_DIR}/../venv"
 
 # Lazy set up and run the venv python
