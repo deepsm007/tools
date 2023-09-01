@@ -97,7 +97,7 @@ class CheckSecrets(Task):
 
         if rc == leak_exit_code:
             logging.info(templates.LEAK_DETECTED)
-            return rh_gitleaks.config.BLOCKING_EXIT_CODE
+            return rc
 
         # Only return a failing status if leaks are found.
         # There are cases where gitleaks will fail and we don't want to block

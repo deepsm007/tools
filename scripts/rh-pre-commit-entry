@@ -24,14 +24,14 @@
 #     point at the open source packages and set Red Hat specific configuration
 #     for backwards compatibility.
 #
-#   - This script currently does not auto-login rh-gitleaks. Please see the
-#     docs for more info:
-#
-#       https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit
+#   - This script currently does not auto-login rh-gitleaks, but rh-gitleaks
+#     will provide a command to run to login if it fails. Also the auth token
+#     from https://patterns.security.redhat.com can be set via the
+#     LEAKTK_PATTERN_SERVER_AUTH_TOKEN env var.
 #
 set -euo pipefail
 
-SCRIPTS_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 VENV_DIR="${SCRIPTS_DIR}/../venv"
 
 # Lazy set up and run the venv python

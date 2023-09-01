@@ -12,5 +12,5 @@
 #   in this repo.
 set -euo pipefail
 
-SCRIPTS_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 grep -Pzo '\[\s?project\s?\][\S\s]+?\[' "${SCRIPTS_DIR}/../${1}/pyproject.toml" 2> /dev/null | grep -a version | grep -oP "\d\.\d\.\d"

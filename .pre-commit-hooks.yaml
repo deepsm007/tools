@@ -1,7 +1,7 @@
 ---
 - id: rh-pre-commit
   name: Local rh-pre-commit
-  description: Run rh-pre-commit tasks
+  description: "https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit"
   stages: [pre-commit]
   language: script
   entry: scripts/rh-pre-commit-entry
