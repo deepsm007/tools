@@ -81,8 +81,6 @@ def parse_args(args):
             rh_gitleaks_args.append(args[0].replace("-", "_"))
         else:
             gitleaks_args = args
-    else:
-        gitleaks_args.append("--help")
 
     return {
         "gitleaks": gitleaks_args,
@@ -228,11 +226,11 @@ def run_gitleaks(args, callback=None, **kwargs):
     """
     bin_path = gitleaks_bin_path()
     if not bin_path:
-        return 1
+        return config.BLOCKING_EXIT_CODE
 
     p_path = patterns_path()
     if not p_path:
-        return 1
+        return config.BLOCKING_EXIT_CODE
 
     proc = subprocess.run(  # nosec
         [bin_path, f"--config-path={p_path}", *args],

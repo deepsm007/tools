@@ -78,22 +78,26 @@ class CheckSecrets(Task):
         Run the check and return a status code. A non-zero status code
         is considered a failure.
         """
+        # Make sure this isn't the same as rh_gitleaks.config.BLOCKING_EXIT_CODE
         leak_exit_code = 42
+
         args = [
             f"--leaks-exit-code={leak_exit_code}",
             "--verbose",
-            "--unstaged",
             "--redact",
-            "--format=json",
-            "--path=.",
         ]
 
         if os.path.isfile(".gitleaks.toml"):
             args.append("--additional-config=.gitleaks.toml")
 
-        if rh_gitleaks.main(args) == leak_exit_code:
+        rc = rh_gitleaks.main(args)
+
+        if rc == rh_gitleaks.config.BLOCKING_EXIT_CODE:
+            return rc
+
+        if rc == leak_exit_code:
             logging.info(templates.LEAK_DETECTED)
-            return leak_exit_code
+            return rh_gitleaks.config.BLOCKING_EXIT_CODE
 
         # Only return a failing status if leaks are found.
         # There are cases where gitleaks will fail and we don't want to block
