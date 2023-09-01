@@ -45,17 +45,11 @@ function venv_python {
   "${VENV_DIR}/bin/python3" $@
 }
 
-# Determine what's in this branch of the repo
-function pyproject_version {
-  pyproject_toml="${SCRIPTS_DIR}/../${1}/pyproject.toml"
-  grep -Pzo '\[\s?project\s?\][\S\s]+?\[' "${pyproject_toml}" 2> /dev/null | grep -a version | grep -oP "\d\.\d\.\d"
-}
-
 # Make sure the version of the package in the venv matches whats in this
 # branch of the repo
 function sync_version {
   project="${1}"
-  expected="$(pyproject_version "${project}")"
+  expected="$("${SCRIPTS_DIR}/tool-version" "${project}")"
   actual="$(venv_python -m pip list 2> /dev/null | grep "^${project}\s" | awk '{print $2}' || echo "")"
 
   if [[ "${actual}" != "${expected}" ]]

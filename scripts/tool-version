@@ -1,0 +1,16 @@
+#! /bin/bash
+# File for getting versions of tools in this repo
+# ID: 8e7309c7-7253-4328-b90d-e212a95f26e9
+#
+# USAGE
+#
+#   tool-version <tool-name>
+#
+# DESCRIPTION
+#
+#   This is not meant to be used by individuals directly. Only by other scripts
+#   in this repo.
+set -euo pipefail
+
+SCRIPTS_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+grep -Pzo '\[\s?project\s?\][\S\s]+?\[' "${SCRIPTS_DIR}/../${1}/pyproject.toml" 2> /dev/null | grep -a version | grep -oP "\d\.\d\.\d"

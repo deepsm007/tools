@@ -4,6 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rh-gitleaks"
+# When changing this make sure that "../scripts/tool-version rh-gitleaks"
+# reports the correct value
 version = "2.0.0-dev"
 description = "A wrapper around gitleaks to integrate with Red Hat patterns"
 authors = [{ name="Red Hat InfoSec", email="infosec@redhat.com" }]

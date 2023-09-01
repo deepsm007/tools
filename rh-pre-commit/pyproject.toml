@@ -4,6 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rh-pre-commit"
+# When changing this make sure that "../scripts/tool-version rh-pre-commit"
+# reports the correct value
 version = "2.0.0-dev"
 description = "Tools for managing pre-commit hooks within Red Hat"
 authors = [{ name="Red Hat InfoSec", email="infosec@redhat.com" }]
