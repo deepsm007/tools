@@ -202,25 +202,25 @@ def install(args, content):
     return status
 
 
-def check_hooks():
-    # Currently only covering pre-commit hook.
-    hook_file = os.path.join(os.getcwd(), ".git/hooks/pre-commit")
+def hook_installed(hook_type):
+    hook_path = os.path.join(os.getcwd(), ".git", "hooks", hook_type)
 
     # Check to see if the file exists
-    if not os.path.isfile(hook_file):
-        return 1
+    if not os.path.isfile(hook_path):
+        return False
 
-    # Check to make sure owner execution bit is set
-    if not bool(os.stat(hook_file).st_mode & 0b0100):
-        return 1
+    # Check to make sure the execution bit is set
+    if not bool(os.stat(hook_path).st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)):
+        return False
 
-    # Check to make sure this is called in the file.
-    with open(hook_file, "r", encoding="UTF-8") as f:
-        data = f.read()
-        if "rh-pre-commit" not in data and "rh-multi-pre-commit" not in data:
-            return 1
-
-    return 0
+    try:
+        # Check to make sure this is called in the file.
+        with open(hook_path, "r", encoding="UTF-8") as hook_file:
+            data = hook_file.read()
+            return "rh-pre-commit" in data or "rh-multi-pre-commit" in data
+    except Exception as e:
+        logging.info(e)
+        return False
 
 
 def configure_git_template(args, content):

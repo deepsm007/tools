@@ -58,12 +58,12 @@ class Task(ABC):
         """
 
 
-class SecretsCheck(Task):
+class CheckSecrets(Task):
     """
     Run rh-gitleaks on unstaged commits
     """
 
-    name = "secrets-check"
+    name = "check-secrets"
     flag = "checkSecrets"
     default_config_value = "true"
 
@@ -113,36 +113,33 @@ class SignOff(Task):
     flag = "signOff"
     default_config_value = "true"
 
-    _git_section = "rh-pre-commit.commit-msg"
+    _git_section = f"{config.DEFAULT_GIT_SECTION}.commit-msg"
 
     def run(self, args):
         """
         Check that tasks are enabled and then append a SignOff to the commit message
         """
 
-        if common.check_hooks():
+        if not common.hook_installed("pre-commit"):
+            logging.error("pre-commit hook not installed")
             return 1
 
         # Generate sign-off text
-        sign_off_msg = [f"\nrh-pre-commit.version: {common.application_version()}\n"]
+        sign_off_msg = [
+          f"rh-pre-commit.version: {common.application_version()}",
+        ]
+
         for task in tasks["pre-commit"]:
-            sign_off_msg.append(
-                f"rh-pre-commit.{task.name}: " + "OK\n" if task.enabled() else "Off\n"
-            )
+            status = "ENABLED" if task.enabled() else "DISABLED"
+            sign_off_msg.append(f"rh-pre-commit.{task.name}: {status}")
 
-        # Write the sign-off to file (immediately before end/comments) - I think I can improve this.
-        with open(args.commit_msg_filename, "r", encoding="UTF-8") as f:
-            lines = f.readlines()
-
-        insert_idx = 0
-        for idx, line in enumerate(lines):
-            if not line.lstrip().startswith("#"):
-                insert_idx = idx
-        lines[insert_idx + 1 : 1] = sign_off_msg
-        with open(args.commit_msg_filename, "w", encoding="UTF_8") as f:
-            f.writelines(lines)
+        # Write the sign-off to file
+        with open(args.commit_msg_filename, "a", encoding="UTF-8") as commit_msg_file:
+            commit_msg_file.write("\n")
+            commit_msg_file.write("\n".join(sign_off_msg))
+            commit_msg_file.write("\n")
 
         return 0
 
 
-tasks = {"pre-commit": (SecretsCheck(),), "commit-msg": (SignOff(),)}
+tasks = {"pre-commit": (CheckSecrets(),), "commit-msg": (SignOff(),)}
