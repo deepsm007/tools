@@ -29,6 +29,15 @@ def configure(args):
     """
     A handler that resets the config for the tool
     """
+    #
+    # Important!
+    #
+    # rh-pre-commit should be runable without doing a configure first. It
+    # should have sane defaults if values aren't set with the only exception
+    # being auth (which explains what the user needs to do to log in). This
+    # is so that we can support running this through a .pre-commit-hooks.yaml
+    # file.
+    #
     if args.configure_git_template:
         template = templates.RH_PRE_COMMIT_HOOK[args.hook_type]
         if common.configure_git_template(args, template) != 0:
