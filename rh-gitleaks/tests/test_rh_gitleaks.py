@@ -154,6 +154,10 @@ class RHGitleaksTest(TestCase):
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.load_auth_token(), self.mock_token)
 
+            # Make sure configure doesn't hang if the token's already there
+            self.assertEqual(rh_gitleaks.configure(), 0)
+            self.assertEqual(rh_gitleaks.load_auth_token(), self.mock_token)
+
     @patch("requests.get")
     @patch("subprocess.run")
     def test_run_gitleaks(self, mock_subprocess_run, mock_requests_get):

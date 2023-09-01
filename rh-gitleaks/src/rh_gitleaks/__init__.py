@@ -277,9 +277,14 @@ def configure(auth_token=None):
     but it may include more steps in the future. This is also to keep the
     tool consistent with other tools in this toolchain.
 
+    If an auth token already exists, this is a noop.
+
     Returns:
         A return code for sys.exit
     """
+    if load_auth_token():
+        return 0
+
     return login(auth_token=auth_token)
 
 
