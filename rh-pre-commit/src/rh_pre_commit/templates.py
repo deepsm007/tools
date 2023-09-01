@@ -80,15 +80,16 @@ repos:
   - repo: local
     hooks:
       - id: rh-pre-commit
-        name: Run standard RH pre-commit checks
+        name: Global rh-pre-commit
         language: system
         entry: {shlex.quote(sys.executable)} -m rh_pre_commit
         stages: [ pre-commit ]
         pass_filenames: false
-      - id: rh-pre-commit-msg
-        name: Append attestation to commit-msg
+        stages: [pre-commit]
+      - id: rh-pre-commit.commit-msg
+        name: Global rh-pre-commit --hook-type commit-msg
         language: system
-        entry: {shlex.quote(sys.executable)} -m rh_pre_commit --hook-type commit-msg --commit-msg-filename 
+        entry: {shlex.quote(sys.executable)} -m rh_pre_commit --hook-type commit-msg --commit-msg-filename
         stages: [ commit-msg ]
         pass_filenames: true
 """
