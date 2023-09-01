@@ -126,7 +126,7 @@ class SignOff(Task):
 
         # Generate sign-off text
         sign_off_msg = [
-          f"rh-pre-commit.version: {common.application_version()}",
+            f"rh-pre-commit.version: {common.application_version()}",
         ]
 
         for task in tasks["pre-commit"]:

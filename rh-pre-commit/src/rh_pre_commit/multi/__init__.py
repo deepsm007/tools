@@ -36,7 +36,12 @@ def run(args):
             status = pre_commit.main(["run", f"--config={path}"])
         if args.hook_type == "commit-msg":
             status = pre_commit.main(
-                ["run", f"--config={path}", f"--hook-stage={args.hook_type}", f"--commit-msg-filename={args.commit_msg_filename}"]
+                [
+                    "run",
+                    f"--config={path}",
+                    f"--hook-stage={args.hook_type}",
+                    f"--commit-msg-filename={args.commit_msg_filename}",
+                ]
             )
         if status:
             return status
@@ -51,7 +56,6 @@ def configure(args):
     if args.configure_git_template:
         hook_template = templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type]
         if common.configure_git_template(args, hook_template) != 0:
-
             return 1
 
         # So that rh_pre_commit doesn't apply it

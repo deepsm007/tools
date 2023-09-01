@@ -210,7 +210,9 @@ def hook_installed(hook_type):
         return False
 
     # Check to make sure the execution bit is set
-    if not bool(os.stat(hook_path).st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)):
+    if not bool(
+        os.stat(hook_path).st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    ):
         return False
 
     try:
