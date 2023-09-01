@@ -18,7 +18,7 @@ CONFIG_DIR = os.path.join(XDG_CONFIG_HOME, "rh-gitleaks")
 CACHE_DIR = os.path.join(XDG_CACHE_HOME, "rh-gitleaks")
 
 # Return this exit code to indicate that automation shouldn't continue
-BLOCKING_EXIT_CODE = 100
+BLOCKING_EXIT_CODE = 418
 
 # Gitleaks Settings
 GITLEAKS_VERSION = "7.6.1"
