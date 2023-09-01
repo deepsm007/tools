@@ -26,10 +26,12 @@
 #
 #       https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit
 #
+set -euo pipefail
+
+SCRIPTS_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-"${HOME}/.cache"}"
 RH_PRE_COMMIT_CACHE_DIR="${XDG_CACHE_HOME}/rh-pre-commit"
-VENV_DIR="${RH_PRE_COMMIT_CACHE_DIR}/venv"
-SCRIPTS_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+VENV_DIR="${SCRIPTS_DIR}/../venv"
 
 # Lazy set up and run the venv python
 function venv_python {
@@ -53,7 +55,7 @@ function pyproject_version {
 function sync_version {
   project="${1}"
   expected="$(pyproject_version "${project}")"
-  actual="$(venv_python -m pip list 2> /dev/null | grep "^${project}\s" | awk '{print $2}')"
+  actual="$(venv_python -m pip list 2> /dev/null | grep "^${project}\s" | awk '{print $2}' || echo "")"
 
   if [[ "${actual}" != "${expected}" ]]
   then
@@ -70,5 +72,3 @@ function sync_version {
 sync_version rh-gitleaks
 sync_version rh-pre-commit
 venv_python -m rh_pre_commit $@
-# TODO:
-# - Make sure everything errors out the right way and exit codes are handled

@@ -1,6 +1,8 @@
 ---
 - id: rh-pre-commit
-  name: RH-pre-commit
-  description: Run standard rh-pre-commit checks
-  entry: scripts/rh-pre-commit-entry
+  name: rh-pre-commit
+  description: Run standard rh-pre-commit tasks
+  stages: [pre-commit]
   language: script
+  entry: scripts/rh-pre-commit-entry
+  pass_filenames: false
