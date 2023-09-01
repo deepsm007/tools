@@ -7,6 +7,7 @@ from abc import abstractmethod
 import rh_gitleaks
 
 from rh_pre_commit import common
+from rh_pre_commit import config
 from rh_pre_commit import git
 from rh_pre_commit import templates
 
@@ -24,7 +25,7 @@ class Task(ABC):
     flag = "checkAbstract"
     default_config_value = "false"
 
-    _git_section = "rh-pre-commit"
+    _git_section = config.DEFAULT_GIT_SECTION
 
     def __str__(self):
         return self.name

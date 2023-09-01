@@ -51,7 +51,8 @@ class MultiPreCommitHookTest(TestCase):
             self.assertEqual(multi.pick_handler(ns), handler, f"test={i}")
 
     @patch("pre_commit.main.main")
-    def test_run(self, mock_pre_commit_main):
+    @patch("rh_pre_commit.config.local_config_enabled")
+    def test_run(self, mock_config_local_config_enabled, mock_pre_commit_main):
         """
         Confirm the run command passes the right args
         """
@@ -66,6 +67,7 @@ class MultiPreCommitHookTest(TestCase):
             # It should fail if fail is in the path for this test
             return 1 if "fail" in " ".join(args) else 0
 
+        mock_config_local_config_enabled.return_value = True
         mock_pre_commit_main.side_effect = side_effect
 
         with TemporaryDirectory() as tmp_dir:
