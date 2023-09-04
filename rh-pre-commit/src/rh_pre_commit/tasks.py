@@ -71,9 +71,6 @@ class CheckSecrets(Task):
         """
         Reset the flags but also log in
         """
-        if rh_gitleaks.load_auth_token():
-            return super().configure()
-
         return super().configure() or rh_gitleaks.configure(*args, **kwargs)
 
     def run(self, args):
