@@ -221,7 +221,7 @@ def hook_installed(hook_type):
             data = hook_file.read()
             return "rh-pre-commit" in data or "rh-multi-pre-commit" in data
     except Exception as e:
-        logging.info(e)
+        logging.error(e)
         return False
 
 

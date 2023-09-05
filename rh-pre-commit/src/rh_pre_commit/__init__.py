@@ -30,20 +30,16 @@ def configure(args):
     A handler that resets the config for the tool
     """
     if args.configure_git_template:
-        if (
-            common.configure_git_template(
-                args, templates.RH_PRE_COMMIT_HOOK[args.hook_type]
-            )
-            != 0
-        ):
+        template = templates.RH_PRE_COMMIT_HOOK[args.hook_type]
+        if common.configure_git_template(args, template) != 0:
             return 1
 
     for task in tasks[args.hook_type]:
         if task.configure() != 0:
-            logging.error("Error Resetting Check: %s", task)
+            logging.error("Error configuring %s", task)
             return 1
 
-        logging.info("Configured Check: %s", task)
+        logging.info("Configured %s", task)
 
     return 0
 

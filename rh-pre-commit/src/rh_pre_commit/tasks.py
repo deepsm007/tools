@@ -14,15 +14,15 @@ from rh_pre_commit import templates
 
 class Task(ABC):
     """
-    An abstract base class for implementing a check in the rh-pre-commit
+    An abstract base class for implementing a task in the rh-pre-commit
     hook.
 
-    All checks should inherit from this and should override name, flag and
+    All tasks should inherit from this and should override name, flag and
     optionally default_config_value.
     """
 
-    name = "abstract-check"
-    flag = "checkAbstract"
+    name = "abstract-task"
+    flag = "abstractTask"
     default_config_value = "false"
 
     _git_section = config.DEFAULT_GIT_SECTION
@@ -43,7 +43,7 @@ class Task(ABC):
 
     def enabled(self):
         """
-        Make sure this check is turned on in the settings or is enabled by
+        Make sure this task is turned on in the settings or is enabled by
         default.
         """
         proc = git.config(f"{self._git_section}.{self.flag}", flags=["bool"])
@@ -53,7 +53,7 @@ class Task(ABC):
     @abstractmethod
     def run(self, args):
         """
-        Run the check and return a status code. A non-zero status code
+        Run the task and return a status code. A non-zero status code
         is considered a failure.
         """
 
