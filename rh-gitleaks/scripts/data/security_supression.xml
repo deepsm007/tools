@@ -6,9 +6,23 @@
         file name: pkg:pypi/parso@0.8.3
 
         This suppresses CVE-2019-12760, This is disputed because "the cache directory is not under control of the attacker in any common configuration..
-      ]]>
+        ]]>
     </notes>
     <packageUrl regex="true">^pkg:pypi/parso@0.8.3$</packageUrl>
     <cve>CVE-2019-12760</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      file name: GitPython:3.1.34
+      ]]></notes>
+    <packageUrl regex="true">^pkg:pypi/gitpython@.*$</packageUrl>
+    <vulnerabilityName>CVE-2023-40590</vulnerabilityName>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      file name: GitPython:3.1.34
+      ]]></notes>
+    <packageUrl regex="true">^pkg:pypi/gitpython@.*$</packageUrl>
+    <vulnerabilityName>CVE-2023-41040</vulnerabilityName>
   </suppress>
 </suppressions>
