@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 # File for use by ../.pre-commit-hooks.yaml
 # ID: 9ffec9f6-9b91-4600-b96d-30ac691aa498
 #
