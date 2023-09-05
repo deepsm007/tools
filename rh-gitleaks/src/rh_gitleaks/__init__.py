@@ -169,7 +169,7 @@ def load_auth_token():
         else:
             auth_token_path = config.PATTERN_SERVER_AUTH_TOKEN_PATH
             with open(auth_token_path, "r", encoding="UTF-8") as f:
-                auth_token = f.read()
+                auth_token = f.read().strip()
 
         if jwt_valid(auth_token):
             return auth_token
