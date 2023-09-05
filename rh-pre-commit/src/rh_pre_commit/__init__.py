@@ -77,7 +77,9 @@ def main():
     try:
         args = common.create_parser("rh-pre-commit").parse_args()
         if args.version:
-            return print(common.application_version())
+            logging.info(common.application_version())
+            return 0
+
         handler = pick_handler(args)
 
         return handler(args)
