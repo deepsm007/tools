@@ -9,6 +9,7 @@ from rh_pre_commit import common
 
 
 class CommonTest(TestCase):
+    hooks = ["commit-msg"]
     def test_create_parser(self):
         """
         Simply spot check the arg parser
@@ -26,24 +27,24 @@ class CommonTest(TestCase):
             ("--check --path baz", True, False, "baz"),
             ("", False, False, "."),
         )
-
-        for args, check, force, path in install_tests:
-            ns = parser.parse_args(["install", *args.split()])
-            self.assertEqual(
-                ns.check,
-                check,
-                f"check: {ns.check} != {check} for {args}",
-            )
-            self.assertEqual(
-                ns.force,
-                force,
-                f"force: {ns.force} != {force} for {args}",
-            )
-            self.assertEqual(
-                ns.path,
-                path,
-                f"path: {ns.path} != {path} for {args}",
-            )
+        for hook in self.hooks:
+            for args, check, force, path in install_tests:
+                ns = parser.parse_args([f"--hook-type={hook}", "install", *args.split()])
+                self.assertEqual(
+                    ns.check,
+                    check,
+                    f"check: {ns.check} != {check} for {args}",
+                )
+                self.assertEqual(
+                    ns.force,
+                    force,
+                    f"force: {ns.force} != {force} for {args}",
+                )
+                self.assertEqual(
+                    ns.path,
+                    path,
+                    f"path: {ns.path} != {path} for {args}",
+                )
 
         # Test configure args
         configure_tests = (
