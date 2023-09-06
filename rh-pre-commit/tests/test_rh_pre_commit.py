@@ -119,11 +119,11 @@ class PreCommitHookTest(TestCase):
 
             # Was added to the clean repo
             with open(hook_path(clean_repo), encoding="UTF-8") as h:
-                self.assertIn("378a113b-5011-4170-9dd7-9ee9e37366b3", h.read())
+                self.assertIn("13f5c8db-62a3-4ca8-ad21-2f27d83f8068", h.read())
 
             # Not to the existing
             with open(hook_path(existing_hooks), encoding="UTF-8") as h:
-                self.assertNotIn("378a113b-5011-4170-9dd7-9ee9e37366b3", h.read())
+                self.assertNotIn("13f5c8db-62a3-4ca8-ad21-2f27d83f8068", h.read())
 
             # Not to the empty dir
             self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
@@ -140,11 +140,11 @@ class PreCommitHookTest(TestCase):
 
             # Was added to the clean repo
             with open(hook_path(clean_repo), encoding="UTF-8") as h:
-                self.assertIn("378a113b-5011-4170-9dd7-9ee9e37366b3", h.read())
+                self.assertIn("13f5c8db-62a3-4ca8-ad21-2f27d83f8068", h.read())
 
             # Now added to the existing due to --force
             with open(hook_path(existing_hooks), encoding="UTF-8") as h:
-                self.assertIn("378a113b-5011-4170-9dd7-9ee9e37366b3", h.read())
+                self.assertIn("13f5c8db-62a3-4ca8-ad21-2f27d83f8068", h.read())
 
             # Not to the empty dir
             self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
@@ -183,4 +183,4 @@ class PreCommitHookTest(TestCase):
             # The template hook path should exist now that the flag was set to
             # True, even though the rest of the hook config failed
             with open(hook_path, encoding="UTF-8") as h:
-                self.assertIn("378a113b-5011-4170-9dd7-9ee9e37366b3", h.read())
+                self.assertIn("13f5c8db-62a3-4ca8-ad21-2f27d83f8068", h.read())
