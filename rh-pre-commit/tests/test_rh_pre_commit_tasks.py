@@ -10,23 +10,19 @@ from rh_pre_commit.tasks import SignOff
 
 class SignOffTaskTest(TestCase):
     @patch("rh_pre_commit.common.hook_installed")
-    @patch("rh_pre_commit.tasks.Task.enabled")
-    def test_run(self, mock_tasks_enabled, mock_hook_installed):
-
+    def test_run(self, mock_hook_installed):
         tests = (
             # Success
-            (True, True, 0),
+            (True, 0),
             # pre-commit hook not installed
-            (False, True, 1),
-            # No tests enabled
-            (True, False, 0),
+            (False, 1),
         )
         sign_off = SignOff()
 
-        for i, (hook_installed, tasks_enabled, expected) in enumerate(tests):
+        for i, (hook_installed, expected) in enumerate(tests):
             with TemporaryDirectory() as tmp_dir:
                 mock_hook_installed.return_value = hook_installed
-                mock_tasks_enabled.return_value = tasks_enabled
+                # mock_tasks_enabled.return_value = tasks_enabled
 
                 tmp_file = os.path.join(tmp_dir, "COMMIT-MSG")
                 with open(tmp_file, "w", encoding="UTF-8") as commit_msg:
@@ -34,7 +30,9 @@ class SignOffTaskTest(TestCase):
 
                 status = sign_off.run(
                     Namespace(
-                        command=None, hook_type="commit-msg", commit_msg_filename=tmp_file
+                        command=None,
+                        hook_type="commit-msg",
+                        commit_msg_filename=tmp_file,
                     )
                 )
                 self.assertEqual(status, expected, f"test={i}")
