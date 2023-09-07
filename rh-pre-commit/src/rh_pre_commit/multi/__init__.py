@@ -16,7 +16,7 @@ def install(args):
     """
     A handler that sets up pre-commit file
     """
-    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type])
+    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOKS[args.hook_type])
 
 
 def run(args):
@@ -54,7 +54,7 @@ def configure(args):
     A handler that resets the config for the tool
     """
     if args.configure_git_template:
-        hook_template = templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type]
+        hook_template = templates.RH_MULTI_PRE_COMMIT_HOOKS[args.hook_type]
         if common.configure_git_template(args, hook_template) != 0:
             return 1
 
