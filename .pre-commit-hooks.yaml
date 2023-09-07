@@ -1,4 +1,8 @@
 # ID: 341ce722-81d2-4fdd-80bf-a26e2a40746a
+#
+# Dev Notes:
+#   - If changing the hook ids make sure hook_installed_via_local_config can
+#     detect them and older versions too
 ---
 - id: rh-pre-commit
   name: Local rh-pre-commit

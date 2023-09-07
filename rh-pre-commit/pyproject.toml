@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
   'pre-commit >= 2',
   'rh-gitleaks',
+  'PyYAML',
 ]
 
 [project.urls]

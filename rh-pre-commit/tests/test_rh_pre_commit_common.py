@@ -8,6 +8,16 @@ from unittest.mock import patch
 from rh_pre_commit import common
 from rh_pre_commit import templates
 
+PRE_COMMIT_CONFIG_YAML = """
+---
+repos:
+  - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+    rev: main
+    hooks:
+      - id: rh-pre-commit
+      - id: rh-pre-commit.commit-msg
+"""
+
 
 class CommonTest(TestCase):
     hook_types = list(templates.RH_PRE_COMMIT_HOOKS)
@@ -117,3 +127,71 @@ class CommonTest(TestCase):
 
             # Check the path
             self.assertEqual(call.args[2], repo[1])
+
+    def test_hook_installed(self):
+        with TemporaryDirectory() as tmp_dir:
+            hook_type = "pre-commit"
+            repo_path = os.path.join(tmp_dir, ".git")
+            hook_dir = os.path.join(repo_path, "hooks")
+            hook_path = os.path.join(hook_dir, hook_type)
+            config_path = os.path.join(tmp_dir, ".pre-commit-config.yaml")
+
+            # Just to make sure we're starting off clean
+            os.makedirs(hook_dir)
+            self.assertFalse(os.path.isfile(hook_path))
+
+            # If it doesn't exist it should fail
+            self.assertFalse(common.hook_installed(hook_type, repo_path))
+
+            # It isn't executable nor does it have the right content
+            with open(hook_path, "w", encoding="UTF-8") as hook_file:
+                hook_file.write("foo")
+
+            self.assertFalse(common.hook_installed(hook_type, repo_path))
+
+            # It has to be the right content
+            common.install_hook(
+                Namespace(hook_type=hook_type, force=True),
+                repo_path,
+                "bar",
+            )
+            self.assertFalse(common.hook_installed(hook_type, repo_path))
+
+            # If it contains rh-pre-commit it's good
+            status = common.install_hook(
+                Namespace(hook_type=hook_type, force=True),
+                repo_path,
+                templates.RH_PRE_COMMIT_HOOKS[hook_type],
+            )
+            self.assertEqual(status, 0)
+            self.assertTrue(common.hook_installed(hook_type, repo_path))
+
+            # If it contains rh-multi-pre-commit it's good
+            status = common.install_hook(
+                Namespace(hook_type=hook_type, force=True),
+                repo_path,
+                templates.RH_MULTI_PRE_COMMIT_HOOKS[hook_type],
+            )
+            self.assertEqual(status, 0)
+            self.assertTrue(common.hook_installed(hook_type, repo_path))
+
+            # If it just contains pre-commit then it's not valid
+            status = common.install_hook(
+                Namespace(hook_type=hook_type, force=True),
+                repo_path,
+                "exec pre-commit",
+            )
+            self.assertEqual(status, 0)
+            self.assertFalse(common.hook_installed(hook_type, repo_path))
+
+            # If pre-commit is configured to run the hook it's valid
+            with open(config_path, "w", encoding="UTF-8") as config_file:
+                config_file.write(PRE_COMMIT_CONFIG_YAML)
+
+            status = common.install_hook(
+                Namespace(hook_type=hook_type, force=True),
+                repo_path,
+                "exec pre-commit",
+            )
+            self.assertEqual(status, 0)
+            self.assertTrue(common.hook_installed(hook_type, repo_path))

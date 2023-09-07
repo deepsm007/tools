@@ -3,14 +3,19 @@ Common functions between rh-pre-commit and rh-multi-pre-commit
 """
 import logging
 import os
+import re
 import stat
 
 from argparse import ArgumentParser
-from importlib.metadata import version
+from importlib import metadata
+
+import yaml
 
 from pre_commit import main as pre_commit  # The pre-commit.com library
 from rh_pre_commit import config
 from rh_pre_commit import git
+
+HOOK_VARIANT_RE = re.compile(r"\s*exec\s+((rh-(multi-)?)?pre-commit)\b")
 
 
 def create_parser(prog):
@@ -202,27 +207,98 @@ def install(args, content):
     return status
 
 
-def hook_installed(hook_type):
-    hook_path = os.path.join(os.getcwd(), ".git", "hooks", hook_type)
+def is_rh_pre_commit_repo(repo_url):
+    """
+    Confirm if the repo URL is this tool's repo URL
+    """
+    # It is split the way it is to handle both ssh and https clones and
+    # clones without the .git suffix.
+    return (
+        "gitlab.corp.redhat.com" in repo_url
+        and "infosec-public/developer-workbench/tools" in repo_url
+    )
 
-    # Check to see if the file exists
-    if not os.path.isfile(hook_path):
+
+def hook_installed_via_local_config(hook_type, repo_path):
+    """
+    Check a local .pre-commit-config.yaml for the hook type being installed.
+
+    The hook id must match what's in the .pre-commit-hooks.yaml. Having it
+    installed in a way other than a .pre-commit-config.yaml or directly installed
+    through rh-(multi-)-pre-commit is not supported for this check.
+    """
+    local_config_path = os.path.join(repo_path, "..", ".pre-commit-config.yaml")
+
+    if not os.path.isfile(local_config_path):
         return False
 
-    # Check to make sure the execution bit is set
-    if not bool(
-        os.stat(hook_path).st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    ):
-        return False
+    hook_id = "rh-pre-commit"
+    if hook_type != "pre-commit":
+        hook_id += f".{hook_type}"
 
     try:
-        # Check to make sure this is called in the file.
-        with open(hook_path, "r", encoding="UTF-8") as hook_file:
-            data = hook_file.read()
-            return "rh-pre-commit" in data or "rh-multi-pre-commit" in data
+        with open(local_config_path, "r", encoding="UTF-8") as local_config_file:
+            local_config = yaml.load(local_config_file, Loader=yaml.SafeLoader)
+
+        return hook_id in {
+            hook["id"]
+            for repo in local_config["repos"]
+            for hook in repo["hooks"]
+            if is_rh_pre_commit_repo(repo["repo"])
+        }
     except Exception as e:
         logging.error(e)
         return False
+
+
+def file_is_executable(path):
+    """
+    Confirm a file exists and can be executed
+    """
+    if not os.path.isfile(path):
+        return False
+
+    return bool(os.stat(path).st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
+
+
+def search_hook_variant(hook_path):
+    """
+    Determines what type of pre-commit hook is installed
+
+    rh-pre-commit, rh-multi-pre-commit and pre-commit all contain:
+
+        exec <hook_variant>
+
+    For pre-commit, further checks are needed to confirm it's valid.
+    """
+    try:
+        with open(hook_path, "r", encoding="UTF-8") as hook_file:
+            hook_data = hook_file.read()
+    except Exception as e:
+        logging.error(e)
+        return None
+
+    match = HOOK_VARIANT_RE.search(hook_data)
+    return match.group(1) if match else None
+
+
+def hook_installed(hook_type, repo_path=os.path.join(os.getcwd(), ".git")):
+    hook_path = os.path.join(repo_path, "hooks", hook_type)
+
+    if not file_is_executable(hook_path):
+        return False
+
+    hook_variant = search_hook_variant(hook_path)
+    if not hook_variant:
+        return False
+
+    if hook_variant in ("rh-multi-pre-commit", "rh-pre-commit"):
+        return True
+
+    if hook_variant == "pre-commit":
+        return hook_installed_via_local_config(hook_type, repo_path)
+
+    return False
 
 
 def configure_git_template(args, content):
@@ -240,8 +316,8 @@ def configure_git_template(args, content):
     return install_hook(args, template_dir, content)
 
 
-def application_version():
+def version():
     try:
-        return version("rh_pre_commit")
+        return metadata.version("rh_pre_commit")
     except Exception:
         return "UNKNOWN"
