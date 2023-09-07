@@ -6,10 +6,11 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from rh_pre_commit import common
+from rh_pre_commit import templates
 
 
 class CommonTest(TestCase):
-    hooks = ["pre-commit", "commit-msg"]
+    hook_types = list(templates.RH_PRE_COMMIT_HOOKS)
 
     def test_create_parser(self):
         """
@@ -28,10 +29,10 @@ class CommonTest(TestCase):
             ("--check --path baz", True, False, "baz"),
             ("", False, False, "."),
         )
-        for hook in self.hooks:
+        for hook_type in self.hook_types:
             for args, check, force, path in install_tests:
                 ns = parser.parse_args(
-                    [f"--hook-type={hook}", "install", *args.split()]
+                    [f"--hook-type={hook_type}", "install", *args.split()]
                 )
                 self.assertEqual(
                     ns.check,

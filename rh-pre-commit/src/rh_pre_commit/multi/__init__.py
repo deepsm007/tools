@@ -110,12 +110,12 @@ def pick_handler(args):
 def main():
     try:
         args = common.create_parser("rh-multi-pre-commit").parse_args()
+
         if args.version:
             logging.info(common.application_version())
             return 0
 
         handler = pick_handler(args)
-
         return handler(args)
     except KeyboardInterrupt:
         logging.info("Exiting...")

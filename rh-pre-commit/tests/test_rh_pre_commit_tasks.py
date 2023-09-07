@@ -22,9 +22,8 @@ class SignOffTaskTest(TestCase):
         for i, (hook_installed, expected) in enumerate(tests):
             with TemporaryDirectory() as tmp_dir:
                 mock_hook_installed.return_value = hook_installed
-                # mock_tasks_enabled.return_value = tasks_enabled
-
                 tmp_file = os.path.join(tmp_dir, "COMMIT-MSG")
+
                 with open(tmp_file, "w", encoding="UTF-8") as commit_msg:
                     commit_msg.write("Creating a file for testing")
 
@@ -35,6 +34,7 @@ class SignOffTaskTest(TestCase):
                         commit_msg_filename=tmp_file,
                     )
                 )
+
                 self.assertEqual(status, expected, f"test={i}")
 
                 if not status:
