@@ -16,6 +16,24 @@ repos:
     hooks:
       - id: rh-pre-commit
       - id: rh-pre-commit.commit-msg
+
+  #
+  # Include some malformed ones to make sure that's covered
+  #
+
+  # Some other empty repo
+  - repo: https://example.com
+
+  # Not valid at all
+  - foo: bar
+
+  # Our repo but no hooks
+  - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+
+  # Our repo but malformed hooks
+  - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+    hooks:
+      - foo: bar
 """
 
 
@@ -97,11 +115,11 @@ class CommonTest(TestCase):
 
             # Have a file named .git
             file_test = os.path.join(tmp_dir, "git-file")
-            modfile = os.path.join(file_test, ".git")
+            gitfile_path = os.path.join(file_test, ".git")
 
             os.makedirs(file_test)
-            with open(modfile, "w", encoding="UTF-8") as module:
-                module.write("gitdir: ../.git/modules/git-file")
+            with open(gitfile_path, "w", encoding="UTF-8") as gitfile:
+                gitfile.write("gitdir: ../.git/modules/git-file")
 
             expected.append(("M", os.path.join(file_test, "../.git/modules/git-file")))
 
@@ -128,9 +146,12 @@ class CommonTest(TestCase):
             # Check the path
             self.assertEqual(call.args[2], repo[1])
 
-    def test_hook_installed(self):
+    def test_hook_installed_git_folder(self):
+        hook_type = "pre-commit"
+
+        # It should work with a regular git directory
         with TemporaryDirectory() as tmp_dir:
-            hook_type = "pre-commit"
+            args = Namespace(hook_type=hook_type, force=True, path=tmp_dir)
             repo_path = os.path.join(tmp_dir, ".git")
             hook_dir = os.path.join(repo_path, "hooks")
             hook_path = os.path.join(hook_dir, hook_type)
@@ -150,37 +171,23 @@ class CommonTest(TestCase):
             self.assertFalse(common.hook_installed(hook_type, repo_path))
 
             # It has to be the right content
-            common.install_hook(
-                Namespace(hook_type=hook_type, force=True),
-                repo_path,
-                "bar",
-            )
+            common.install(args, "bar")
             self.assertFalse(common.hook_installed(hook_type, repo_path))
 
             # If it contains rh-pre-commit it's good
-            status = common.install_hook(
-                Namespace(hook_type=hook_type, force=True),
-                repo_path,
-                templates.RH_PRE_COMMIT_HOOKS[hook_type],
-            )
+            status = common.install(args, templates.RH_PRE_COMMIT_HOOKS[hook_type])
             self.assertEqual(status, 0)
             self.assertTrue(common.hook_installed(hook_type, repo_path))
 
             # If it contains rh-multi-pre-commit it's good
-            status = common.install_hook(
-                Namespace(hook_type=hook_type, force=True),
-                repo_path,
-                templates.RH_MULTI_PRE_COMMIT_HOOKS[hook_type],
+            status = common.install(
+                args, templates.RH_MULTI_PRE_COMMIT_HOOKS[hook_type]
             )
             self.assertEqual(status, 0)
             self.assertTrue(common.hook_installed(hook_type, repo_path))
 
             # If it just contains pre-commit then it's not valid
-            status = common.install_hook(
-                Namespace(hook_type=hook_type, force=True),
-                repo_path,
-                "exec pre-commit",
-            )
+            status = common.install(args, "exec pre-commit")
             self.assertEqual(status, 0)
             self.assertFalse(common.hook_installed(hook_type, repo_path))
 
@@ -188,10 +195,33 @@ class CommonTest(TestCase):
             with open(config_path, "w", encoding="UTF-8") as config_file:
                 config_file.write(PRE_COMMIT_CONFIG_YAML)
 
-            status = common.install_hook(
-                Namespace(hook_type=hook_type, force=True),
-                repo_path,
-                "exec pre-commit",
-            )
+            status = common.install(args, "exec pre-commit")
             self.assertEqual(status, 0)
             self.assertTrue(common.hook_installed(hook_type, repo_path))
+
+    def test_hook_installed_git_file(self):
+        hook_type = "pre-commit"
+
+        # It should work with a .git file too (e.g. submodule repo)
+        with TemporaryDirectory() as tmp_dir:
+            args = Namespace(hook_type=hook_type, force=True, path=tmp_dir)
+            project_dir = os.path.join(tmp_dir, "project")
+            repo_path = os.path.join(project_dir, ".git")
+            module_repo_path = os.path.join(repo_path, "modules", "submodule")
+            submodule_dir = os.path.join(project_dir, "submodule")
+            submodule_gitfile_path = os.path.join(submodule_dir, ".git")
+
+            os.makedirs(submodule_dir)
+            os.makedirs(module_repo_path)
+
+            with open(submodule_gitfile_path, "w", encoding="UTF-8") as gitfile:
+                gitfile.write("gitdir: ../.git/modules/submodule")
+
+            # It has to be the right content
+            common.install(args, "bar")
+            self.assertFalse(common.hook_installed(hook_type, submodule_gitfile_path))
+
+            # If it contains rh-pre-commit it's good
+            status = common.install(args, templates.RH_PRE_COMMIT_HOOKS[hook_type])
+            self.assertEqual(status, 0)
+            self.assertTrue(common.hook_installed(hook_type, submodule_gitfile_path))

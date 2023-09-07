@@ -16,6 +16,7 @@ from rh_pre_commit import config
 from rh_pre_commit import git
 
 HOOK_VARIANT_RE = re.compile(r"\s*exec\s+((rh-(multi-)?)?pre-commit)\b")
+GITDIR_RE = re.compile("gitdir: (.+)")
 
 
 def create_parser(prog):
@@ -78,17 +79,13 @@ def create_parser(prog):
     return parser
 
 
-def read_modfile(path):
+def search_gitdir(gitfile_path):
     """
     Read the contents of a .git file and return the gitdir value if it exists
     """
     try:
-        with open(os.path.join(path, ".git"), encoding="UTF-8") as modfile:
-            for line in modfile:
-                if line.startswith("gitdir: "):
-                    return line.split(None, 1)[1].strip()
-
-        return None
+        with open(gitfile_path, encoding="UTF-8") as gitfile:
+            return GITDIR_RE.search(gitfile.read()).group(1)
     except Exception:
         return None
 
@@ -110,7 +107,7 @@ def find_repos(prefix):
             yield ("R", path)
 
         elif ".git" in files:
-            modpath = read_modfile(path)
+            modpath = search_gitdir(os.path.join(path, ".git"))
             if modpath:
                 yield ("M", os.path.join(path, modpath))
 
@@ -214,7 +211,8 @@ def is_rh_pre_commit_repo(repo_url):
     # It is split the way it is to handle both ssh and https clones and
     # clones without the .git suffix.
     return (
-        "gitlab.corp.redhat.com" in repo_url
+        repo_url
+        and "gitlab.corp.redhat.com" in repo_url
         and "infosec-public/developer-workbench/tools" in repo_url
     )
 
@@ -243,8 +241,9 @@ def hook_installed_via_local_config(hook_type, repo_path):
         return hook_id in {
             hook["id"]
             for repo in local_config["repos"]
+            if repo and "hooks" in repo and is_rh_pre_commit_repo(repo.get("repo"))
             for hook in repo["hooks"]
-            if is_rh_pre_commit_repo(repo["repo"])
+            if hook and "id" in hook
         }
     except Exception as e:
         logging.error(e)
@@ -283,6 +282,16 @@ def search_hook_variant(hook_path):
 
 
 def hook_installed(hook_type, repo_path=os.path.join(os.getcwd(), ".git")):
+    # Handle submodules
+    if os.path.isfile(repo_path):
+        try:
+            repo_path = os.path.join(
+                os.path.dirname(repo_path), search_gitdir(repo_path)
+            )
+        except Exception as e:
+            logging.error(e)
+            return False
+
     hook_path = os.path.join(repo_path, "hooks", hook_type)
 
     if not file_is_executable(hook_path):
