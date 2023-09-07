@@ -83,14 +83,14 @@ repos:
         name: Global rh-pre-commit
         language: system
         entry: {shlex.quote(sys.executable)} -m rh_pre_commit
-        stages: [ pre-commit ]
-        pass_filenames: false
         stages: [pre-commit]
+        pass_filenames: false
+
       - id: rh-pre-commit.commit-msg
-        name: Global rh-pre-commit --hook-type commit-msg
+        name: Global rh-pre-commit.commit-msg
         language: system
         entry: {shlex.quote(sys.executable)} -m rh_pre_commit --hook-type commit-msg --commit-msg-filename
-        stages: [ commit-msg ]
+        stages: [commit-msg]
         pass_filenames: true
 """
 

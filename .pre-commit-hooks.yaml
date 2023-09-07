@@ -2,7 +2,15 @@
 - id: rh-pre-commit
   name: Local rh-pre-commit
   description: "https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit"
-  stages: [pre-commit]
   language: script
   entry: scripts/rh-pre-commit-entry
+  stages: [pre-commit]
   pass_filenames: false
+
+- id: rh-pre-commit.commit-msg
+  name: Local rh-pre-commit.commit-msg
+  description: "https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit"
+  language: script
+  entry: scripts/rh-pre-commit-entry --hook-type commit-msg --commit-msg-filename
+  stages: [commit-msg]
+  pass_filenames: true
