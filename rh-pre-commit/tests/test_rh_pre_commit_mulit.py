@@ -12,9 +12,13 @@ from rh_pre_commit import config
 
 class MultiPreCommitHookTest(TestCase):
     hooks = [
-        ("pre-commit", "308ef274-3374-479a-b03a-298d8fdbba34"),
-        ("commit-msg", "7ad444b3-4a97-482b-bd5f-9d290eb17663"),
+        ("pre-commit", "-m rh_pre_commit.multi"),
+        (
+            "commit-msg",
+            "-m rh_pre_commit.multi --hook-type commit-msg --commit-msg-filename",
+        ),
     ]
+
     def test_pick_handler(self):
         """
         Test that the right handler is selected when different args are set
@@ -124,7 +128,7 @@ class MultiPreCommitHookTest(TestCase):
             os.makedirs(existing_hooks)
             os.makedirs(just_a_dir)
 
-            def hook_path(repo_dir, hook_t, touch=False):
+            def hook_path(repo_dir, hook_type, touch=False):
                 """
                 Helper to stub out the test dirs
                 """
@@ -134,12 +138,12 @@ class MultiPreCommitHookTest(TestCase):
                     if not os.path.lexists(d):
                         os.makedirs(d)
 
-                    with open(os.path.join(d, hook_t), "w", encoding="UTF-8"):
+                    with open(os.path.join(d, hook_type), "w", encoding="UTF-8"):
                         pass
 
-                return os.path.join(d, hook_t)
+                return os.path.join(d, hook_type)
 
-            for hook_type, hook_uuid in self.hooks:
+            for hook_type, content in self.hooks:
                 # Simulate an existing hook
                 hook_path(existing_hooks, hook_type, touch=True)
 
@@ -155,11 +159,11 @@ class MultiPreCommitHookTest(TestCase):
 
                 # Was added to the clean repo
                 with open(hook_path(clean_repo, hook_type), encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())
 
                 # Not to the existing
                 with open(hook_path(existing_hooks, hook_type), encoding="UTF-8") as h:
-                    self.assertNotIn(hook_uuid, h.read())
+                    self.assertNotIn(content, h.read())
 
                 # Not to the empty dir
                 self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
@@ -176,11 +180,11 @@ class MultiPreCommitHookTest(TestCase):
 
                 # Was added to the clean repo
                 with open(hook_path(clean_repo, hook_type), encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())
 
                 # Now added to the existing due to --force
                 with open(hook_path(existing_hooks, hook_type), encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())
 
                 # Not to the empty dir
                 self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
@@ -197,7 +201,7 @@ class MultiPreCommitHookTest(TestCase):
         mock_subprocess_run.return_value.returncode = 0
         mock_subprocess_run.return_value.stdout = "true"
         mock_rh_gitleaks_configure.return_value = 0
-        for hook_type, hook_uuid in self.hooks:
+        for hook_type, content in self.hooks:
             with TemporaryDirectory() as tmp_dir:
                 config_path = os.path.join(tmp_dir, "config.yaml")
                 config.RH_MULTI_GLOBAL_CONFIG_PATH = config_path
@@ -236,4 +240,4 @@ class MultiPreCommitHookTest(TestCase):
                 # The template hook path should exist now that the flag was set to
                 # True
                 with open(hook_path, encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())

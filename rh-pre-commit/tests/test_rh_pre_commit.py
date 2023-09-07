@@ -12,9 +12,10 @@ from rh_pre_commit import common
 
 class PreCommitHookTest(TestCase):
     hooks = [
-        ("pre-commit", "13f5c8db-62a3-4ca8-ad21-2f27d83f8068"),
-        ("commit-msg", "7f4bf7f0-e2f5-4c86-af41-949a29fb5ef5"),
+        ("pre-commit", "-m rh_pre_commit"),
+        ("commit-msg", "-m rh_pre_commit --hook-type commit-msg --commit-msg-filename"),
     ]
+
     def test_pick_handler(self):
         """
         Test that the right handler is selected when different args are set.
@@ -26,7 +27,7 @@ class PreCommitHookTest(TestCase):
                 Namespace(command=None, hook_type="pre-commit"),
                 pre.run,
             ),
-            # Install --check should list repos with pre-commit hook
+            # Install --check should list repos without installing pre-commit hook
             (
                 Namespace(command="install", check=True, hook_type="commit-msg"),
                 common.list_repos,
@@ -101,7 +102,7 @@ class PreCommitHookTest(TestCase):
             os.makedirs(existing_hooks)
             os.makedirs(just_a_dir)
 
-            def hook_path(repo_dir, hook_t, touch=False):
+            def hook_path(repo_dir, hook_type, touch=False):
                 """
                 Helper to stub out the test dirs
                 """
@@ -111,12 +112,12 @@ class PreCommitHookTest(TestCase):
                     if not os.path.lexists(d):
                         os.makedirs(d)
 
-                    with open(os.path.join(d, hook_t), "w", encoding="UTF-8"):
+                    with open(os.path.join(d, hook_type), "w", encoding="UTF-8"):
                         pass
 
-                return os.path.join(d, hook_t)
+                return os.path.join(d, hook_type)
 
-            for hook_type, hook_uuid in self.hooks:
+            for hook_type, content in self.hooks:
                 # Simulate an existing hook
                 hook_path(existing_hooks, hook_type, touch=True)
 
@@ -132,11 +133,11 @@ class PreCommitHookTest(TestCase):
 
                 # Was added to the clean repo
                 with open(hook_path(clean_repo, hook_type), encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())
 
                 # Not to the existing
                 with open(hook_path(existing_hooks, hook_type), encoding="UTF-8") as h:
-                    self.assertNotIn(hook_uuid, h.read())
+                    self.assertNotIn(content, h.read())
 
                 # Not to the empty dir
                 self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
@@ -153,11 +154,11 @@ class PreCommitHookTest(TestCase):
 
                 # Was added to the clean repo
                 with open(hook_path(clean_repo, hook_type), encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())
 
                 # Now added to the existing due to --force
                 with open(hook_path(existing_hooks, hook_type), encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())
 
                 # Not to the empty dir
                 self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
@@ -170,8 +171,7 @@ class PreCommitHookTest(TestCase):
 
         with TemporaryDirectory() as tmp_dir:
             init_template_dir = os.path.join(tmp_dir, ".git-template")
-            for hook_type, hook_uuid in self.hooks:
-
+            for hook_type, content in self.hooks:
                 hook_path = os.path.join(init_template_dir, "hooks", hook_type)
                 mock_git_init_template_dir.return_value = init_template_dir
 
@@ -198,4 +198,4 @@ class PreCommitHookTest(TestCase):
                 # The template hook path should exist now that the flag was set to
                 # True, even though the rest of the hook config failed
                 with open(hook_path, encoding="UTF-8") as h:
-                    self.assertIn(hook_uuid, h.read())
+                    self.assertIn(content, h.read())

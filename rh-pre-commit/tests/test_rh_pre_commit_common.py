@@ -9,7 +9,8 @@ from rh_pre_commit import common
 
 
 class CommonTest(TestCase):
-    hooks = ["commit-msg"]
+    hooks = ["pre-commit", "commit-msg"]
+
     def test_create_parser(self):
         """
         Simply spot check the arg parser
@@ -29,7 +30,9 @@ class CommonTest(TestCase):
         )
         for hook in self.hooks:
             for args, check, force, path in install_tests:
-                ns = parser.parse_args([f"--hook-type={hook}", "install", *args.split()])
+                ns = parser.parse_args(
+                    [f"--hook-type={hook}", "install", *args.split()]
+                )
                 self.assertEqual(
                     ns.check,
                     check,

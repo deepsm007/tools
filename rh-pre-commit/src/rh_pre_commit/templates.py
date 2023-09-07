@@ -29,7 +29,7 @@ fi
 INSTALL_PYTHON={shlex.quote(sys.executable)}
 
 if [ -x "$INSTALL_PYTHON" ]; then
-    exec "$INSTALL_PYTHON" -m rh_pre_commit.multi  --hook-type commit-msg --commit-msg-filename $1
+    exec "$INSTALL_PYTHON" -m rh_pre_commit.multi --hook-type commit-msg --commit-msg-filename $1
 elif command -v rh-multi-pre-commit > /dev/null; then
     exec rh-multi-pre-commit --hook-type commit-msg --commit-msg-filename $1
 else
