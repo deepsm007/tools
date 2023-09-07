@@ -11,6 +11,14 @@ from rh_pre_commit import config
 
 
 class MultiPreCommitHookTest(TestCase):
+    hooks = [
+        ("pre-commit", "-m rh_pre_commit.multi"),
+        (
+            "commit-msg",
+            "-m rh_pre_commit.multi --hook-type commit-msg --commit-msg-filename",
+        ),
+    ]
+
     def test_pick_handler(self):
         """
         Test that the right handler is selected when different args are set
@@ -18,27 +26,31 @@ class MultiPreCommitHookTest(TestCase):
         tests = (
             # The default should be to run
             (
-                Namespace(command=None),
+                Namespace(command=None, hook_type="pre-commit"),
                 multi.run,
             ),
             # Install --check should list repos
             (
-                Namespace(command="install", check=True),
+                Namespace(command="install", check=True, hook_type="pre-commit"),
                 common.list_repos,
             ),
             # Install --check should list repos even if other flags are set
             (
-                Namespace(command="install", check=True, force=True),
+                Namespace(
+                    command="install", check=True, force=True, hook_type="pre-commit"
+                ),
                 common.list_repos,
             ),
             # Install without check should return the install command
             (
-                Namespace(command="install", check=False, force=False),
+                Namespace(
+                    command="install", check=False, force=False, hook_type="pre-commit"
+                ),
                 multi.install,
             ),
             # Configure should only care about the command
             (
-                Namespace(command="configure"),
+                Namespace(command="configure", hook_type="pre-commit"),
                 multi.configure,
             ),
         )
@@ -88,7 +100,7 @@ class MultiPreCommitHookTest(TestCase):
                 with open(path, "w", encoding="UTF-8"):
                     pass
 
-            status = multi.run(Namespace())
+            status = multi.run(Namespace(hook_type="pre-commit"))
 
         self.assertEqual(status, 1)
 
@@ -116,7 +128,7 @@ class MultiPreCommitHookTest(TestCase):
             os.makedirs(existing_hooks)
             os.makedirs(just_a_dir)
 
-            def hook_path(repo_dir, touch=False):
+            def hook_path(repo_dir, hook_type, touch=False):
                 """
                 Helper to stub out the test dirs
                 """
@@ -126,51 +138,56 @@ class MultiPreCommitHookTest(TestCase):
                     if not os.path.lexists(d):
                         os.makedirs(d)
 
-                    with open(os.path.join(d, "pre-commit"), "w", encoding="UTF-8"):
+                    with open(os.path.join(d, hook_type), "w", encoding="UTF-8"):
                         pass
 
-                return os.path.join(d, "pre-commit")
+                return os.path.join(d, hook_type)
 
-            # Simulate an existing hook
-            hook_path(existing_hooks, touch=True)
+            for hook_type, content in self.hooks:
+                # Simulate an existing hook
+                hook_path(existing_hooks, hook_type, touch=True)
 
-            #
-            # Without --force
-            #
+                #
+                # Without --force
+                #
 
-            # Run the install now that things are setup
-            args = Namespace(check=False, force=False, path=tmp_dir)
-            multi.install(args)
+                # Run the install now that things are setup
+                args = Namespace(
+                    check=False, force=False, path=tmp_dir, hook_type=hook_type
+                )
+                multi.install(args)
 
-            # Was added to the clean repo
-            with open(hook_path(clean_repo), encoding="UTF-8") as h:
-                self.assertIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())
+                # Was added to the clean repo
+                with open(hook_path(clean_repo, hook_type), encoding="UTF-8") as h:
+                    self.assertIn(content, h.read())
 
-            # Not to the existing
-            with open(hook_path(existing_hooks), encoding="UTF-8") as h:
-                self.assertNotIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())
+                # Not to the existing
+                with open(hook_path(existing_hooks, hook_type), encoding="UTF-8") as h:
+                    self.assertNotIn(content, h.read())
 
-            # Not to the empty dir
-            self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
+                # Not to the empty dir
+                self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
 
-            #
-            # Now with --force
-            #
+                #
+                # Now with --force
+                #
 
-            # Run the install now that things are setup
-            args = Namespace(check=False, force=True, path=tmp_dir)
-            multi.install(args)
+                # Run the install now that things are setup
+                args = Namespace(
+                    check=False, force=True, path=tmp_dir, hook_type=hook_type
+                )
+                multi.install(args)
 
-            # Was added to the clean repo
-            with open(hook_path(clean_repo), encoding="UTF-8") as h:
-                self.assertIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())
+                # Was added to the clean repo
+                with open(hook_path(clean_repo, hook_type), encoding="UTF-8") as h:
+                    self.assertIn(content, h.read())
 
-            # Now added to the existing due to --force
-            with open(hook_path(existing_hooks), encoding="UTF-8") as h:
-                self.assertIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())
+                # Now added to the existing due to --force
+                with open(hook_path(existing_hooks, hook_type), encoding="UTF-8") as h:
+                    self.assertIn(content, h.read())
 
-            # Not to the empty dir
-            self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
+                # Not to the empty dir
+                self.assertFalse(os.path.lexists(os.path.join(just_a_dir, ".git")))
 
     @patch("rh_pre_commit.git.init_template_dir")
     @patch("rh_gitleaks.configure")
@@ -184,38 +201,43 @@ class MultiPreCommitHookTest(TestCase):
         mock_subprocess_run.return_value.returncode = 0
         mock_subprocess_run.return_value.stdout = "true"
         mock_rh_gitleaks_configure.return_value = 0
+        for hook_type, content in self.hooks:
+            with TemporaryDirectory() as tmp_dir:
+                config_path = os.path.join(tmp_dir, "config.yaml")
+                config.RH_MULTI_GLOBAL_CONFIG_PATH = config_path
+                init_template_dir = os.path.join(tmp_dir, ".git-template")
 
-        with TemporaryDirectory() as tmp_dir:
-            config_path = os.path.join(tmp_dir, "config.yaml")
-            config.RH_MULTI_GLOBAL_CONFIG_PATH = config_path
-            init_template_dir = os.path.join(tmp_dir, ".git-template")
-            hook_path = os.path.join(init_template_dir, "hooks", "pre-commit")
-            mock_git_init_template_dir.return_value = init_template_dir
+                hook_path = os.path.join(init_template_dir, "hooks", hook_type)
+                mock_git_init_template_dir.return_value = init_template_dir
 
-            # The template hook path shouldn't exist yet
-            self.assertFalse(os.path.lexists(hook_path))
+                # The template hook path shouldn't exist yet
+                self.assertFalse(os.path.lexists(hook_path))
 
-            # It writes the config file
-            self.assertFalse(os.path.lexists(config_path))
-            multi.configure(Namespace(configure_git_template=False))
-            self.assertTrue(os.path.lexists(config_path))
+                # It writes the config file
+                self.assertFalse(os.path.lexists(config_path))
+                multi.configure(
+                    Namespace(configure_git_template=False, hook_type=hook_type)
+                )
+                self.assertTrue(os.path.lexists(config_path))
 
-            # The template hook path shouldn't exist yet
-            self.assertFalse(os.path.lexists(hook_path))
+                # The template hook path shouldn't exist yet
+                self.assertFalse(os.path.lexists(hook_path))
 
-            # It resets the config file
-            with open(config_path, "w", encoding="UTF-8") as conf_file:
-                conf_file.write("junk")
+                # It resets the config file
+                with open(config_path, "w", encoding="UTF-8") as conf_file:
+                    conf_file.write("junk")
 
-            with open(config_path, "r", encoding="UTF-8") as conf_file:
-                self.assertIn("junk", conf_file.read())
+                with open(config_path, "r", encoding="UTF-8") as conf_file:
+                    self.assertIn("junk", conf_file.read())
 
-            multi.configure(Namespace(configure_git_template=True))
+                multi.configure(
+                    Namespace(configure_git_template=True, hook_type=hook_type)
+                )
 
-            with open(config_path, "r", encoding="UTF-8") as conf_file:
-                self.assertNotIn("junk", conf_file.read())
+                with open(config_path, "r", encoding="UTF-8") as conf_file:
+                    self.assertNotIn("junk", conf_file.read())
 
-            # The template hook path should exist now that the flag was set to
-            # True
-            with open(hook_path, encoding="UTF-8") as h:
-                self.assertIn("ed00ee75-4516-44ef-8b25-28ca3d18d91a", h.read())
+                # The template hook path should exist now that the flag was set to
+                # True
+                with open(hook_path, encoding="UTF-8") as h:
+                    self.assertIn(content, h.read())

@@ -16,10 +16,10 @@ def install(args):
     """
     A handler that sets up pre-commit file
     """
-    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOK)
+    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type])
 
 
-def run(_):
+def run(args):
     """
     A handler that runs the pre-commit.com package
     """
@@ -32,9 +32,17 @@ def run(_):
     for path in paths:
         if not os.path.isfile(path):
             continue
-
-        status = pre_commit.main(["run", f"--config={path}"])
-
+        if args.hook_type == "pre-commit":
+            status = pre_commit.main(["run", f"--config={path}"])
+        if args.hook_type == "commit-msg":
+            status = pre_commit.main(
+                [
+                    "run",
+                    f"--config={path}",
+                    f"--hook-stage={args.hook_type}",
+                    f"--commit-msg-filename={args.commit_msg_filename}",
+                ]
+            )
         if status:
             return status
 
@@ -46,7 +54,8 @@ def configure(args):
     A handler that resets the config for the tool
     """
     if args.configure_git_template:
-        if common.configure_git_template(args, templates.RH_MULTI_PRE_COMMIT_HOOK) != 0:
+        hook_template = templates.RH_MULTI_PRE_COMMIT_HOOK[args.hook_type]
+        if common.configure_git_template(args, hook_template) != 0:
             return 1
 
         # So that rh_pre_commit doesn't apply it
@@ -101,6 +110,10 @@ def pick_handler(args):
 def main():
     try:
         args = common.create_parser("rh-multi-pre-commit").parse_args()
+        if args.version:
+            logging.info(common.application_version())
+            return 0
+
         handler = pick_handler(args)
 
         return handler(args)

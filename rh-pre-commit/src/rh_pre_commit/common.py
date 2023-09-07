@@ -6,6 +6,7 @@ import os
 import stat
 
 from argparse import ArgumentParser
+from importlib.metadata import version
 
 from pre_commit import main as pre_commit  # The pre-commit.com library
 from rh_pre_commit import config
@@ -19,6 +20,17 @@ def create_parser(prog):
     parser = ArgumentParser(
         prog=prog,
         description="Manage multiple pre-commit hooks for Red Hatters",
+    )
+    parser.add_argument(
+        "--version", "-v", action="store_true", help="Print version information"
+    )
+    parser.add_argument(
+        "--hook-type", default="pre-commit", help="Set the hook type to run."
+    )
+    parser.add_argument(
+        "--commit-msg-filename",
+        required=False,
+        help="Provide the commit message filename.",
     )
 
     subparsers = parser.add_subparsers(dest="command")
@@ -136,7 +148,7 @@ def install_hook(args, repo_path, content):
     repo_path
     """
     hooks_dir = os.path.join(repo_path, "hooks")
-    hook_path = os.path.join(hooks_dir, "pre-commit")
+    hook_path = os.path.join(hooks_dir, args.hook_type)
 
     # Make sure the path leading up to the hooks dir exists
     if not os.path.lexists(hooks_dir):
@@ -190,6 +202,29 @@ def install(args, content):
     return status
 
 
+def hook_installed(hook_type):
+    hook_path = os.path.join(os.getcwd(), ".git", "hooks", hook_type)
+
+    # Check to see if the file exists
+    if not os.path.isfile(hook_path):
+        return False
+
+    # Check to make sure the execution bit is set
+    if not bool(
+        os.stat(hook_path).st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    ):
+        return False
+
+    try:
+        # Check to make sure this is called in the file.
+        with open(hook_path, "r", encoding="UTF-8") as hook_file:
+            data = hook_file.read()
+            return "rh-pre-commit" in data or "rh-multi-pre-commit" in data
+    except Exception as e:
+        logging.error(e)
+        return False
+
+
 def configure_git_template(args, content):
     template_dir = git.init_template_dir()
 
@@ -203,3 +238,10 @@ def configure_git_template(args, content):
         return 1
 
     return install_hook(args, template_dir, content)
+
+
+def application_version():
+    try:
+        return version("rh_pre_commit")
+    except Exception:
+        return "UNKNOWN"
