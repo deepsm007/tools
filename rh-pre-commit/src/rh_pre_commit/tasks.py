@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 from abc import ABC
 from abc import abstractmethod
@@ -113,6 +114,7 @@ class SignOff(Task):
     name = "sign-off"
     flag = "signOff"
     default_config_value = "true"
+    metadata_re = re.compile(r"rh-pre-commit\.([\w\-]+):\s*(.+)")
 
     _git_section = f"{config.DEFAULT_GIT_SECTION}.commit-msg"
 
@@ -134,8 +136,18 @@ class SignOff(Task):
             status = "ENABLED" if task.enabled() else "DISABLED"
             sign_off_msg.append(f"rh-pre-commit.{task.name}: {status}")
 
+        # Clean out previous sign-offs
+        with open(args.commit_msg_filename, "r", encoding="UTF-8") as commit_msg_file:
+            cleaned_commit_msg = (
+                "\n".join(
+                    line for line in commit_msg_file if not self.metadata_re.match(line)
+                )
+                + "\n"
+            )
+
         # Write the sign-off to file
-        with open(args.commit_msg_filename, "a", encoding="UTF-8") as commit_msg_file:
+        with open(args.commit_msg_filename, "w", encoding="UTF-8") as commit_msg_file:
+            commit_msg_file.write(cleaned_commit_msg)
             commit_msg_file.write("\n")
             commit_msg_file.write("\n".join(sign_off_msg))
             commit_msg_file.write("\n")

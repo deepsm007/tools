@@ -16,7 +16,7 @@ from rh_pre_commit import config
 from rh_pre_commit import git
 
 HOOK_VARIANT_RE = re.compile(r"\s*exec\s+((rh-(multi-)?)?pre-commit)\b")
-GITDIR_RE = re.compile("gitdir: (.+)")
+GITDIR_RE = re.compile(r"gitdir: (.+)")
 
 
 def create_parser(prog):
