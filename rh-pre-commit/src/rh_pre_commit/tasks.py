@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 from abc import ABC
 from abc import abstractmethod
@@ -78,22 +79,26 @@ class CheckSecrets(Task):
         Run the check and return a status code. A non-zero status code
         is considered a failure.
         """
+        # Make sure this isn't the same as rh_gitleaks.config.BLOCKING_EXIT_CODE
         leak_exit_code = 42
+
         args = [
             f"--leaks-exit-code={leak_exit_code}",
             "--verbose",
-            "--unstaged",
             "--redact",
-            "--format=json",
-            "--path=.",
         ]
 
         if os.path.isfile(".gitleaks.toml"):
             args.append("--additional-config=.gitleaks.toml")
 
-        if rh_gitleaks.main(args) == leak_exit_code:
+        rc = rh_gitleaks.main(args)
+
+        if rc == rh_gitleaks.config.BLOCKING_EXIT_CODE:
+            return rc
+
+        if rc == leak_exit_code:
             logging.info(templates.LEAK_DETECTED)
-            return leak_exit_code
+            return rc
 
         # Only return a failing status if leaks are found.
         # There are cases where gitleaks will fail and we don't want to block
@@ -109,6 +114,7 @@ class SignOff(Task):
     name = "sign-off"
     flag = "signOff"
     default_config_value = "true"
+    metadata_re = re.compile(r"rh-pre-commit\.([\w\-]+):\s*(.+)")
 
     _git_section = f"{config.DEFAULT_GIT_SECTION}.commit-msg"
 
@@ -123,15 +129,25 @@ class SignOff(Task):
 
         # Generate sign-off text
         sign_off_msg = [
-            f"rh-pre-commit.version: {common.application_version()}",
+            f"rh-pre-commit.version: {common.version()}",
         ]
 
         for task in tasks["pre-commit"]:
             status = "ENABLED" if task.enabled() else "DISABLED"
             sign_off_msg.append(f"rh-pre-commit.{task.name}: {status}")
 
+        # Clean out previous sign-offs
+        with open(args.commit_msg_filename, "r", encoding="UTF-8") as commit_msg_file:
+            cleaned_commit_msg = (
+                "\n".join(
+                    line for line in commit_msg_file if not self.metadata_re.match(line)
+                )
+                + "\n"
+            )
+
         # Write the sign-off to file
-        with open(args.commit_msg_filename, "a", encoding="UTF-8") as commit_msg_file:
+        with open(args.commit_msg_filename, "w", encoding="UTF-8") as commit_msg_file:
+            commit_msg_file.write(cleaned_commit_msg)
             commit_msg_file.write("\n")
             commit_msg_file.write("\n".join(sign_off_msg))
             commit_msg_file.write("\n")

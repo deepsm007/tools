@@ -61,9 +61,9 @@ class PreCommitHookTest(TestCase):
         """
         Confirm the run command passes the right args
         """
-        mock_check = Mock()
-        mock_rh_pre_commit_tasks["commit-msg"].__iter__.return_value = [mock_check]
-        mock_rh_pre_commit_tasks["pre-commit"].__iter__.return_value = [mock_check]
+        mock_task = Mock()
+        mock_rh_pre_commit_tasks["commit-msg"].__iter__.return_value = [mock_task]
+        mock_rh_pre_commit_tasks["pre-commit"].__iter__.return_value = [mock_task]
 
         tests = (
             # Success
@@ -81,9 +81,9 @@ class PreCommitHookTest(TestCase):
         )
 
         for i, (hook_type, enabled, run, expected) in enumerate(tests):
-            mock_check.reset_mock()
-            mock_check.enabled.return_value = enabled
-            mock_check.run.return_value = run
+            mock_task.reset_mock()
+            mock_task.enabled.return_value = enabled
+            mock_task.run.return_value = run
             self.assertEqual(
                 pre.run(Namespace(hook_type=hook_type)), expected, f"test={i}"
             )
@@ -166,8 +166,8 @@ class PreCommitHookTest(TestCase):
     @patch("rh_pre_commit.git.init_template_dir")
     @patch("rh_pre_commit.tasks")
     def test_configure(self, mock_rh_pre_commit_tasks, mock_git_init_template_dir):
-        mock_check = Mock()
-        mock_rh_pre_commit_tasks["pre-commit"].__iter__.return_value = [mock_check]
+        mock_task = Mock()
+        mock_rh_pre_commit_tasks["pre-commit"].__iter__.return_value = [mock_task]
 
         with TemporaryDirectory() as tmp_dir:
             init_template_dir = os.path.join(tmp_dir, ".git-template")
@@ -178,8 +178,8 @@ class PreCommitHookTest(TestCase):
                 # The template hook path shouldn't exist yet
                 self.assertFalse(os.path.lexists(hook_path))
 
-                mock_check.reset_mock()
-                mock_check.configure.return_value = 0
+                mock_task.reset_mock()
+                mock_task.configure.return_value = 0
                 status = pre.configure(
                     Namespace(configure_git_template=False, hook_type=hook_type)
                 )
@@ -188,8 +188,8 @@ class PreCommitHookTest(TestCase):
                 # The template hook path shouldn't exist yet
                 self.assertFalse(os.path.lexists(hook_path))
 
-                mock_check.reset_mock()
-                mock_check.configure.return_value = 1
+                mock_task.reset_mock()
+                mock_task.configure.return_value = 1
                 status = pre.configure(
                     Namespace(configure_git_template=True, hook_type=hook_type)
                 )

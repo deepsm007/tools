@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import os
+import shlex
 import stat
 import subprocess  # nosec
 import sys
@@ -80,8 +81,6 @@ def parse_args(args):
             rh_gitleaks_args.append(args[0].replace("-", "_"))
         else:
             gitleaks_args = args
-    else:
-        gitleaks_args.append("--help")
 
     return {
         "gitleaks": gitleaks_args,
@@ -170,14 +169,18 @@ def load_auth_token():
         else:
             auth_token_path = config.PATTERN_SERVER_AUTH_TOKEN_PATH
             with open(auth_token_path, "r", encoding="UTF-8") as f:
-                auth_token = f.read()
+                auth_token = f.read().strip()
 
         if jwt_valid(auth_token):
             return auth_token
 
         return None
     except Exception:
-        logging.error("Could not find auth token. Try: rh-gitleaks login")
+        logging.error("Could not find pattern server auth token!")
+        logging.info(
+            "\nPlease log in with this command and try again:\n\n%s\n",
+            f"{shlex.quote(sys.executable)} -m rh_gitleaks login",
+        )
         return None
 
 
@@ -223,11 +226,11 @@ def run_gitleaks(args, callback=None, **kwargs):
     """
     bin_path = gitleaks_bin_path()
     if not bin_path:
-        return 1
+        return config.BLOCKING_EXIT_CODE
 
     p_path = patterns_path()
     if not p_path:
-        return 1
+        return config.BLOCKING_EXIT_CODE
 
     proc = subprocess.run(  # nosec
         [bin_path, f"--config-path={p_path}", *args],
@@ -277,9 +280,14 @@ def configure(auth_token=None):
     but it may include more steps in the future. This is also to keep the
     tool consistent with other tools in this toolchain.
 
+    If an auth token already exists, this is a noop.
+
     Returns:
         A return code for sys.exit
     """
+    if load_auth_token():
+        return 0
+
     return login(auth_token=auth_token)
 
 

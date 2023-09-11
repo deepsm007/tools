@@ -71,11 +71,11 @@ class RHGitleaksTest(TestCase):
                     "rh_gitleaks": [],
                 },
             ),
-            # No args should pass "--help" to gitleaks
+            # No args shouldn't pass any default args
             (
                 [],
                 {
-                    "gitleaks": ["--help"],
+                    "gitleaks": [],
                     "rh_gitleaks": [],
                 },
             ),
@@ -154,6 +154,10 @@ class RHGitleaksTest(TestCase):
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.load_auth_token(), self.mock_token)
 
+            # Make sure configure doesn't hang if the token's already there
+            self.assertEqual(rh_gitleaks.configure(), 0)
+            self.assertEqual(rh_gitleaks.load_auth_token(), self.mock_token)
+
     @patch("requests.get")
     @patch("subprocess.run")
     def test_run_gitleaks(self, mock_subprocess_run, mock_requests_get):
@@ -178,7 +182,10 @@ class RHGitleaksTest(TestCase):
             )
 
             # Check the results of a configure and run
-            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 1)
+            self.assertEqual(
+                rh_gitleaks.run_gitleaks(["--help"]),
+                rh_gitleaks.config.BLOCKING_EXIT_CODE,
+            )
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
             self.assertEqual(

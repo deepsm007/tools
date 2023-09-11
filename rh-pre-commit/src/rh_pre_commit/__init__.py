@@ -29,8 +29,15 @@ def configure(args):
     """
     A handler that resets the config for the tool
     """
+    #
+    # Important!
+    #
+    # rh-pre-commit should run without needing to configure it first (with the
+    # only exception being auth). It should have sane default values for
+    # everything so it can be used through the .pre-commit-hooks.yaml
+    #
     if args.configure_git_template:
-        template = templates.RH_PRE_COMMIT_HOOK[args.hook_type]
+        template = templates.RH_PRE_COMMIT_HOOKS[args.hook_type]
         if common.configure_git_template(args, template) != 0:
             return 1
 
@@ -48,7 +55,7 @@ def install(args):
     """
     A handler that sets up pre-commit file in the repos
     """
-    return common.install(args, templates.RH_PRE_COMMIT_HOOK[args.hook_type])
+    return common.install(args, templates.RH_PRE_COMMIT_HOOKS[args.hook_type])
 
 
 def pick_handler(args):
@@ -76,12 +83,12 @@ def pick_handler(args):
 def main():
     try:
         args = common.create_parser("rh-pre-commit").parse_args()
+
         if args.version:
-            logging.info(common.application_version())
+            logging.info(common.version())
             return 0
 
         handler = pick_handler(args)
-
         return handler(args)
     except KeyboardInterrupt:
         logging.info("Exiting...")
