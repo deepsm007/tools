@@ -106,8 +106,8 @@ make install
 # To understand these options, run: python3 -m rh_pre_commit.multi configure --help
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 
-# To configure commit-msg attestation  (sign-off)
-python3 -m rh_pre_commit.multi --hook-type commit-msg configure --configure-git-template --force
+# OPTIONAL: To configure commit-msg attestation  (sign-off)
+python3 -m rh_pre_commit.multi --hook-type commit-msg configure --force
 ```
 
 **Global vs Local Configuration**
@@ -123,7 +123,8 @@ values that affect all repositories.
 # To understand these options, run: python3 -m rh_pre_commit.multi install --help
 python3 -m rh_pre_commit.multi install --force --path ~/
 
-# To install the commit-msg hook for commit message attestation (sign-off)
+# OPTIONAL: To install the commit-msg hook for commit message attestation (sign-off)
+# it is recommended to review the --path value
 python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path ~/
 ```
 
@@ -250,7 +251,7 @@ If you're using rh-multi-pre-commit:
 # To understand these flags, run: python3 -m rh_pre_commit.multi configure --help
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 
-# To reset commit-msg attestation configuration
+# OPTIONAL: To reset commit-msg attestation configuration
 python3 -m rh_pre_commit.multi --hook-type commit-msg configure --configure-git-template --force
 ```
 
@@ -259,7 +260,7 @@ If you're using rh-pre-commit:
 # To understand these flags, run: python3 -m rh_pre_commit configure --help
 python3 -m rh_pre_commit configure --configure-git-template --force
 
-# To reset commit-msg attestation configuration
+# OPTIONAL: To reset commit-msg attestation configuration
 python3 -m rh_pre_commit --hook-type commit-msg configure --configure-git-template --force
 ```
 
@@ -274,7 +275,7 @@ If you're using rh-multi-pre-commit:
 # To understand these flags, run: python3 -m rh_pre_commit.multi install --help
 python3 -m rh_pre_commit.multi install --force --path /path/to/repo
 
-# To install commit-msg attestation hook
+# OPTIONAL: To install commit-msg attestation hook
 python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path /path/to/repo
 ```
 
@@ -283,7 +284,7 @@ If you're using rh-pre-commit:
 # To understand these flags, run: python3 -m rh_pre_commit install --help
 python3 -m rh_pre_commit install --force --path /path/to/repo
 
-# To install commit-msg attestation hook
+# OPTIONAL: To install commit-msg attestation hook
 python3 -m rh_pre_commit --hook-type commit-msg install --force --path /path/to/repo
 ```
 
@@ -315,7 +316,7 @@ git config --bool rh-pre-commit.checkSecrets true
 
 #### SignOff (Default: On)
 This task provides a sign-off in the commit message to provide an attestation
-that the tasks have fun.
+that the tasks have run.
 
 To turn it off for a repo:
 
