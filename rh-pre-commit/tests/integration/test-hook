@@ -7,6 +7,7 @@ set -euo pipefail
 
 HOOK="${1}"
 GITREF="${2}"
+ENVTYPE="${3}"
 
 echo ">> Run setup"
 
@@ -29,13 +30,19 @@ then
     fail ">>>> local config not disabled by default"
   fi
 else
-  echo ">>> Confirm local config setting not set for normal installs"
-
-  if grep "enableLocalConfig" ~/.gitconfig &> /dev/null
+  if [[ "${ENVTYPE}" == "container" ]]
   then
-    fail ">>>> enableLocalConfig should not be set for ${HOOK}"
+    echo ">>> Confirm local config setting not set for normal installs"
+
+    if grep "enableLocalConfig" ~/.gitconfig &> /dev/null
+    then
+      fail ">>>> enableLocalConfig should not be set for ${HOOK}"
+    else
+      pass ">>>> enableLocalConfig not set for ${HOOK}"
+    fi
   else
-    pass ">>>> enableLocalConfig not set for ${HOOK}"
+    # Containers have a known clean state and other things might not
+    echo ">>> Skipping confirm local config setting not set for normal installs for env type ${ENVTYPE}"
   fi
 fi
 

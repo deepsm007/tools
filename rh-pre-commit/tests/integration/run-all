@@ -11,21 +11,21 @@ function run-test {
   echo "====================================================================="
   echo "Running in RHEL"
   echo "---------------------------------------------------------------------"
-  ./run-in-rhel ${@}
+  ./run-in-rhel test-hook ${@} container
   echo "====================================================================="
 
   echo "====================================================================="
   echo "Running in Fedora"
   echo "---------------------------------------------------------------------"
-  ./run-in-fedora ${@}
+  ./run-in-fedora test-hook ${@} container
   echo "====================================================================="
 
   echo "====================================================================="
   echo "Running on host (WARNING this resets host config)"
   echo "---------------------------------------------------------------------"
-  ./${@}
+  ./test-hook ${@} host
   echo "====================================================================="
 }
 
-run-test test-hook rh-pre-commit "${GITREF}"
-run-test test-hook rh-multi-pre-commit "${GITREF}"
+run-test rh-pre-commit "${GITREF}"
+run-test rh-multi-pre-commit "${GITREF}"
