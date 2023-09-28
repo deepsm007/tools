@@ -1,0 +1,19 @@
+#! /usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+function run-test {
+  echo "======================================================================="
+  echo "Running in RHEL"
+  "${SCRIPT_DIR}/run-in-rhel" ${@}
+  echo "======================================================================="
+
+  echo "======================================================================="
+  echo "Running in Fedora"
+  "${SCRIPT_DIR}/run-in-fedora" ${@}
+  echo "======================================================================="
+}
+
+run-test test-detect-secret rh-pre-commit
+run-test test-detect-secret rh-multi-pre-commit

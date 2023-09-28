@@ -1,0 +1,25 @@
+#! /usr/bin/env bash
+set -eou pipefail
+
+export project_dir="$(cd ../../ && pwd)"
+export test_repos="$(mktemp -d)"
+
+git clone https://github.com/leaktk/fake-leaks.git "${test_repos}/repo-0"
+
+cd "${test_repos}/repo-0"
+git config --global user.email "integration-test@example.com"
+git config --global user.name "Integration Test"
+
+for x in {1..9}
+do
+  cp -r "${test_repos}/repo-0" "${test_repos}/repo-${x}"
+done
+
+cd "${project_dir}" && make install
+cd "${test_repos}"
+
+# Configure it with the default settings
+"${HOOK}" configure --configure-git-template --force
+
+# Enable it for all existing projects under the home directory
+"${HOOK}" install --force --path "${test_repos}"
