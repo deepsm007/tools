@@ -211,7 +211,7 @@ new-repo
 
 echo ">>> Replace hook with pre-commit.com"
 
-pre-commit install -f &> /dev/null
+python3 -m pre_commit install -f &> /dev/null
 if grep "${HOOK}" .git/hooks/pre-commit &> /dev/null
 then
   fail ">>>> ${HOOK} not replaced"
