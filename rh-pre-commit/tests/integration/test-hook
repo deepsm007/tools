@@ -3,9 +3,13 @@
 # WARNING: these tests are run on the host too. Try to make sure that
 # they aren't destructive and work outside of a container
 #
+set -euo pipefail
 
 HOOK="${1}"
 GITREF="${2}"
+
+echo ">> Run setup"
+
 source ./common/setup
 
 echo ">> Test Hook: ${HOOK}"
@@ -232,7 +236,7 @@ else
   fail ">>>> Secret detected when it shouldn't be"
 fi
 
-echo ">>> Confirm it can be installed through it's .pre-commit-hooks.yaml"
+echo ">>> Confirm it can be installed through its .pre-commit-hooks.yaml"
 
 cat > .pre-commit-config.yaml <<EOF
 repos:

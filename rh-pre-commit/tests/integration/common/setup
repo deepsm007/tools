@@ -7,12 +7,12 @@ export base_repos="$(mktemp -d)"
 if [[ "$(id -u)" == "0" ]]
 then
   curl -o /etc/pki/ca-trust/source/anchors/2015-RH-IT-Root-CA.pem \
-    https://certs.corp.redhat.com/certs/2015-IT-Root-CA.pem
+    https://certs.corp.redhat.com/certs/2015-IT-Root-CA.pem &> /dev/null
 
   curl -o /etc/pki/ca-trust/source/anchors/2022-IT-Root-CA.pem \
-    https://certs.corp.redhat.com/certs/2022-IT-Root-CA.pem
+    https://certs.corp.redhat.com/certs/2022-IT-Root-CA.pem &> /dev/null
 
-  update-ca-trust
+  update-ca-trust &> /dev/null
 fi
 
 # By using this repo we confirm the existing history isn't an issue
@@ -21,20 +21,20 @@ cd "${base_repos}/fake-leaks"
 
 if ! git config user.email &> /dev/null
 then
-  git config --global user.email "integration-test@example.com"
-  git config --global user.name "Integration Test"
+  git config --global user.email "no-reply@redhat.com"
+  git config --global user.name "No Reply"
 fi
 
-echo -n "Installing tools..."
+echo ">>> Install hooks"
 cd "${project_dir}" && make install &> /dev/null
-echo "done!"
 
 # Configure and install hooks
+echo ">>> Configure hooks"
 cd "${base_repos}"
-"${HOOK}" --hook-type pre-commit configure --configure-git-template --force
-"${HOOK}" --hook-type commit-msg configure --configure-git-template --force
-"${HOOK}" --hook-type pre-commit install --force --path "${base_repos}"
-"${HOOK}" --hook-type commit-msg install --force --path "${base_repos}"
+"${HOOK}" --hook-type pre-commit configure --configure-git-template --force &> /dev/null
+"${HOOK}" --hook-type commit-msg configure --configure-git-template --force &> /dev/null
+"${HOOK}" --hook-type pre-commit install --force --path "${base_repos}" &> /dev/null
+"${HOOK}" --hook-type commit-msg install --force --path "${base_repos}" &> /dev/null
 
 function pass {
   echo "${1} (PASS)"
@@ -49,4 +49,5 @@ function new-repo {
   cd $(mktemp -d)
   cp -r "${base_repos}/fake-leaks" ./fake-leaks
   cd ./fake-leaks
+  echo ">>> Change repo to $(pwd)"
 }
