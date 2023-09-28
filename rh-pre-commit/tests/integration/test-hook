@@ -19,7 +19,7 @@ echo ">> Test Hook: ${HOOK}"
 new-repo
 ###############################################################################
 
-if [[ "${HOOK}" = "rh-multi-pre-commit" ]]
+if [[ "${HOOK}" = "rh_pre_commit.multi" ]]
 then
   echo ">>> Confirm local config disabled by default for multi installs"
 
@@ -185,7 +185,7 @@ fi
 git config --bool rh-pre-commit.enableLocalConfig true
 touch some-file && git add some-file # Force a change for a commit
 
-if [[ "${HOOK}" == "rh-multi-pre-commit" ]]
+if [[ "${HOOK}" == "rh_pre_commit.multi" ]]
 then
   echo ">>> Confirm the local config can be enabled for ${HOOK}"
   if git commit -m "This should error" &> /dev/null

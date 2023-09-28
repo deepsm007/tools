@@ -31,10 +31,10 @@ cd "${project_dir}" && make install &> /dev/null
 # Configure and install hooks
 echo ">>> Configure hooks"
 cd "${base_repos}"
-"${HOOK}" --hook-type pre-commit configure --configure-git-template --force &> /dev/null
-"${HOOK}" --hook-type commit-msg configure --configure-git-template --force &> /dev/null
-"${HOOK}" --hook-type pre-commit install --force --path "${base_repos}" &> /dev/null
-"${HOOK}" --hook-type commit-msg install --force --path "${base_repos}" &> /dev/null
+python3 -m "${HOOK}" --hook-type pre-commit configure --configure-git-template --force &> /dev/null
+python3 -m "${HOOK}" --hook-type commit-msg configure --configure-git-template --force &> /dev/null
+python3 -m "${HOOK}" --hook-type pre-commit install --force --path "${base_repos}" &> /dev/null
+python3 -m "${HOOK}" --hook-type commit-msg install --force --path "${base_repos}" &> /dev/null
 
 function pass {
   echo "${1} (PASS)"

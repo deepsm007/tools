@@ -34,5 +34,5 @@ function run-test {
   echo "====================================================================="
 }
 
-run-test rh-pre-commit "${GITREF}"
-run-test rh-multi-pre-commit "${GITREF}"
+run-test rh_pre_commit "${GITREF}"
+run-test rh_pre_commit.multi "${GITREF}"
