@@ -15,5 +15,5 @@ function run-test {
   echo "======================================================================="
 }
 
-run-test test-detect-secret rh-pre-commit
-run-test test-detect-secret rh-multi-pre-commit
+run-test test-hook rh-pre-commit
+run-test test-hook rh-multi-pre-commit

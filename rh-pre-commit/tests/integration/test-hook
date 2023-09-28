@@ -1,0 +1,242 @@
+#! /usr/bin/bash
+
+HOOK="${1}"
+source ./common/setup
+
+echo ">> Test Hook: ${HOOK}"
+
+# New Repo ####################################################################
+cp -r "${test_repos}/repo-0" "${test_repos}/repo-1"
+cd "${test_repos}/repo-1"
+###############################################################################
+
+if [[ "${HOOK}" = "rh-multi-pre-commit" ]]
+then
+  echo ">>> Confirm local config disabled by default for multi installs"
+
+  if grep "enableLocalConfig\s*=\s*false" ~/.gitconfig &> /dev/null
+  then
+    pass ">>>> local config disabled by default"
+  else
+    fail ">>>> local config not disabled by default"
+  fi
+else
+  echo ">>> Confirm local config setting not set for normal installs"
+
+  if grep "enableLocalConfig" ~/.gitconfig &> /dev/null
+  then
+    fail ">>>> enableLocalConfig should not be set for ${HOOK}"
+  else
+    pass ">>>> enableLocalConfig not set for ${HOOK}"
+  fi
+fi
+
+echo ">>> Confirm the pre-commit hook template is installed"
+
+if grep "${HOOK}" ~/.git-template/hooks/pre-commit &> /dev/null
+then
+  pass ">>>> ${HOOK} type:pre-commit installed"
+else
+  fail ">>>> ${HOOK} type:pre-commit not installed"
+fi
+
+echo ">>> Confirm the commit-msg hook template is installed"
+
+if grep "${HOOK}" ~/.git-template/hooks/commit-msg &> /dev/null
+then
+  pass ">>>> ${HOOK} template type:commit-msg installed"
+else
+  fail ">>>> ${HOOK} template type:commit-msg not installed"
+fi
+
+echo ">>> Confirm secrets are caught"
+
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
+git add secret
+
+if ! git commit -m "This should error" &> /dev/null
+then
+  pass ">>>> ${HOOK} detected secrets"
+else
+  fail ">>>> ${HOOK} did not detect secrets"
+fi
+
+echo ">>> Confirm a notsecret allows a secret"
+
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g" #notsecret' > secret
+git add secret
+
+if git commit -m "This should pass" &> /dev/null
+then
+  pass ">>>> ${HOOK} notsecret comment works"
+else
+  fail ">>>> ${HOOK} notsecret comment did not work"
+fi
+
+echo ">>> Confirm a .gitleaks.toml should allow secrtes"
+
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
+git add secret
+
+cat > .gitleaks.toml << EOF
+[allowlist]
+paths = [
+  'secret'
+]
+EOF
+git add .gitleaks.toml
+
+if git commit -m "This should pass" &> /dev/null
+then
+  pass ">>>> ${HOOK} allowlist works"
+else
+  fail ">>>> ${HOOK} allowlist did not work"
+fi
+
+echo ">>> Confirm it signed off on the commits as ENABLED"
+if git log -n 1 | grep "rh-pre-commit.check-secrets: ENABLED" &> /dev/null
+then
+  pass ">>>> It was detected as enabled"
+else
+  fail ">>>> It was not detected as enabled"
+fi
+
+echo ">>> Confirm the check can just be disabled"
+
+# New Repo ####################################################################
+cp -r "${test_repos}/repo-0" "${test_repos}/repo-2"
+cd "${test_repos}/repo-2"
+###############################################################################
+
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
+git add secret
+
+if ! git commit -m "This should error" &> /dev/null
+then
+  pass ">>>> ${HOOK} detected secrets"
+else
+  fail ">>>> ${HOOK} did not detect secrets"
+fi
+
+git config --bool rh-pre-commit.checkSecrets false
+
+if git commit -m "This should pass" &> /dev/null
+then
+  pass ">>>> ${HOOK} git config works"
+else
+  fail ">>>> ${HOOK} git config did not work"
+fi
+
+echo ">>> Confirm it signed off on the commits as disabled"
+if git log -n 1 | grep "rh-pre-commit.check-secrets: DISABLED" &> /dev/null
+then
+  pass ">>>> It was detected as disabled"
+else
+  fail ">>>> It was not detected as disabled"
+fi
+
+# New Repo ####################################################################
+cp -r "${test_repos}/repo-0" "${test_repos}/repo-3"
+cd "${test_repos}/repo-3"
+###############################################################################
+
+echo ">>> Confirm the local hook setting is respected"
+cat > .pre-commit-config.yaml <<EOF
+repos:
+  - repo: local
+    hooks:
+      - id: failing-hook
+        name: Failing Hook
+        language: system
+        entry: false
+        stages: [pre-commit]
+        pass_filenames: false
+EOF
+git add .pre-commit-config.yaml
+
+if git commit -m "This should pass" &> /dev/null
+then
+  pass ">>>> .pre-commit-config.yaml local config ignored"
+else
+  fail ">>>> .pre-commit-config.yaml local config not ignored"
+fi
+
+git config --bool rh-pre-commit.enableLocalConfig true
+touch some-file && git add some-file # Force a change for a commit
+
+if [[ "${HOOK}" == "rh-multi-pre-commit" ]]
+then
+  echo ">>> Confirm the local config can be enabled for ${HOOK}"
+  if git commit -m "This should error" &> /dev/null
+  then
+    fail ">>>> .pre-commit-config.yaml local config not applied"
+  else
+    pass ">>>> .pre-commit-config.yaml local config applied"
+  fi
+else
+  echo ">>> Confirm the local config cannot be enabled for ${HOOK}"
+
+  if git commit -m "This should pass" &> /dev/null
+  then
+    pass ">>>> .pre-commit-config.yaml local config ignored"
+  else
+    fail ">>>> .pre-commit-config.yaml local config not ignored"
+  fi
+fi
+
+# New Repo ####################################################################
+cp -r "${test_repos}/repo-0" "${test_repos}/repo-4"
+cd "${test_repos}/repo-4"
+###############################################################################
+
+echo ">>> Replace hook in repo-4 with pre-commit.com"
+
+pre-commit install -f
+if grep "${HOOK}" .git/hooks/pre-commit &> /dev/null
+then
+  fail ">>>> ${HOOK} not replaced"
+fi
+
+echo ">>> Confirm it's not enabled for this repo yet and sign off blocks it"
+
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret-not-caught
+cat > .pre-commit-config.yaml <<EOF
+repos: []
+EOF
+git add .pre-commit-config.yaml secret-not-caught
+
+if git commit -m "This should error" &> /dev/null
+then
+  fail ">>>> Sign-off did not catch the commit"
+else
+  pass ">>>> Sign-off caught the commit when it wasn't disabled"
+fi
+
+echo ">>> Confirm it's not enabled for this repo yet and sign off has been turned off"
+
+git config --bool rh-pre-commit.commit-msg.signOff false
+
+if git commit -m "This should pass" &> /dev/null
+then
+  pass ">>>> Secret not caught yet"
+else
+  fail ">>>> Secret detected when it shouldn't be"
+fi
+
+echo ">>> Confirm it can be installed through it's .pre-commit-hooks.yaml"
+
+cat > .pre-commit-config.yaml <<EOF
+repos:
+  - repo: file:///source
+    hooks:
+      - id: rh-pre-commit
+EOF
+mv secret-not-caught secret
+git add .pre-commit-config.yaml secret
+
+if git commit -m "This should error" &> /dev/null
+then
+  fail ">>>> Secret not caught"
+else
+  pass ">>>> Secret caught"
+fi
