@@ -124,11 +124,11 @@ else
   fail ">>>> It was not detected as enabled"
 fi
 
-echo ">>> Confirm the check can just be disabled"
-
 # New Repo ####################################################################
 new-repo
 ###############################################################################
+
+echo ">>> Confirm the check can just be disabled"
 
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
 git add secret
@@ -150,6 +150,7 @@ else
 fi
 
 echo ">>> Confirm it signed off on the commits as disabled"
+
 if git log -n 1 | grep "rh-pre-commit.check-secrets: DISABLED" &> /dev/null
 then
   pass ">>>> It was detected as disabled"
@@ -162,6 +163,7 @@ new-repo
 ###############################################################################
 
 echo ">>> Confirm the local hook setting is respected"
+
 cat > .pre-commit-config.yaml <<EOF
 repos:
   - repo: local
@@ -181,6 +183,8 @@ then
 else
   fail ">>>> .pre-commit-config.yaml local config not ignored"
 fi
+
+echo ">>> Confirm the local hook will run when turned on in the config"
 
 git config --bool rh-pre-commit.enableLocalConfig true
 touch some-file && git add some-file # Force a change for a commit
