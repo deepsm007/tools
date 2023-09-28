@@ -1,13 +1,17 @@
 #! /usr/bin/bash
+#
+# WARNING: these tests are run on the host too. Try to make sure that
+# they aren't destructive and work outside of a container
+#
 
 HOOK="${1}"
+GITREF="${2}"
 source ./common/setup
 
 echo ">> Test Hook: ${HOOK}"
 
 # New Repo ####################################################################
-cp -r "${test_repos}/repo-0" "${test_repos}/repo-1"
-cd "${test_repos}/repo-1"
+new-repo
 ###############################################################################
 
 if [[ "${HOOK}" = "rh-multi-pre-commit" ]]
@@ -49,9 +53,17 @@ else
   fail ">>>> ${HOOK} template type:commit-msg not installed"
 fi
 
-echo ">>> Confirm secrets are caught"
-
+echo ">>> Confirm it doesn't block on secrets that are not staged during a commit"
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
+
+if git commit --allow-empty -m "This should pass" &> /dev/null
+then
+  pass ">>>> ${HOOK} unstaged secret not blocked"
+else
+  fail ">>>> ${HOOK} unstaged secret blocked"
+fi
+
+echo ">>> Confirm staged secrets are caught"
 git add secret
 
 if ! git commit -m "This should error" &> /dev/null
@@ -104,8 +116,7 @@ fi
 echo ">>> Confirm the check can just be disabled"
 
 # New Repo ####################################################################
-cp -r "${test_repos}/repo-0" "${test_repos}/repo-2"
-cd "${test_repos}/repo-2"
+new-repo
 ###############################################################################
 
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
@@ -136,8 +147,7 @@ else
 fi
 
 # New Repo ####################################################################
-cp -r "${test_repos}/repo-0" "${test_repos}/repo-3"
-cd "${test_repos}/repo-3"
+new-repo
 ###############################################################################
 
 echo ">>> Confirm the local hook setting is respected"
@@ -185,13 +195,12 @@ else
 fi
 
 # New Repo ####################################################################
-cp -r "${test_repos}/repo-0" "${test_repos}/repo-4"
-cd "${test_repos}/repo-4"
+new-repo
 ###############################################################################
 
-echo ">>> Replace hook in repo-4 with pre-commit.com"
+echo ">>> Replace hook with pre-commit.com"
 
-pre-commit install -f
+pre-commit install -f &> /dev/null
 if grep "${HOOK}" .git/hooks/pre-commit &> /dev/null
 then
   fail ">>>> ${HOOK} not replaced"
@@ -227,7 +236,8 @@ echo ">>> Confirm it can be installed through it's .pre-commit-hooks.yaml"
 
 cat > .pre-commit-config.yaml <<EOF
 repos:
-  - repo: file:///source
+  - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+    rev: ${GITREF}
     hooks:
       - id: rh-pre-commit
 EOF
@@ -239,4 +249,16 @@ then
   fail ">>>> Secret not caught"
 else
   pass ">>>> Secret caught"
+fi
+
+echo ">>> Confirm it doesn't block on secrets that are not staged during a commit"
+
+git commit --no-verify -m "Commit staged to get it out of the way" &> /dev/null
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > unstaged
+
+if git commit --allow-empty -m "This should pass" &> /dev/null
+then
+  pass ">>>> Unstaged secret not blocked"
+else
+  fail ">>>> Unstaged secret blocked"
 fi

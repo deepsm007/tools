@@ -2,28 +2,39 @@
 set -eou pipefail
 
 export project_dir="$(cd ../../ && pwd)"
-export test_repos="$(mktemp -d)"
+export base_repos="$(mktemp -d)"
+
+if [[ "$(id -u)" == "0" ]]
+then
+  curl -o /etc/pki/ca-trust/source/anchors/2015-RH-IT-Root-CA.pem \
+    https://certs.corp.redhat.com/certs/2015-IT-Root-CA.pem
+
+  curl -o /etc/pki/ca-trust/source/anchors/2022-IT-Root-CA.pem \
+    https://certs.corp.redhat.com/certs/2022-IT-Root-CA.pem
+
+  update-ca-trust
+fi
 
 # By using this repo we confirm the existing history isn't an issue
-git clone https://github.com/leaktk/fake-leaks.git "${test_repos}/repo-0"
+git clone https://github.com/leaktk/fake-leaks.git "${base_repos}/fake-leaks"
+cd "${base_repos}/fake-leaks"
 
-cd "${test_repos}/repo-0"
-git config --global user.email "integration-test@example.com"
-git config --global user.name "Integration Test"
+if ! git config user.email &> /dev/null
+then
+  git config --global user.email "integration-test@example.com"
+  git config --global user.name "Integration Test"
+fi
 
 echo -n "Installing tools..."
 cd "${project_dir}" && make install &> /dev/null
-cd "${test_repos}"
 echo "done!"
 
-# Configure it with the default settings
-"${HOOK}" configure --configure-git-template --force
+# Configure and install hooks
+cd "${base_repos}"
+"${HOOK}" --hook-type pre-commit configure --configure-git-template --force
 "${HOOK}" --hook-type commit-msg configure --configure-git-template --force
-
-# Enable it for all existing projects under the home directory
-"${HOOK}" install --force --path "${test_repos}"
-"${HOOK}" --hook-type commit-msg install --force --path "${test_repos}"
-
+"${HOOK}" --hook-type pre-commit install --force --path "${base_repos}"
+"${HOOK}" --hook-type commit-msg install --force --path "${base_repos}"
 
 function pass {
   echo "${1} (PASS)"
@@ -32,4 +43,10 @@ function pass {
 function fail {
   echo "${1} (FAIL)"
   exit 1
+}
+
+function new-repo {
+  cd $(mktemp -d)
+  cp -r "${base_repos}/fake-leaks" ./fake-leaks
+  cd ./fake-leaks
 }
