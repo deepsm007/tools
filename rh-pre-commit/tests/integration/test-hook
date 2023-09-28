@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
 #
 # WARNING: these tests are run on the host too. Try to make sure that
 # they aren't destructive and work outside of a container
