@@ -4,7 +4,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 GITREF="$(git rev-parse --abbrev-ref HEAD)"
 
-
 function run-test {
   cd "${SCRIPT_DIR}"
 
@@ -15,7 +14,7 @@ function run-test {
     echo "---------------------------------------------------------------------"
     ./run-in-rhel test-hook ${@} container
     echo "====================================================================="
-
+    echo
     echo "====================================================================="
     echo "Running in Fedora"
     echo "---------------------------------------------------------------------"
@@ -27,6 +26,7 @@ function run-test {
     echo "====================================================================="
   fi
 
+  echo
   echo "====================================================================="
   echo "Running on host (WARNING this resets host config)"
   echo "---------------------------------------------------------------------"
