@@ -54,6 +54,13 @@ legacy scripts and will prompt you before doing so.
 
 ## Getting Started
 
+There are a number of different ways to install rh-pre-commit, the option you
+choose will be determined by your requirements.  
+1. Quickstart.sh - This is a common method for installing rh-pre-commit and it's hooks in all your repositories. 
+2. Manual installation - Running the installation and configuration steps manually, including installing hooks.
+3. Pre-commit-config entry - If you already have pre-commit installed on your repo you can add this project to you `.pre-commit-config.yaml` file.
+
+  
 **Quickstart:**
 
 If you are fine with a default install, there is a [quickstart.sh](quickstart.sh)
@@ -71,7 +78,7 @@ by the quickstart!
 * Disable `rh-multi-pre-commit` from automatically running local pre-commit hooks defined in a repositories `.pre-commit-config.yaml`. 
 * If the `-s` flag is set, it will repeat the above enabling a sign-off in the commit message using commit-msg hooks.  
 
-**Updating:**
+## Installation & Updating - Manual
 
 Unless the
 [changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
@@ -191,6 +198,36 @@ for handling false positives.
 
 ```
 
+## Installation & Updating - Existing pre-commit-config.yaml
+Rh-pre-commit can be configured directly in an existing `.pre-commit-config.yaml` 
+or by creating a new on in your repo as follows.  
+
+As `rh-pre-commit` is currently internal tooling it will only be able to install 
+when you are connected to the VPN. For external repositories this could be problematic,
+so it is recommended that `rh-multi-pre-commit` is used instead. This allows you
+to still run existing pre-commit hooks, as desired, whilst keeping the configuration
+local.
+
+For updates, follow the 
+[leaktk changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/).
+
+```yaml
+---
+repos:
+  - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+    # This will be `rh-pre-commit-2.0.0` once things are merged in and the docs will explain how
+    # to set this up.
+    rev: 2.0.0
+    hooks:
+      # If you have not run this hook on your system before, it will prompt you to
+      # log in for patterns, and you will need to try again.
+      #
+      # Docs: https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit
+      - id: rh-pre-commit
+      # - id: rh-pre-commit.commit-msg # Optional for commit-msg attestation
+```
+*Note: You will need to [install pre-commit](https://pre-commit.com/#install) and it's hooks* 
+
 ## Notifications About Updates
 
 Please follow the
@@ -225,17 +262,14 @@ by the `rh-multi-pre-commit configure` command.
 
 **Warning:** If you are using `rh-multi-pre-commit`, make sure you trust the
 pre-commit hooks defined in a project's `.pre-commit-config.yaml` before making
-a commit. It will run them during a commit.
+a commit. It will run them during if `rh-pre-commit.enableLocalConfig` is set 
+to `true`.
 
 If you often contribute to untrusted projects and/or don't want to use the
 `rh-multi-pre-commit` manager, any of the Getting Started steps that reference
 `rh-multi-pre-commit` should also work with `rh-pre-commit`. You can also
 switch between the two by running the install steps again, using the one you
 want to enable.
-
-There are plans to provide an option for telling `rh-multi-pre-commit` to use
-global config only, project-config only, or both project and local config.
-(More details will come when the feature's released).
 
 
 ## Usage
