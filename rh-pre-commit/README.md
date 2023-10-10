@@ -109,6 +109,12 @@ make install
 
 **Configure the tools**
 
+Running the tool configuration performs the following:  
+1. Enables global git config settings used by the tooling.
+2. Creates templates for the hooks and enables them in the configuration. This allows all new git repositories to have 
+hooks installed by default (when `--configure-git-template` is used).
+3. For `rh-multi-commit` it creates a global pre-commit configuration file.
+
 ```sh
 # To understand these options, run: python3 -m rh_pre_commit.multi configure --help
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
@@ -124,7 +130,7 @@ a single repository.
 This follows the `git config` convention, where the `--global` flag is used to set
 values that affect all repositories.  
 
-**Enable the hook in your existing repos**
+**Install / Enable the hook in your existing repos**
 
 ```sh
 # To understand these options, run: python3 -m rh_pre_commit.multi install --help
@@ -197,6 +203,19 @@ for handling false positives.
 [1] https://patterns.security.redhat.com/docs
 
 ```
+**Setting the rh-gitleaks authentication token - File or ENV**  
+You may prefer to set the authentication token manually, or as an environment 
+variable. Instead of using `rh-gitleaks login`.  
+
+The environment variable `PATTERN_SERVER_AUTH_TOKEN` is used to provide the 
+authentication token as an environment variable. This variable is first preference
+when loading the authentication token.  
+
+The default auth.jwt file locations are `$XDG_CONFIG_HOME/rh-gitleaks/auth.jwt`
+or `$HOME/.config/rh-gitleaks/auth.jwt`. `$XDG_CONFIG_HOME` is the default unless 
+this value is not set, with `$HOME` the fallback.
+
+Refer to the rh-gitleaks [README.md](https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/blob/main/rh-gitleaks/README.md) for more information.
 
 ## Installation & Updating - Existing pre-commit-config.yaml
 Rh-pre-commit can be configured directly in an existing `.pre-commit-config.yaml` 
@@ -327,7 +346,7 @@ python3 -m rh_pre_commit --hook-type commit-msg install --force --path /path/to/
 The [Pattern Server Doc](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#handling-false-positives)
 has a section on how to handle false positives.
 
-### Tasks
+## Tasks
 
 These options allow you to turn on/off different checks provided by this
 package without having to remove the entire hook.
