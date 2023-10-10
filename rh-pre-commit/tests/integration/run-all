@@ -7,7 +7,7 @@ GITREF="$(git rev-parse --abbrev-ref HEAD)"
 function run-test {
   cd "${SCRIPT_DIR}"
 
-  if which podman &> /dev/null
+  if which podman &> /dev/null && [[ "$OSTYPE" != "darwin"* ]]  
   then
     echo "====================================================================="
     echo "Running in RHEL"
@@ -22,7 +22,7 @@ function run-test {
     echo "====================================================================="
   else
     echo "====================================================================="
-    echo "Podman not found. Skipping Linux tests"
+    echo "Podman not found or host is darwin architecture. Skipping Linux tests"
     echo "====================================================================="
   fi
 
