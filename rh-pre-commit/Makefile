@@ -60,6 +60,21 @@ unittest:
 	@echo ""
 	@./scripts/$@
 
+# helptext: integrationtest:
+# helptext:
+# helptext: Run the integration test suit for the project
+# helptext:
+# helptext:
+.PHONY: integrationtest
+integrationtest:
+	@echo ""
+	@echo "====================================================================="
+	@echo "Run Integration Tests"
+	@echo "====================================================================="
+	@echo ""
+	@./tests/integration/run-all
+
+
 # helptext: coverage:
 # helptext:
 # helptext: Run code coverage reports
