@@ -1,8 +1,22 @@
 # rh-pre-commit
 
 This tool provides a [pre-commit hook](https://www.atlassian.com/git/tutorials/git-hooks)
-that runs a standard set of [checks](#checks) and a way to manage multiple
-pre-commit hooks in your projects.
+that runs a standard set of [tasks](#tasks) and a way to manage multiple
+pre-commit hooks in your projects. The tool currently utilizes a pre-commit
+hook for scanning for potential secrets and a commit-msg hook to provide an
+attestation "sign off" in the commit message.
+
+Rh-pre-commit currently provides two functions:
+
+1. A check secrets task. This task utilizes gitleaks and internal patterns to
+   identify potential secrets before they are committed. It requires the
+   installation of a pre-commit hook in each git repository.
+
+2. An optional sign-off task. This task provides an attestation in the commit
+   message allowing teams to easily identify what version of the the hook was
+   installed and what other tasks were enabled. It requires the installation of
+   a commit-msg hook in each repository and for the check secrets task to be
+   installed and enabled.
 
 ## Contents
 
@@ -15,6 +29,9 @@ You will need the following installed on your system:
 * `python3`
 * `pip`
 * `make`
+
+Your system will need to be connected to the Red Hat VPN during installation
+and initial configuration.
 
 ## Supported Operating Systems
 
@@ -38,12 +55,27 @@ legacy scripts and will prompt you before doing so.
 
 ## Getting Started
 
-**Quickstart:**
+There are a number of different ways to install rh-pre-commit, the option you
+choose will be determined by your requirements.
+
+1. [Quickstart Install](#quickstart-install) - This is a common method for installing rh-pre-commit
+   and its hooks in all your repositories.
+
+2. [Manual Install](#manual-install) - Running the installation and configuration steps
+   manually, including installing hooks.
+
+3. [Pre-Commit-Config Install](#pre-commit-config-install) - If you already have pre-commit installed on your
+   repo you can add this project to you `.pre-commit-config.yaml` file.
+
+
+## Installation & Updating
+
+### Quickstart Install
 
 If you are fine with a default install, there is a [quickstart.sh](quickstart.sh)
-that runs all of the commands from this section in one go. **Please still read
-though this section** to understand the implications of the defaults applied
-by the quickstart!
+that runs all the commands from this section in one go. **Please still read
+through the [Manual Install section](#manual-install)** to understand the implications of the defaults applied
+by the quickstart and how apply updates!
 
 **A default install will:**
 
@@ -51,25 +83,15 @@ by the quickstart!
 * Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your home dir
 * Set `rh-multi-pre-commit` as the pre-commit hook by default for all new repos
 * Create a `~/.config/pre-commit/config.yaml` config file for `rh-multi-pre-commit` to enable `rh-pre-commit`
-* Configure `rh-gitleaks` with a 2 year patterns server token
+* Configure `rh-gitleaks` with a 2-year Patterns Server auth token
+* Disable `rh-multi-pre-commit` from automatically running local pre-commit hooks defined in a repositories `.pre-commit-config.yaml`.
+* If the `-s` flag is set, it will repeat the above enabling a sign-off in the commit message using commit-msg hooks.
 
-**Rh-multi-pre-commit considerations:**
+And after you run the quickstart.sh, you should be all set! There is a
+[section below](#testing-the-installation) that has steps for confirming
+everything's working as expected.
 
-`rh-multi-pre-commit` builds on [pre-commit.com](https://pre-commit.com/)'s
-pre-commit framework to support a global config file in addition to hooks
-defined in a project's `.pre-commit-config.yaml`. If you don't want to support
-multiple pre-commit hooks per project (the default), `rh-pre-commit` can be
-enabled instead.
-
-**Warning:** If you are using `rh-multi-pre-commit`, make sure you trust the
-pre-commit hooks defined in a project's `.pre-commit-config.yaml` before making
-a commit. It will run them during a commit.
-
-For more info see the
-[rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
-section.
-
-**Updating:**
+### Manual Install
 
 Unless the
 [changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
@@ -100,21 +122,131 @@ make install
 
 **Configure the tools**
 
+Running the tool configuration performs the following:
+
+1. It sets global git config settings used by the tooling.
+
+2. When `--configure-git-template` is used it creates templates
+   for the hooks so that all new git repositories to have hooks
+   installed by default.
+
+3. For `rh-multi-commit` it creates a global pre-commit configuration file.
+
 ```sh
 # To understand these options, run: python3 -m rh_pre_commit.multi configure --help
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
+
+# OPTIONAL: To configure commit-msg attestation (sign-off)
+python3 -m rh_pre_commit.multi --hook-type commit-msg configure --force
 ```
 
-**Enable the hook in your existing repos**
+**Install / Enable the hook in your existing repos**
 
 ```sh
 # To understand these options, run: python3 -m rh_pre_commit.multi install --help
 python3 -m rh_pre_commit.multi install --force --path ~/
+
+# OPTIONAL: To install the commit-msg hook for commit message attestation (sign-off)
+# If you don't want sign-off enabled for all repos under your home dir, you can
+# provide a different path.
+python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path ~/
 ```
 
-And you should be all set!
+And you should be all set! There is a [section below](#testing-the-installation)
+that has steps for confirming everything's working as expected.
 
-**Confirming it works**
+**Rh-multi-pre-commit considerations:**
+
+In the context of `rh-pre-commit` we consider global configuration items those that
+affect the behavior of all repositories. Local refers to configuration that affects
+a single repository. This follows the `git config` convention, where the `--global`
+flag is used to set values that affect all repositories.
+
+`rh-multi-pre-commit` builds on [pre-commit.com](https://pre-commit.com/)'s
+pre-commit framework to support a global config file in addition to hooks
+defined in a project's local `.pre-commit-config.yaml`. Running local hooks
+is disabled by default to avoid accidently executing a malicious hook, but
+it can be turned on per-repo or for all repos.
+
+**Note:** If you don't want to support multiple pre-commit hooks per project
+(the default), `rh-pre-commit` can be enabled instead. To do this, simply
+replace `rh_pre_commit.multi` with `rh_pre_commit` in the steps above.
+
+**Warning:** If you are using `rh-multi-pre-commit` with
+`rh-pre-commit.enableLocalConfig = true`, in your git config, make sure you
+trust the hooks defined in the repo's `.pre-commit-config.yaml`. It is disabled
+by default to avoid executing a malicious hook.
+
+**To enable running hooks defined in a repo's .pre-commit-config.yaml**
+
+```sh
+# Run from inside the repo you want to enable it on
+git config --bool rh-pre-commit.enableLocalConfig true
+```
+**To enable running hooks defined in all repos' .pre-commit-config.yaml (use with caution)**
+
+```sh
+git config --bool --global rh-pre-commit.enableLocalConfig true
+```
+
+**Note:** The global setting is disabled every time you run `configure`
+
+For more info see the
+[rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
+section.
+
+### Pre-Commit-Config Install
+
+Rh-pre-commit can be configured directly in an existing `.pre-commit-config.yaml`
+or by creating a new on in your repo as follows.
+
+As `rh-pre-commit` is currently internal tooling it will only be able to install
+when you are connected to the VPN. For external repositories this could be problematic,
+so it is recommended that `rh-multi-pre-commit` is used instead. This allows you
+to still run existing pre-commit hooks, as desired, whilst keeping the configuration
+local.
+
+Here is an example `.pre-commit-config.yaml`:
+
+```yaml
+---
+repos:
+  - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+    rev: rh-pre-commit-2.0.0
+    hooks:
+      # If you have not run this hook on your system before, it may prompt you to
+      # log in for patterns, and you will need to try again.
+      #
+      # Docs: https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit
+      - id: rh-pre-commit
+      # - id: rh-pre-commit.commit-msg # Optional for commit-msg attestation
+```
+
+For updates, follow the
+[leaktk changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/).
+
+**Note:** For this method to work, you will need to [install pre-commit](https://pre-commit.com/#install)
+and the relevant hooks in your repo. `rh-pre-commit` requires pre-commit's `pre-commit`
+hook to be installed, and `rh-pre-commit.commit-msg` requires pre-commit's `commit-msg`
+hook to be installed. (This also works with rh-multi-pre-commit with local config
+enabled for the repo. It just may run the checks twice if you're running it through
+rh-multi-pre-commit.)
+
+### Non-Interactive Install
+
+For a non-interactive install you can set the auth token manually or through an
+environment variable instead of using `rh-gitleaks login`. The `configure` step
+detects that rh-gitleaks is already logged in and won't prompt for a token.
+
+Steps:
+
+1. Configure the [Pattern Server Auth Token](../rh-gitleaks#pattern-server-auth-token)
+2. Follow the steps in one of the instillation sections above.
+
+### Testing the Installation
+
+This applies to the quickstart and manual steps, but a slightly modified
+version of this could still work in a repo containing a .pre-commit-config.yaml
 
 ```sh
 rm -rf /tmp/test-pre-commit && mkdir /tmp/test-pre-commit
@@ -179,37 +311,39 @@ by the `rh-multi-pre-commit configure` command.
 
 **Warning:** If you are using `rh-multi-pre-commit`, make sure you trust the
 pre-commit hooks defined in a project's `.pre-commit-config.yaml` before making
-a commit. It will run them during a commit.
+a commit. It will run them during a commit only if
+`rh-pre-commit.enableLocalConfig` is set to `true` in your git config.
 
-If you often contribute to untrusted projects and/or don't want to use the
-`rh-multi-pre-commit` manager, any of the Getting Started steps that reference
-`rh-multi-pre-commit` should also work with `rh-pre-commit`. You can also
-switch between the two by running the install steps again, using the one you
+If you don't want to use the `rh-multi-pre-commit` manager, any of the installation
+steps that reference `rh_pre_commit.multi` should also work with `rh_pre_commit`.
+You can also switch between the two by running the install steps again, using the one you
 want to enable.
-
-There are plans to provide an option for telling `rh-multi-pre-commit` to use
-global config only, project-config only, or both project and local config.
-(More details will come when the feature's released).
 
 
 ## Usage
 
 ### Resetting Config
 
-This section covers how to reset the config back to the defaults.
+This section covers how to reset the config back to the defaults. There are
+different commands for pre-commit and commit-msg hooks to enable `rh-pre-commit`
+to run at different stages of the git commit process.
 
 If you're using rh-multi-pre-commit:
-
 ```sh
 # To understand these flags, run: python3 -m rh_pre_commit.multi configure --help
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
+
+# OPTIONAL: To reset commit-msg attestation configuration
+python3 -m rh_pre_commit.multi --hook-type commit-msg configure --configure-git-template --force
 ```
 
 If you're using rh-pre-commit:
-
 ```sh
 # To understand these flags, run: python3 -m rh_pre_commit configure --help
 python3 -m rh_pre_commit configure --configure-git-template --force
+
+# OPTIONAL: To reset commit-msg attestation configuration
+python3 -m rh_pre_commit --hook-type commit-msg configure --configure-git-template --force
 ```
 
 ### Enabling for Ad-Hoc Repos
@@ -219,17 +353,21 @@ want to do this if you didn't run configure with `--configure-git-template`
 set or want to swap out the hooks in a specific repo.
 
 If you're using rh-multi-pre-commit:
-
 ```sh
 # To understand these flags, run: python3 -m rh_pre_commit.multi install --help
 python3 -m rh_pre_commit.multi install --force --path /path/to/repo
+
+# OPTIONAL: To install commit-msg attestation hook
+python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path /path/to/repo
 ```
 
 If you're using rh-pre-commit:
-
 ```sh
 # To understand these flags, run: python3 -m rh_pre_commit install --help
 python3 -m rh_pre_commit install --force --path /path/to/repo
+
+# OPTIONAL: To install commit-msg attestation hook
+python3 -m rh_pre_commit --hook-type commit-msg install --force --path /path/to/repo
 ```
 
 ### Ignoring False Leak Positives
@@ -237,12 +375,14 @@ python3 -m rh_pre_commit install --force --path /path/to/repo
 The [Pattern Server Doc](https://source.redhat.com/departments/it/it-information-security/wiki/pattern_distribution_server#handling-false-positives)
 has a section on how to handle false positives.
 
-### Checks
+## Tasks
 
-These options allow you to turn on/off different checks provided by this
+These options allow you to turn on/off different tasks run by this
 package without having to remove the entire hook.
 
 #### Check Secrets (Default: On)
+
+This task scans the repository on pre-commit for any potential secrets.
 
 To turn it off a repo:
 
@@ -256,9 +396,33 @@ To turn it on a repo:
 git config --bool rh-pre-commit.checkSecrets true
 ```
 
+#### SignOff (Default: On)
+
+This task signs off on a commit message attesting that the hook is
+installed and enabled.
+
+To turn it off for a repo:
+
+```sh
+git config --bool rh-pre-commit.commit-msg.signOff false
+```
+
+To turn it on for a repo:
+
+```sh
+git config --bool rh-pre-commit.commit-msg.signOff true
+```
+
+The output of this task is appended to the COMMIT-MSG during commit, and looks
+like the following:
+```
+    rh-pre-commit.version: 2.0.0
+    rh-pre-commit.check-secrets: ENABLED
+```
+
 ### Updating pre-commit.com style hooks
 
-**NOTE:** This does not update the tools in this repo, this is like running
+**Note:** This does not update the tools in this repo, this is like running
 [pre-commit autoupdate](https://pre-commit.com/#updating-hooks-automatically)
 
 To update the global pre-commit.com style hooks and the ones defined

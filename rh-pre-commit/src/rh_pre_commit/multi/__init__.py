@@ -16,21 +16,33 @@ def install(args):
     """
     A handler that sets up pre-commit file
     """
-    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOK)
+    return common.install(args, templates.RH_MULTI_PRE_COMMIT_HOOKS[args.hook_type])
 
 
-def run(_):
+def run(args):
     """
     A handler that runs the pre-commit.com package
     """
     status = 0
+    if config.local_config_enabled():
+        paths = config.RH_MULTI_CONFIG_PATHS
+    else:
+        paths = (config.RH_MULTI_GLOBAL_CONFIG_PATH,)
 
-    for path in config.RH_MULTI_CONFIG_PATHS:
+    for path in paths:
         if not os.path.isfile(path):
             continue
-
-        status = pre_commit.main(["run", f"--config={path}"])
-
+        if args.hook_type == "pre-commit":
+            status = pre_commit.main(["run", f"--config={path}"])
+        if args.hook_type == "commit-msg":
+            status = pre_commit.main(
+                [
+                    "run",
+                    f"--config={path}",
+                    f"--hook-stage={args.hook_type}",
+                    f"--commit-msg-filename={args.commit_msg_filename}",
+                ]
+            )
         if status:
             return status
 
@@ -42,35 +54,29 @@ def configure(args):
     A handler that resets the config for the tool
     """
     if args.configure_git_template:
-        if common.configure_git_template(args, templates.RH_MULTI_PRE_COMMIT_HOOK) != 0:
+        hook_template = templates.RH_MULTI_PRE_COMMIT_HOOKS[args.hook_type]
+        if common.configure_git_template(args, hook_template) != 0:
             return 1
 
         # So that rh_pre_commit doesn't apply it
         args.configure_git_template = False
 
     config_path = config.RH_MULTI_GLOBAL_CONFIG_PATH
-    if os.path.lexists(config_path):
-        try:
-            os.remove(config_path)
-        except Exception:
-            logging.error("Could not unlink %s", config_path)
-            return 1
-
-    if not os.path.lexists(config.CONFIG_DIR):
-        try:
-            os.makedirs(config.CONFIG_DIR)
-        except Exception:
-            logging.error("Could not create config dir %s", config.CONFIG_DIR)
-            return 1
-
     try:
+        if os.path.lexists(config_path):
+            os.remove(config_path)
+        if not os.path.lexists(config.CONFIG_DIR):
+            os.makedirs(config.CONFIG_DIR)
         with open(config_path, "w", encoding="UTF-8") as config_file:
             config_file.write(templates.RH_MULTI_CONIFG)
     except Exception:
-        logging.error("Could not write config %s", config_path)
+        logging.error("Could not remove or write config %s", config_path)
         return 1
 
     logging.info("Config updated %s", config_path)
+
+    if config.disable_local_config():
+        return 1
 
     # Apply this to the individual hooks too
     if rh_pre_commit.configure(args) != 0:
@@ -104,8 +110,12 @@ def pick_handler(args):
 def main():
     try:
         args = common.create_parser("rh-multi-pre-commit").parse_args()
-        handler = pick_handler(args)
 
+        if args.version:
+            logging.info(common.version())
+            return 0
+
+        handler = pick_handler(args)
         return handler(args)
     except KeyboardInterrupt:
         logging.info("Exiting...")

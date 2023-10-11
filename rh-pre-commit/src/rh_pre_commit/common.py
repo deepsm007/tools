@@ -3,13 +3,20 @@ Common functions between rh-pre-commit and rh-multi-pre-commit
 """
 import logging
 import os
+import re
 import stat
 
 from argparse import ArgumentParser
+from importlib import metadata
+
+import yaml
 
 from pre_commit import main as pre_commit  # The pre-commit.com library
 from rh_pre_commit import config
 from rh_pre_commit import git
+
+HOOK_VARIANT_RE = re.compile(r"\s*exec\s+((rh-(multi-)?)?pre-commit)\b")
+GITDIR_RE = re.compile(r"gitdir: (.+)")
 
 
 def create_parser(prog):
@@ -19,6 +26,17 @@ def create_parser(prog):
     parser = ArgumentParser(
         prog=prog,
         description="Manage multiple pre-commit hooks for Red Hatters",
+    )
+    parser.add_argument(
+        "--version", "-v", action="store_true", help="Print version information"
+    )
+    parser.add_argument(
+        "--hook-type", default="pre-commit", help="Set the hook type to run."
+    )
+    parser.add_argument(
+        "--commit-msg-filename",
+        required=False,
+        help="Provide the commit message filename.",
     )
 
     subparsers = parser.add_subparsers(dest="command")
@@ -61,17 +79,13 @@ def create_parser(prog):
     return parser
 
 
-def read_modfile(path):
+def search_gitdir(gitfile_path):
     """
     Read the contents of a .git file and return the gitdir value if it exists
     """
     try:
-        with open(os.path.join(path, ".git"), encoding="UTF-8") as modfile:
-            for line in modfile:
-                if line.startswith("gitdir: "):
-                    return line.split(None, 1)[1].strip()
-
-        return None
+        with open(gitfile_path, encoding="UTF-8") as gitfile:
+            return GITDIR_RE.search(gitfile.read()).group(1)
     except Exception:
         return None
 
@@ -93,7 +107,7 @@ def find_repos(prefix):
             yield ("R", path)
 
         elif ".git" in files:
-            modpath = read_modfile(path)
+            modpath = search_gitdir(os.path.join(path, ".git"))
             if modpath:
                 yield ("M", os.path.join(path, modpath))
 
@@ -136,7 +150,7 @@ def install_hook(args, repo_path, content):
     repo_path
     """
     hooks_dir = os.path.join(repo_path, "hooks")
-    hook_path = os.path.join(hooks_dir, "pre-commit")
+    hook_path = os.path.join(hooks_dir, args.hook_type)
 
     # Make sure the path leading up to the hooks dir exists
     if not os.path.lexists(hooks_dir):
@@ -190,6 +204,112 @@ def install(args, content):
     return status
 
 
+def is_rh_pre_commit_repo(repo_url):
+    """
+    Confirm if the repo URL is this tool's repo URL
+    """
+    # It is split the way it is to handle both ssh and https clones and
+    # clones without the .git suffix.
+    return (
+        repo_url
+        and "gitlab.corp.redhat.com" in repo_url
+        and "infosec-public/developer-workbench/tools" in repo_url
+    )
+
+
+def hook_installed_via_local_config(hook_type, repo_path):
+    """
+    Check a local .pre-commit-config.yaml for the hook type being installed.
+
+    The hook id must match what's in the .pre-commit-hooks.yaml. Having it
+    installed in a way other than a .pre-commit-config.yaml or directly installed
+    through rh-(multi-)-pre-commit is not supported for this check.
+    """
+    local_config_path = os.path.join(repo_path, "..", ".pre-commit-config.yaml")
+
+    if not os.path.isfile(local_config_path):
+        return False
+
+    hook_id = "rh-pre-commit"
+    if hook_type != "pre-commit":
+        hook_id += f".{hook_type}"
+
+    try:
+        with open(local_config_path, "r", encoding="UTF-8") as local_config_file:
+            local_config = yaml.load(local_config_file, Loader=yaml.SafeLoader)
+
+        return hook_id in {
+            hook["id"]
+            for repo in local_config["repos"]
+            if repo and "hooks" in repo and is_rh_pre_commit_repo(repo.get("repo"))
+            for hook in repo["hooks"]
+            if hook and "id" in hook
+        }
+    except Exception as e:
+        logging.error(e)
+        return False
+
+
+def file_is_executable(path):
+    """
+    Confirm a file exists and can be executed
+    """
+    if not os.path.isfile(path):
+        return False
+
+    return bool(os.stat(path).st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
+
+
+def search_hook_variant(hook_path):
+    """
+    Determines what type of pre-commit hook is installed
+
+    rh-pre-commit, rh-multi-pre-commit and pre-commit all contain:
+
+        exec <hook_variant>
+
+    For pre-commit, further checks are needed to confirm it's valid.
+    """
+    try:
+        with open(hook_path, "r", encoding="UTF-8") as hook_file:
+            hook_data = hook_file.read()
+    except Exception as e:
+        logging.error(e)
+        return None
+
+    match = HOOK_VARIANT_RE.search(hook_data)
+    return match.group(1) if match else None
+
+
+def hook_installed(hook_type, repo_path=os.path.join(os.getcwd(), ".git")):
+    # Handle submodules
+    if os.path.isfile(repo_path):
+        try:
+            repo_path = os.path.join(
+                os.path.dirname(repo_path), search_gitdir(repo_path)
+            )
+        except Exception as e:
+            logging.error(e)
+            return False
+
+    hook_path = os.path.join(repo_path, "hooks", hook_type)
+
+    if not file_is_executable(hook_path):
+        return False
+
+    hook_variant = search_hook_variant(hook_path)
+    if not hook_variant:
+        return False
+
+    if hook_variant in ("rh-multi-pre-commit", "rh-pre-commit"):
+        return True
+
+    if hook_variant == "pre-commit":
+        return hook_installed_via_local_config(hook_type, repo_path)
+
+    return False
+
+
 def configure_git_template(args, content):
     template_dir = git.init_template_dir()
 
@@ -203,3 +323,10 @@ def configure_git_template(args, content):
         return 1
 
     return install_hook(args, template_dir, content)
+
+
+def version():
+    try:
+        return metadata.version("rh_pre_commit")
+    except Exception:
+        return "UNKNOWN"

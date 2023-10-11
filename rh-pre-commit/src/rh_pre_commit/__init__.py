@@ -4,21 +4,23 @@ import sys
 
 from rh_pre_commit import common
 from rh_pre_commit import templates
-from rh_pre_commit.checks import checks
+from rh_pre_commit.tasks import tasks
 
 
-def run(_):
+def run(args):
     """
     A handler that runs the checks
     """
-    for check in checks:
-        if check.enabled():
-            logging.info("Running Check: %s", check)
+    logging.info("Running tasks for hook-type: %s", args.hook_type)
+    for task in tasks[args.hook_type]:
+        if task.enabled():
+            logging.info("Running task: %s", task)
 
-            if check.run() != 0:
+            if task.run(args) != 0:
+                logging.info("Task '%s' did not run successfully", task)
                 return 1
         else:
-            logging.info("Skipping Check: %s", check)
+            logging.info("Skipping task: %s", task)
 
     return 0
 
@@ -27,16 +29,24 @@ def configure(args):
     """
     A handler that resets the config for the tool
     """
+    #
+    # Important!
+    #
+    # rh-pre-commit should run without needing to configure it first (with the
+    # only exception being auth). It should have sane default values for
+    # everything so it can be used through the .pre-commit-hooks.yaml
+    #
     if args.configure_git_template:
-        if common.configure_git_template(args, templates.RH_PRE_COMMIT_HOOK) != 0:
+        template = templates.RH_PRE_COMMIT_HOOKS[args.hook_type]
+        if common.configure_git_template(args, template) != 0:
             return 1
 
-    for check in checks:
-        if check.configure() != 0:
-            logging.error("Error Resetting Check: %s", check)
+    for task in tasks[args.hook_type]:
+        if task.configure() != 0:
+            logging.error("Error configuring %s", task)
             return 1
 
-        logging.info("Configured Check: %s", check)
+        logging.info("Configured %s", task)
 
     return 0
 
@@ -45,7 +55,7 @@ def install(args):
     """
     A handler that sets up pre-commit file in the repos
     """
-    return common.install(args, templates.RH_PRE_COMMIT_HOOK)
+    return common.install(args, templates.RH_PRE_COMMIT_HOOKS[args.hook_type])
 
 
 def pick_handler(args):
@@ -73,8 +83,12 @@ def pick_handler(args):
 def main():
     try:
         args = common.create_parser("rh-pre-commit").parse_args()
-        handler = pick_handler(args)
 
+        if args.version:
+            logging.info(common.version())
+            return 0
+
+        handler = pick_handler(args)
         return handler(args)
     except KeyboardInterrupt:
         logging.info("Exiting...")

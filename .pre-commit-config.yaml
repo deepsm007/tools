@@ -1,0 +1,12 @@
+---
+repos:
+  - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
+    rev: e2bf8cc42c06da1f6ea20410a7db00977ccd6053
+    hooks:
+      # If you have never ran this hook on your system before, it will prompt you to
+      # log in and you will need to try again.
+      #
+      # Docs: https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_components/rh_pre_commit
+      - id: rh-pre-commit
+      - id: rh-pre-commit.commit-msg
+
