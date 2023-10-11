@@ -137,6 +137,21 @@ rh-gitleaks-gh-account leaktk
 found. This is meant for finding leaks across an account/org rather than
 setting up in a CI pipeline.
 
+## Pattern Server Auth Token
+
+The pattern server uses a JWT to authenticate access to the patterns and to
+determine access to the patterns provided. This is usually set during the `rh-gitleaks configure` step or by running `rh-gitleaks login`. But for automation use cases, it can be set set non-interactively as well:
+
+The auth token can be set using the `LEAKTK_PATTERN_SERVER_AUTH_TOKEN` environment
+variable. If this is set it takes precedence over other tokens.  
+
+Alternatively, and the way that `rh-gitleaks login` sets the token. The following
+files are used. `$XDG_CONFIG_HOME/rh-gitleaks/auth.jwt`
+and `$HOME/.config/rh-gitleaks/auth.jwt`. The `$HOME` path is only used in cases where
+Alternatively, the token can be placed at`$XDG_CONFIG_HOME/rh-gitleaks/auth.jwt`.
+(The value of `$XDG_CONFIG_HOME` will default to `$HOME/.config` if it isn't set). 
+This is also where `rh-gitleaks login` writes the token.  
+
 ## Advanced Usage
 
 The patterns server used by the tool can also be changed by setting the

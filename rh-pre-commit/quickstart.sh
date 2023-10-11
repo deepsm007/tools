@@ -50,7 +50,7 @@ python3 -m rh_pre_commit.multi configure --configure-git-template --force
 
 if [[ ! -z "$signoff" ]]
 then
-  python3 -m rh_pre_commit.multi --hook-type commit-msg configure --configure-git-template --force
+  python3 -m rh_pre_commit.multi --hook-type commit-msg configure --force
 fi
 
 # Enable it for all existing projects under the home directory
