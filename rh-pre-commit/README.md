@@ -88,6 +88,9 @@ by the quickstart and how apply updates!
 * Disable `rh-multi-pre-commit` from automatically running local pre-commit hooks defined in a repositories `.pre-commit-config.yaml`. 
 * If the `-s` flag is set, it will repeat the above enabling a sign-off in the commit message using commit-msg hooks.  
 
+And you should be all set! There is a [section below](#testing-the-installation) 
+that has steps for confirming everything's working as expected.
+
 ### Manual Install
 
 Unless the
@@ -149,7 +152,8 @@ python3 -m rh_pre_commit.multi install --force --path ~/
 python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path ~/
 ```
 
-And you should be all set!
+And you should be all set! There is a [section below](#testing-the-installation) 
+that has steps for confirming everything's working as expected.
 
 **Rh-multi-pre-commit considerations:**
 
@@ -190,51 +194,8 @@ For more info see the
 [rh-multi-pre-commit vs rh-pre-commit](#rh-multi-pre-commit-vs-rh-pre-commit)
 section.
 
-**Confirming it works**
-
-```sh
-rm -rf /tmp/test-pre-commit && mkdir /tmp/test-pre-commit
-cd /tmp/test-pre-commit
-git init
-echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
-git add secret &&
-git commit
-```
-
-You should see an error containing lines like this:
-
-```
-...
-
-INFO[0000] scan time: 476 microseconds
-WARN[0000] leaks found: 1
-ERROR: rh-gitleaks has detected sensitive information in your changes and will
-not allow the commit to proceed.
-
-If it the file contains sensitive information, please remove it and try
-your commit again.
-
-If the detection was a false positive, the documentation[1] contains a section
-for handling false positives.
-
-[1] https://patterns.security.redhat.com/docs
-
-```
-**Setting the rh-gitleaks authentication token - File or ENV**  
-You may prefer to set the authentication token manually, or as an environment 
-variable. Instead of using `rh-gitleaks login`.  
-
-The environment variable `PATTERN_SERVER_AUTH_TOKEN` is used to provide the 
-authentication token as an environment variable. This variable is first preference
-when loading the authentication token.  
-
-The default auth.jwt file locations are `$XDG_CONFIG_HOME/rh-gitleaks/auth.jwt`
-or `$HOME/.config/rh-gitleaks/auth.jwt`. `$XDG_CONFIG_HOME` is the default unless 
-this value is not set, with `$HOME` the fallback.
-
-Refer to the rh-gitleaks [README.md](https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools/-/blob/main/rh-gitleaks/README.md) for more information.
-
 ### Pre-Commit-Config Install
+
 Rh-pre-commit can be configured directly in an existing `.pre-commit-config.yaml` 
 or by creating a new on in your repo as follows.  
 
@@ -266,6 +227,52 @@ hook to be installed, and `rh-pre-commit.commit-msg` requires pre-commit's `comm
 hook to be installed. (This also works with rh-multi-pre-commit with local config 
 enabled for the repo. It just may run the checks twice if you're running it through 
 rh-multi-pre-commit.)
+
+### Non-Interactive Install
+
+You may prefer to set the authentication token manually or as an environment 
+variable. Instead of using `rh-gitleaks login`. This allows for non-interactive
+installs since the `configure` step detects that rh-gitleaks is already logged
+in.
+
+Steps:
+
+1. Configure the [Pattern Server Auth Token](../rh-gitleaks#pattern-server-auth-token)
+2. Follow the steps in one of the instillation sections above.
+
+### Testing the Installation
+
+This applies to the quickstart and manual steps, but a slightly modified 
+version of this could still work in a repo containing a .pre-commit-config.yaml
+
+```sh
+rm -rf /tmp/test-pre-commit && mkdir /tmp/test-pre-commit
+cd /tmp/test-pre-commit
+git init
+echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
+git add secret &&
+git commit
+```
+
+You should see an error containing lines like this:
+
+```
+...
+
+INFO[0000] scan time: 476 microseconds
+WARN[0000] leaks found: 1
+ERROR: rh-gitleaks has detected sensitive information in your changes and will
+not allow the commit to proceed.
+
+If it the file contains sensitive information, please remove it and try
+your commit again.
+
+If the detection was a false positive, the documentation[1] contains a section
+for handling false positives.
+
+[1] https://patterns.security.redhat.com/docs
+
+```
 
 ## Notifications About Updates
 
