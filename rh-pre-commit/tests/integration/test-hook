@@ -43,7 +43,7 @@ if [[ "${HOOK}" = "rh_pre_commit.multi" ]]
 then
   test-case "Confirm local config disabled by default for multi installs"
 
-  if grep "enableLocalConfig\s*=\s*false" ~/.gitconfig &>> "${log_file}"
+  if grep "enableLocalConfig\s*=\s*false" ~/.gitconfig >> "${log_file}" 2>&1
   then
     pass "local config disabled by default"
   else
@@ -54,7 +54,7 @@ else
   then
     test-case "Confirm local config setting not set for normal installs"
 
-    if grep "enableLocalConfig" ~/.gitconfig &>> "${log_file}"
+    if grep "enableLocalConfig" ~/.gitconfig >> "${log_file}" 2>&1
     then
       fail "enableLocalConfig should not be set for ${HOOK}"
     else
@@ -67,7 +67,7 @@ fi
 
 test-case "Confirm the pre-commit hook template is installed"
 
-if grep "${HOOK}" ~/.git-template/hooks/pre-commit &>> "${log_file}"
+if grep "${HOOK}" ~/.git-template/hooks/pre-commit >> "${log_file}" 2>&1
 then
   pass "${HOOK} type:pre-commit installed"
 else
@@ -78,7 +78,7 @@ fi
 
 test-case "Confirm the commit-msg hook template is installed"
 
-if grep "${HOOK}" ~/.git-template/hooks/commit-msg &>> "${log_file}"
+if grep "${HOOK}" ~/.git-template/hooks/commit-msg >> "${log_file}" 2>&1
 then
   pass "${HOOK} template type:commit-msg installed"
 else
@@ -91,7 +91,7 @@ test-case "Confirm it doesn't block on secrets that are not staged during a comm
 
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
 
-if git commit --allow-empty -m "This should pass" &>> "${log_file}"
+if git commit --allow-empty -m "This should pass" >> "${log_file}" 2>&1
 then
   pass "${HOOK} unstaged secret not blocked"
 else
@@ -104,7 +104,7 @@ test-case "Confirm staged secrets are caught"
 
 git add secret
 
-if ! git commit -m "This should error" &>> "${log_file}"
+if ! git commit -m "This should error" >> "${log_file}" 2>&1
 then
   pass "${HOOK} detected secrets"
 else
@@ -118,7 +118,7 @@ test-case "Confirm a notsecret allows a secret"
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g" #notsecret' > secret
 git add secret
 
-if git commit -m "This should pass" &>> "${log_file}"
+if git commit -m "This should pass" >> "${log_file}" 2>&1
 then
   pass "${HOOK} notsecret comment works"
 else
@@ -140,7 +140,7 @@ paths = [
 EOF
 git add .gitleaks.toml
 
-if git commit -m "This should pass" &>> "${log_file}"
+if git commit -m "This should pass" >> "${log_file}" 2>&1
 then
   pass "${HOOK} allowlist works"
 else
@@ -151,7 +151,7 @@ fi
 
 test-case "Confirm it signed off on the commits as ENABLED"
 
-if git log -n 1 | grep "rh-pre-commit.check-secrets: ENABLED" &>> "${log_file}"
+if git log -n 1 | grep "rh-pre-commit.check-secrets: ENABLED" >> "${log_file}" 2>&1
 then
   pass "It was detected as enabled"
 else
@@ -167,7 +167,7 @@ test-case "Confirm the task can just be disabled"
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
 git add secret
 
-if ! git commit -m "This should error" &>> "${log_file}"
+if ! git commit -m "This should error" >> "${log_file}" 2>&1
 then
   pass "${HOOK} detected secrets when the task is enabled"
 else
@@ -176,7 +176,7 @@ fi
 
 git config --bool rh-pre-commit.checkSecrets false
 
-if git commit -m "This should pass" &>> "${log_file}"
+if git commit -m "This should pass" >> "${log_file}" 2>&1
 then
   pass "${HOOK} secrets commited when task disabled"
 else
@@ -188,9 +188,9 @@ fi
 test-case "Confirm sign-off knows when hooks are disabled"
 
 git config --bool rh-pre-commit.checkSecrets false
-git commit --allow-empty -m "some commit" &>> "${log_file}"
+git commit --allow-empty -m "some commit" >> "${log_file}" 2>&1
 
-if git log -n 1 | grep "rh-pre-commit.check-secrets: DISABLED" &>> "${log_file}"
+if git log -n 1 | grep "rh-pre-commit.check-secrets: DISABLED" >> "${log_file}" 2>&1
 then
   pass "It was detected as disabled"
 else
@@ -216,7 +216,7 @@ repos:
 EOF
 git add .pre-commit-config.yaml
 
-if git commit -m "This should pass" &>> "${log_file}"
+if git commit -m "This should pass" >> "${log_file}" 2>&1
 then
   pass ".pre-commit-config.yaml local config ignored"
 else
@@ -232,7 +232,7 @@ then
   git config --bool rh-pre-commit.enableLocalConfig true
   touch some-file && git add some-file # Force a change for a commit
 
-  if git commit -m "This should error" &>> "${log_file}"
+  if git commit -m "This should error" >> "${log_file}" 2>&1
   then
     fail ".pre-commit-config.yaml local config not applied"
   else
@@ -244,7 +244,7 @@ else
   git config --bool rh-pre-commit.enableLocalConfig true
   touch some-file && git add some-file # Force a change for a commit
 
-  if git commit -m "This should pass" &>> "${log_file}"
+  if git commit -m "This should pass" >> "${log_file}" 2>&1
   then
     pass ".pre-commit-config.yaml local config ignored"
   else
@@ -260,21 +260,21 @@ test-case "Confirm it's not enabled for this repo yet and sign-off blocks it"
 # This is because we have the commit-msg installed but not the pre-commit
 # hook in any way
 
-python3 -m pre_commit install --hook-type pre-commit -f &>> "${log_file}"
+python3 -m pre_commit install --hook-type pre-commit -f >> "${log_file}" 2>&1
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret-not-caught
 cat > .pre-commit-config.yaml <<EOF
 repos: []
 EOF
 git add .pre-commit-config.yaml secret-not-caught
 
-if grep "${HOOK}" .git/hooks/pre-commit &>> "${log_file}"
+if grep "${HOOK}" .git/hooks/pre-commit >> "${log_file}" 2>&1
 then
   fail "${HOOK} not pre-commit hook replaced"
 else
   pass "${HOOK} pre-commit hook replaced"
 fi
 
-if git commit -m "Sign-off should stop the commit" &>> "${log_file}"
+if git commit -m "Sign-off should stop the commit" >> "${log_file}" 2>&1
 then
   fail "Sign-off did not catch the commit"
 else
@@ -289,14 +289,14 @@ test-case "Confirm pre-commit not enabled for this repo yet and sign-off has bee
 
 git config --bool rh-pre-commit.commit-msg.signOff false
 
-if git commit -m "This should pass" &>> "${log_file}"
+if git commit -m "This should pass" >> "${log_file}" 2>&1
 then
   pass "Secret not caught yet"
 else
   fail "Secret detected when it shouldn't be"
 fi
 
-if git log -n 1 | grep "rh-pre-commit" &>> "${log_file}"
+if git log -n 1 | grep "rh-pre-commit" >> "${log_file}" 2>&1
 then
   fail "Sign-off was still enabled"
 else
@@ -308,7 +308,7 @@ fi
 test-case "Confirm both pre-commit and commit-msg can be installed through its .pre-commit-hooks.yaml"
 
 git config --bool rh-pre-commit.commit-msg.signOff true
-python3 -m pre_commit install --hook-type commit-msg -f &>> "${log_file}"
+python3 -m pre_commit install --hook-type commit-msg -f >> "${log_file}" 2>&1
 cat > .pre-commit-config.yaml <<EOF
 repos:
   - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
@@ -320,21 +320,21 @@ EOF
 mv secret-not-caught secret
 git add .pre-commit-config.yaml secret
 
-if grep "${HOOK}" .git/hooks/pre-commit &>> "${log_file}"
+if grep "${HOOK}" .git/hooks/pre-commit >> "${log_file}" 2>&1
 then
   fail "${HOOK} not pre-commit hook replaced"
 else
   pass "${HOOK} pre-commit hook replaced"
 fi
 
-if grep "${HOOK}" .git/hooks/commig-msg &>> "${log_file}"
+if grep "${HOOK}" .git/hooks/commig-msg >> "${log_file}" 2>&1
 then
   fail "${HOOK} commit-msg hook not replaced"
 else
   pass "${HOOK} commmit-msg hook replaced"
 fi
 
-if git commit -m "This should error" &>> "${log_file}"
+if git commit -m "This should error" >> "${log_file}" 2>&1
 then
   fail "Secret not caught"
 else
@@ -345,10 +345,10 @@ fi
 
 test-case "Confirm it doesn't block on secrets that are not staged during a commit"
 
-git commit --no-verify -m "Commit staged to get it out of the way" &>> "${log_file}"
+git commit --no-verify -m "Commit staged to get it out of the way" >> "${log_file}" 2>&1
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > unstaged
 
-if git commit --allow-empty -m "This should pass" &>> "${log_file}"
+if git commit --allow-empty -m "This should pass" >> "${log_file}" 2>&1
 then
   pass "Unstaged secret not blocked"
 else
@@ -361,7 +361,7 @@ rm unstaged
 
 test-case "Confirm it signed off on the commits as ENABLED (i.e. it detected it from the .pre-commit-config.yaml in the repo)"
 
-if git log -n 1 | grep "rh-pre-commit.check-secrets: ENABLED" &>> "${log_file}"
+if git log -n 1 | grep "rh-pre-commit.check-secrets: ENABLED" >> "${log_file}" 2>&1
 then
   pass "It was detected as enabled"
 else
@@ -380,7 +380,7 @@ then
   echo 'Hello, world!' > some-file
   git add some-file
 
-  if git commit -m "This should pass" &>> "${log_file}"
+  if git commit -m "This should pass" >> "${log_file}" 2>&1
   then
     pass "rh-gitleaks ran without an issue"
   else
@@ -402,28 +402,28 @@ then
 
   commit_output="$(git commit -m "This should error" 2>&1 || true)"
 
-  if echo "${commit_output}" | grep 'Could not find pattern server auth token' &>> "${log_file}"
+  if echo "${commit_output}" | grep 'Could not find pattern server auth token' >> "${log_file}" 2>&1
   then
     pass "A failure reason was provided"
   else
     fail "A failure reason not was provided"
   fi
 
-  if echo "${commit_output}" | grep 'Please log in with this command and try again' &>> "${log_file}"
+  if echo "${commit_output}" | grep 'Please log in with this command and try again' >> "${log_file}" 2>&1
   then
     pass "Login instructions were provided"
   else
     fail "Login instructions were not provided"
   fi
 
-  if echo "${commit_output}" | grep '/python3 -m rh_gitleaks login' &>> "${log_file}"
+  if echo "${commit_output}" | grep '/python3 -m rh_gitleaks login' >> "${log_file}" 2>&1
   then
     pass "A login example was provided"
   else
     fail "A login example was not provided"
   fi
 
-  git rm -f some-other-file &>> "${log_file}"
+  git rm -f some-other-file >> "${log_file}" 2>&1
   export LEAKTK_PATTERN_SERVER_AUTH_TOKEN="${SAVED_TOKEN}"
   unset SAVED_TOKEN
 fi
@@ -436,17 +436,17 @@ test-case "Confirm ammends don't double add the sign-off"
 
 touch some-file
 git add some-file
-git commit -m "Add some file" &>> "${log_file}"
+git commit -m "Add some file" >> "${log_file}" 2>&1
 enabled_str="rh-pre-commit.check-secrets: ENABLED"
 
-if git log -n 1 | grep "${enabled_str}" &>> "${log_file}"
+if git log -n 1 | grep "${enabled_str}" >> "${log_file}" 2>&1
 then
   pass "The inital sign-off is there"
 else
   fail "The inital sign-off not is there"
 fi
 
-git commit --amend -m "Add some file" &>> "${log_file}"
+git commit --amend -m "Add some file" >> "${log_file}" 2>&1
 
 enabled_count="$(git log -n 1 | grep "${enabled_str}" | sort | uniq -c | awk '{print $1}')"
 
