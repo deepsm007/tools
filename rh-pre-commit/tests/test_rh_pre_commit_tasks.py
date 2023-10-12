@@ -20,8 +20,7 @@ class SignOffTaskTest(TestCase):
             # pre-commit hook not installed
             (False, 1, "Creating a file for testing"),
             # pre-commit hook installed, multiline message
-            (True, 0, "Creating a file for testing\nMultiple lines\nTesting\n"),
-
+            (True, 0, "Creating a file for testing\n\nMultiple lines\nTesting\n"),
         )
         sign_off = SignOff()
 
