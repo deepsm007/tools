@@ -16,19 +16,21 @@ class SignOffTaskTest(TestCase):
 
         tests = (
             # Success
-            (True, 0),
+            (True, 0, "Creating a file for testing"),
             # pre-commit hook not installed
-            (False, 1),
+            (False, 1, "Creating a file for testing"),
+            # pre-commit hook installed, multiline message
+            (True, 0, "Creating a file for testing\n\nMultiple lines\nTesting\n"),
         )
         sign_off = SignOff()
 
-        for i, (hook_installed, expected) in enumerate(tests):
+        for i, (hook_installed, expected, message) in enumerate(tests):
             with TemporaryDirectory() as tmp_dir:
                 mock_hook_installed.return_value = hook_installed
                 tmp_file = os.path.join(tmp_dir, "COMMIT-MSG")
 
                 with open(tmp_file, "w", encoding="UTF-8") as commit_msg:
-                    commit_msg.write("Creating a file for testing")
+                    commit_msg.write(message)
 
                 status = sign_off.run(
                     Namespace(
@@ -46,6 +48,8 @@ class SignOffTaskTest(TestCase):
                 # Confirm the value is present
                 with open(tmp_file, encoding="UTF-8") as f:
                     self.assertEqual(len(version_re.findall(f.read())), 1)
+                    f.seek(0)
+                    self.assertIsNotNone(re.match(message, f.read(), re.MULTILINE))
 
                 # Confirm it doesn't write to the commit message twice if
                 # the value is already there (think of ammends)

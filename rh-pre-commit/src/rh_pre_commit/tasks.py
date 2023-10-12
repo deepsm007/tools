@@ -138,11 +138,8 @@ class SignOff(Task):
 
         # Clean out previous sign-offs
         with open(args.commit_msg_filename, "r", encoding="UTF-8") as commit_msg_file:
-            cleaned_commit_msg = (
-                "\n".join(
-                    line for line in commit_msg_file if not self.metadata_re.match(line)
-                )
-                + "\n"
+            cleaned_commit_msg = "".join(
+                line for line in commit_msg_file if not self.metadata_re.match(line)
             )
 
         # Write the sign-off to file
