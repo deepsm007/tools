@@ -31,7 +31,7 @@ git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tool
 cd /tmp/infosec-tools/rh-pre-commit
 
 # Checkout a branch if it was specified
-if [[ ! -z "$branch" ]]
+if [[ -n "$branch" ]]
 then
   git checkout $branch
 fi
@@ -48,7 +48,7 @@ make install
 # Configure it with the default settings
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 
-if [[ ! -z "$signoff" ]]
+if [[ -n "$signoff" ]]
 then
   python3 -m rh_pre_commit.multi --hook-type commit-msg configure --force
 fi
@@ -56,7 +56,7 @@ fi
 # Enable it for all existing projects under the home directory
 python3 -m rh_pre_commit.multi install --force --path "${HOME}"
 
-if [[ ! -z "$signoff" ]]
+if [[ -n "$signoff" ]]
 then
   python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path "${HOME}"
 fi
