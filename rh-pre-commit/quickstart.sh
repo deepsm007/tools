@@ -2,28 +2,49 @@
 #
 # WARNING
 #
-#   This will apply rh-multi-pre-commit to every repo in your home dir and
-#   overwrite any existing pre-commit hooks!
+#   This will apply rh-multi-pre-commit to every repo in your home dir
+#   (or repo(s) dir if specified) and overwrite any existing pre-commit hooks!
 #
 # USAGE
 #
-#   ./quickstart.sh -b=[branch] -s
+#   ./quickstart.sh -b=[branch] -r=[repos dir] -s
 #
 # OPTIONS
 #
 #   -b branch - (optional) which branch should be installed
+#   -r git repo(s) dir - (optional) a git repo(s) directory
+#                        (an absolute path or a path relative
+#                        to the current working directory)
+#                        to enable the tool in (Default: $HOME)
 #   -s - (optional) include sign-off hook (Default: false)
 #
 set -xeo pipefail
 
-while getopts b:s flag
+while getopts b:r:s flag
 do
   case "${flag}" in
     b) branch=${OPTARG};;
+    r) repos_dir=${OPTARG};;
     s) signoff=True;;
     *) echo "Invalid option."; head -n 17 "$0"; exit 1;;
   esac
 done
+
+if [[ -n "$repos_dir" ]]
+then
+  if [[ "${repos_dir}" != /* ]]
+  # $repos_dir is not an absolute path
+  then
+    repos_dir="${PWD}/${repos_dir}"
+  fi
+else # No '-r repo(s) dir' specified, use $HOME
+  repos_dir="${HOME}"
+fi
+if [[ ! -d "${repos_dir}" ]]
+then
+  echo "${repos_dir} is not a directory"
+  exit 1
+fi
 
 # Pull a fresh copy of the repo
 rm -rf /tmp/infosec-tools
@@ -53,10 +74,10 @@ then
   python3 -m rh_pre_commit.multi --hook-type commit-msg configure --force
 fi
 
-# Enable it for all existing projects under the home directory
-python3 -m rh_pre_commit.multi install --force --path "${HOME}"
+# Enable it for all existing projects under the home (or specified) directory
+python3 -m rh_pre_commit.multi install --force --path "${repos_dir}"
 
 if [[ -n "$signoff" ]]
 then
-  python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path "${HOME}"
+  python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path "${repos_dir}"
 fi
