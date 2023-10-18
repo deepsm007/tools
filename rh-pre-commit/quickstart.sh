@@ -33,7 +33,7 @@ cd /tmp/infosec-tools/rh-pre-commit
 # Checkout a branch if it was specified
 if [[ -n "$branch" ]]
 then
-  git checkout $branch
+  git checkout "$branch"
 fi
 
 # Upgrade pip
