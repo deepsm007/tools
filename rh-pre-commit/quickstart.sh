@@ -11,12 +11,14 @@
 #
 # OPTIONS
 #
-#   -b branch - (optional) which branch should be installed
-#   -r git repo(s) dir - (optional) a git repo(s) directory
-#                        (an absolute path or a path relative
-#                        to the current working directory)
-#                        to enable the tool in (Default: $HOME)
-#   -s - (optional) include sign-off hook (Default: false)
+#   -b branch        (optional) which branch should be installed
+#
+#   -r repo(s) dir   (optional) a git repo(s) directory
+#                    (an absolute path or a path relative
+#                    to the current working directory)
+#                    to enable the tool in (Default: $HOME)
+#
+#   -s               (optional) include sign-off hook (Default: false)
 #
 set -xeo pipefail
 
@@ -30,16 +32,17 @@ do
   esac
 done
 
-if [[ -n "$repos_dir" ]]
+if [[ -n "${repos_dir}" ]]
 then
+  # Ensure repos_dir is an absolute path
   if [[ "${repos_dir}" != /* ]]
-  # $repos_dir is not an absolute path
   then
     repos_dir="${PWD}/${repos_dir}"
   fi
 else # No '-r repo(s) dir' specified, use $HOME
   repos_dir="${HOME}"
 fi
+
 if [[ ! -d "${repos_dir}" ]]
 then
   echo "${repos_dir} is not a directory"
@@ -52,9 +55,9 @@ git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tool
 cd /tmp/infosec-tools/rh-pre-commit
 
 # Checkout a branch if it was specified
-if [[ -n "$branch" ]]
+if [[ -n "${branch}" ]]
 then
-  git checkout "$branch"
+  git checkout "${branch}"
 fi
 
 # Upgrade pip
@@ -69,7 +72,7 @@ make install
 # Configure it with the default settings
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 
-if [[ -n "$signoff" ]]
+if [[ -n "${signoff}" ]]
 then
   python3 -m rh_pre_commit.multi --hook-type commit-msg configure --force
 fi
@@ -77,7 +80,7 @@ fi
 # Enable it for all existing projects under the home (or specified) directory
 python3 -m rh_pre_commit.multi install --force --path "${repos_dir}"
 
-if [[ -n "$signoff" ]]
+if [[ -n "${signoff}" ]]
 then
   python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path "${repos_dir}"
 fi
