@@ -74,18 +74,53 @@ choose will be determined by your requirements.
 
 If you are fine with a default install, there is a [quickstart.sh](quickstart.sh)
 that runs all the commands from this section in one go. **Please still read
-through the [Manual Install section](#manual-install)** to understand the implications of the defaults applied
-by the quickstart and how apply updates!
+through the [Manual Install section](#manual-install)** to understand the
+implications of the defaults applied by the quickstart and how apply updates!
 
 **A default install will:**
 
-* Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and `rh-gitleaks-gh-account`
-* Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your home dir
+* Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and
+  `rh-gitleaks-gh-account`
+
+* Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your
+  home dir
+
 * Set `rh-multi-pre-commit` as the pre-commit hook by default for all new repos
-* Create a `~/.config/pre-commit/config.yaml` config file for `rh-multi-pre-commit` to enable `rh-pre-commit`
+
+* Create a `~/.config/pre-commit/config.yaml` config file for
+  `rh-multi-pre-commit` to enable `rh-pre-commit`
+
 * Configure `rh-gitleaks` with a 2-year Patterns Server auth token
-* Disable `rh-multi-pre-commit` from automatically running local pre-commit hooks defined in a repositories `.pre-commit-config.yaml`.
-* If the `-s` flag is set, it will repeat the above enabling a sign-off in the commit message using commit-msg hooks.
+
+* Disable `rh-multi-pre-commit` from automatically running local pre-commit
+  hooks defined in a repositories `.pre-commit-config.yaml`.
+
+**Supported Flags:**
+
+* If the `-s` flag is set, it will repeat the above enabling a sign-off in the
+  commit message using commit-msg hooks.
+
+* You can use `-b` to specify a different branch (the default is `main`)
+
+* You can use `-r` to specify which repos the hook should be installed in (
+  the default is `${HOME}`).
+
+**Examples:**
+
+You don't have to run all of these, these are just here to explain how a few
+flags work.
+
+```sh
+# This runs the quickstart against the main branch without enabling sign off
+# and installs it in every repo under your home directory (i.e. the default):
+
+./quickstart.sh
+
+# This runs the quickstart against the main branch without enabling sign off
+# and assumes your projects are under a `Workspace` directory:
+
+./quickstart.sh -r ~/Workspace
+```
 
 And after you run the quickstart.sh, you should be all set! There is a
 [section below](#testing-the-installation) that has steps for confirming
