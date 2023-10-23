@@ -36,6 +36,7 @@ and initial configuration.
 ## Supported Operating Systems
 
 * Linux (x86\_64)
+* Linux (aarch64)
 * Mac (x86\_64)
 * Mac (arm64)
 
