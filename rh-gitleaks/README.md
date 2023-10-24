@@ -21,7 +21,7 @@ You will need the following installed on your system:
 ## Supported Operating Systems
 
 * Linux (x86\_64)
-* Linux (aarch64)
+* Linux (arm64)
 * Mac (x86\_64)
 * Mac (arm64)
 
