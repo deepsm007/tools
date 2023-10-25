@@ -248,7 +248,7 @@ Here is an example `.pre-commit-config.yaml`:
 ---
 repos:
   - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
-    rev: rh-pre-commit-2.0.1
+    rev: rh-pre-commit-2.0.2
     hooks:
       # If you have not run this hook on your system before, it may prompt you to
       # log in for patterns, and you will need to try again.
@@ -452,7 +452,7 @@ git config --bool rh-pre-commit.commit-msg.signOff true
 The output of this task is appended to the COMMIT-MSG during commit, and looks
 like the following:
 ```
-    rh-pre-commit.version: 2.0.1
+    rh-pre-commit.version: 2.0.2
     rh-pre-commit.check-secrets: ENABLED
 ```
 
