@@ -40,6 +40,11 @@ GITLEAKS_SUPPORTED_VERSIONS = {
         "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-darwin-arm64",
         "sha256": "eb875959e5994007069490855080bb14657318e5b98cf14da39c2c5480a9f2b3",
     },
+    "7.6.1-linux-aarch64": {
+        # pylint: disable=line-too-long
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-linux-arm64",
+        "sha256": "573393745bc8871e55337ee61814faaad97f4de716b56bd113f94761d75878d0",
+    },
 }
 GITLEAKS_BIN_DOWNLOAD_URL = GITLEAKS_SUPPORTED_VERSIONS.get(
     GITLEAKS_SOURCE_ID,
