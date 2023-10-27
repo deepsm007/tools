@@ -34,8 +34,10 @@ Your system will need to be connected to the Red Hat VPN during installation
 and initial configuration.
 
 If you are running RHEL 8,
-[here is a guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_basic_system_settings/installing-and-using-dynamic-programming-languages_configuring-basic-system-settings#assembly_installing-and-using-python_installing-and-using-dynamic-programming-languages)
-for installing newer versions of Python.
+[here is a guide](https://access.redhat.com/solutions/4763521)
+for installing newer versions of Python. Make sure that `python3 --version`
+returns the expected version. If it doesn't you may need to still set it via
+the `alternatives` command mentioned in the guide.
 
 ## Supported Operating Systems
 
