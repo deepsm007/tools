@@ -37,7 +37,7 @@ If you are running RHEL 8,
 [here is a guide](https://access.redhat.com/solutions/4763521)
 for installing newer versions of Python. Make sure that `python3 --version`
 returns the expected version. If it doesn't you may need to still set it via
-the `alternatives` command mentioned in the guide.
+the `alternatives --config python3` command.
 
 ## Supported Operating Systems
 
