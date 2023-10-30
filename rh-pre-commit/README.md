@@ -26,12 +26,18 @@ Rh-pre-commit currently provides two functions:
 
 You will need the following installed on your system:
 
-* `python3`
+* `python3` (Python 3.9 or higher)
 * `pip`
 * `make`
 
 Your system will need to be connected to the Red Hat VPN during installation
 and initial configuration.
+
+If you are running RHEL 8,
+[here is a guide](https://access.redhat.com/solutions/4763521)
+for installing newer versions of Python. Make sure that `python3 --version`
+returns the expected version. If it doesn't you may need to still set it via
+the `alternatives --config python3` command.
 
 ## Supported Operating Systems
 
@@ -72,6 +78,9 @@ choose will be determined by your requirements.
 ## Installation & Updating
 
 ### Quickstart Install
+
+Before starting the install make sure the [system requirements](#requirements)
+are met.
 
 If you are fine with a default install, there is a [quickstart.sh](quickstart.sh)
 that runs all the commands from this section in one go. **Please still read
@@ -128,6 +137,9 @@ And after you run the quickstart.sh, you should be all set! There is a
 everything's working as expected.
 
 ### Manual Install
+
+Before starting the install make sure the [system requirements](#requirements)
+are met.
 
 Unless the
 [changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
@@ -233,6 +245,9 @@ section.
 
 ### Pre-Commit-Config Install
 
+Before starting the install make sure the [system requirements](#requirements)
+are met.
+
 Rh-pre-commit can be configured directly in an existing `.pre-commit-config.yaml`
 or by creating a new on in your repo as follows.
 
@@ -248,7 +263,7 @@ Here is an example `.pre-commit-config.yaml`:
 ---
 repos:
   - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
-    rev: rh-pre-commit-2.0.2
+    rev: rh-pre-commit-2.0.3
     hooks:
       # If you have not run this hook on your system before, it may prompt you to
       # log in for patterns, and you will need to try again.
@@ -452,7 +467,7 @@ git config --bool rh-pre-commit.commit-msg.signOff true
 The output of this task is appended to the COMMIT-MSG during commit, and looks
 like the following:
 ```
-    rh-pre-commit.version: 2.0.2
+    rh-pre-commit.version: 2.0.3
     rh-pre-commit.check-secrets: ENABLED
 ```
 
