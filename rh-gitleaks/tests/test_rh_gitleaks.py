@@ -239,3 +239,96 @@ Application Options:
                     "--help",
                 ],
             )
+
+    @patch("rh_gitleaks.gitleaks_installed_bin")
+    @patch("requests.get")
+    @patch("subprocess.run")
+    def test_run_gitleaks_offline(self, mock_subprocess_run, mock_requests_get, mock_installed_bin):
+        """
+        Confirm the subprocess is ran properly
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        mock_requests_get.return_value.content = self.mock_resp
+        mock_installed_bin.return_value = None
+        rh_gitleaks.config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM = self.mock_sha256sum
+
+        with TemporaryDirectory() as tmp_dir:
+            # The extra dir in the middle is to confirm it will be created
+            # if it doesn't exist
+            rh_gitleaks.config.PATTERNS_PATH = os.path.join(
+                tmp_dir, "a", "patterns.toml"
+            )
+            rh_gitleaks.config.GITLEAKS_BIN_PATH = os.path.join(
+                tmp_dir, "b", "gitleaks"
+            )
+            rh_gitleaks.config.PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(
+                tmp_dir, "c", "auth.jwt"
+            )
+
+            # Running offline should fail initially due to missing patterns & binary
+            rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
+
+            self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
+            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), rh_gitleaks.config.BLOCKING_EXIT_CODE)
+            self.assertEqual(mock_subprocess_run.call_args, None)
+
+
+            # Running online should fetch the missing patterns & binary
+            rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = True
+
+            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
+            self.assertEqual(
+                mock_subprocess_run.call_args[0][0],
+                [
+                    rh_gitleaks.config.GITLEAKS_BIN_PATH,
+                    f"--config-path={rh_gitleaks.config.PATTERNS_PATH}",
+                    "--help"
+                ],
+            )
+            mock_subprocess_run.call_args = None
+
+            # Running offline again should now work due to cached patterns & binary
+            rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
+
+            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
+            self.assertEqual(
+                mock_subprocess_run.call_args[0][0],
+                [
+                    rh_gitleaks.config.GITLEAKS_BIN_PATH,
+                    f"--config-path={rh_gitleaks.config.PATTERNS_PATH}",
+                    "--help"
+                ],
+            )
+            mock_subprocess_run.call_args = None
+
+
+            then = time.time() - (rh_gitleaks.config.PATTERNS_REFRESH_INTERVAL + 1)
+            os.utime(rh_gitleaks.config.PATTERNS_PATH,
+                     times=(then,then))
+
+            # Running offline should still work with outdated patterns file for a while
+            rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
+
+            self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
+            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
+            self.assertEqual(
+                mock_subprocess_run.call_args[0][0],
+                [
+                    rh_gitleaks.config.GITLEAKS_BIN_PATH,
+                    f"--config-path={rh_gitleaks.config.PATTERNS_PATH}",
+                    "--help"
+                ],
+            )
+            mock_subprocess_run.call_args = None
+
+
+            then = time.time() - (rh_gitleaks.config.PATTERNS_STALE_INTERVAL + 1)
+            os.utime(rh_gitleaks.config.PATTERNS_PATH,
+                     times=(then,then))
+
+            # Running offline should fail with stale patterns file
+            rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
+
+            self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
+            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), rh_gitleaks.config.BLOCKING_EXIT_CODE)
+            self.assertEqual(mock_subprocess_run.call_args, None)
