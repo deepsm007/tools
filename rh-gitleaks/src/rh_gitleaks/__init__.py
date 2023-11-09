@@ -164,7 +164,7 @@ def gitleaks_download():
 
 
 
-def gitleaks_bin_path():
+def gitleaks_bin_path(offline=False):
     """
     Try to find a suitable gitleaks binary.
 
@@ -185,6 +185,10 @@ def gitleaks_bin_path():
         return gitleaks
 
     if not os.path.isfile(config.GITLEAKS_BIN_PATH):
+        if offline:
+            logging.error("gitleaks binary not found, and cannot download in offline mode, try running 'rh-gitleaks pre-cache'")
+            return None
+
         gitleaks_download()
 
     if not os.path.isfile(config.GITLEAKS_BIN_PATH):
