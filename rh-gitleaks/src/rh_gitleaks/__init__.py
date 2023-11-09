@@ -307,11 +307,11 @@ def run_gitleaks(args, callback=None, **kwargs):
     Returns:
         the exit status
     """
-    bin_path = gitleaks_bin_path()
+    bin_path = gitleaks_bin_path(offline=not config.LEAKTK_SCANNER_AUTOFETCH)
     if not bin_path:
         return config.BLOCKING_EXIT_CODE
 
-    p_path = patterns_path()
+    p_path = patterns_path(offline=not config.LEAKTK_SCANNER_AUTOFETCH)
     if not p_path:
         return config.BLOCKING_EXIT_CODE
 
