@@ -211,6 +211,20 @@ def patterns_update_needed(path):
     )
 
 
+def patterns_stale(path):
+    """
+    Helper to determine if the patterns are stale
+
+    Returns:
+        True if the file is too old to be considered fresh
+    """
+
+    return (
+        not os.path.isfile(path)
+        or time.time() - os.stat(path).st_mtime > config.PATTERNS_STALE_INTERVAL
+    )
+
+
 def load_auth_token():
     """
     Load the auth token from disk
@@ -240,7 +254,7 @@ def load_auth_token():
         return None
 
 
-def patterns_path():
+def patterns_path(offline=False):
     """
     Lazy pull patterns and return the path
 
@@ -252,6 +266,19 @@ def patterns_path():
         return None
 
     if patterns_update_needed(config.PATTERNS_PATH):
+        if offline:
+            if os.path.exists(config.PATTERNS_PATH):
+                msg = "patterns file is outdated, and cannot be updated in offline mode"
+                if patterns_stale(config.PATTERNS_PATH):
+                    logging.error(msg)
+                    return None
+
+                logging.debug(msg)
+                return config.PATTERNS_PATH
+
+            logging.error("patterns file not found, and cannot download in offline mode")
+            return None
+
         logging.info("Downloading patterns from %s", config.PATTERN_SERVER_URL)
 
         auth_token = load_auth_token()
