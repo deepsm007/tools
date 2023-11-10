@@ -93,7 +93,7 @@ implications of the defaults applied by the quickstart and how apply updates!
   `rh-gitleaks-gh-account`
 
 * Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your
-  home dir
+  home dir (overwriting any existing hooks due to the `--force` flag being set).
 
 * Set `rh-multi-pre-commit` as the pre-commit hook by default for all new repos
 
@@ -213,7 +213,7 @@ flag is used to set values that affect all repositories.
 `rh-multi-pre-commit` builds on [pre-commit.com](https://pre-commit.com/)'s
 pre-commit framework to support a global config file in addition to hooks
 defined in a project's local `.pre-commit-config.yaml`. Running local hooks
-is disabled by default to avoid accidently executing a malicious hook, but
+is disabled by default to avoid accidentally executing a malicious hook, but
 it can be turned on per-repo or for all repos.
 
 **Note:** If you don't want to support multiple pre-commit hooks per project
