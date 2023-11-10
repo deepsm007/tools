@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import os
+from pathlib import Path
 import shlex
 import stat
 import subprocess  # nosec
@@ -88,6 +89,39 @@ def parse_args(args):
     }
 
 
+def gitleaks_installed_bin():
+    """
+    Look for a compatible gitleaks binary in $PATH
+
+    Returns:
+        None if no compatible binary exists in $PATH
+        gitleaks path str if it exists and is compatible
+    """
+
+    def which(binary):
+        for pathdir in os.environ.get("PATH", "").split(os.pathsep):
+            gitleaks = Path(pathdir, binary)
+            if gitleaks.exists():
+                return str(gitleaks)
+        return None
+
+    for binary in ["gitleaks7", "gitleaks"]:
+        gitleaks = which(binary)
+        if gitleaks is not None:
+            syntax = subprocess.run([gitleaks, "--help"],
+                                    stdout=subprocess.PIPE,
+                                    check=False,
+                                    encoding='utf8').stdout
+            if "--config-path=" in syntax:
+                logging.debug("found compatible installed %s binary", gitleaks)
+                return gitleaks
+
+            logging.debug("ignoring %s which lacks --config-path argument", gitleaks)
+
+    logging.debug("no compatible installed gitleaks binary")
+    return None
+
+
 def gitleaks_download():
     logging.info("Downloading gitleaks-%s", config.GITLEAKS_SOURCE_ID)
     download_url = config.GITLEAKS_BIN_DOWNLOAD_URL
@@ -129,14 +163,27 @@ def gitleaks_download():
             os.unlink(bin_path)
 
 
+
 def gitleaks_bin_path():
     """
-    Lazy pull the gitleaks bin if it doesn't exist and return the path.
+    Try to find a suitable gitleaks binary.
+
+    If one is present in the cache that will be used preferentially.
+    The next option is to identify one in $PATH that is a compatible
+    version. As a final fallback automatically download a pre-compiled
+    binary.
 
     Returns:
         None if it fails to fetch/setup the bin
         gitleaks path str if it exists or was able to be set up
     """
+    if os.path.isfile(config.GITLEAKS_BIN_PATH):
+        return config.GITLEAKS_BIN_PATH
+
+    gitleaks = gitleaks_installed_bin()
+    if gitleaks is not None:
+        return gitleaks
+
     if not os.path.isfile(config.GITLEAKS_BIN_PATH):
         gitleaks_download()
 
