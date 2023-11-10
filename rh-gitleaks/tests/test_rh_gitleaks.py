@@ -56,6 +56,14 @@ class RHGitleaksTest(TestCase):
                     "rh_gitleaks": ["pre_cache"],
                 },
             ),
+            # Refresh should ignore anything that isn't refrsh
+            (
+                ["refresh", "--foo"],
+                {
+                    "gitleaks": [],
+                    "rh_gitleaks": ["refresh"],
+                },
+            ),
             # Other things should be passed to gitleaks
             (
                 ["--help"],
@@ -332,3 +340,28 @@ Application Options:
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
             self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), rh_gitleaks.config.BLOCKING_EXIT_CODE)
             self.assertEqual(mock_subprocess_run.call_args, None)
+
+    @patch("requests.get")
+    @patch("subprocess.run")
+    def test_run_refresh(self, mock_subprocess_run, mock_requests_get):
+        """
+        Confirm the subprocess is ran properly
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        mock_requests_get.return_value.content = self.mock_resp
+        rh_gitleaks.config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM = self.mock_sha256sum
+
+        with TemporaryDirectory() as tmp_dir:
+            # The extra dir in the middle is to confirm it will be created
+            # if it doesn't exist
+            rh_gitleaks.config.PATTERNS_PATH = os.path.join(
+                tmp_dir, "a", "patterns.toml"
+            )
+            rh_gitleaks.config.PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(
+                tmp_dir, "c", "auth.jwt"
+            )
+
+            self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
+            self.assertFalse(Path(rh_gitleaks.config.PATTERNS_PATH).exists())
+            self.assertEqual(rh_gitleaks.refresh(), 0)
+            self.assertTrue(Path(rh_gitleaks.config.PATTERNS_PATH).exists())

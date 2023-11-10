@@ -78,7 +78,7 @@ def parse_args(args):
     rh_gitleaks_args = []
 
     if len(args):
-        if args[0] in ("configure", "login", "logout", "pre-cache"):
+        if args[0] in ("configure", "login", "logout", "pre-cache", "refresh"):
             rh_gitleaks_args.append(args[0].replace("-", "_"))
         else:
             gitleaks_args = args
@@ -268,7 +268,7 @@ def patterns_path(offline=False):
     if patterns_update_needed(config.PATTERNS_PATH):
         if offline:
             if os.path.exists(config.PATTERNS_PATH):
-                msg = "patterns file is outdated, and cannot be updated in offline mode"
+                msg = "patterns file is outdated, and cannot be updated in offline mode, try running 'rh-gitleaks refresh'"
                 if patterns_stale(config.PATTERNS_PATH):
                     logging.error(msg)
                     return None
@@ -276,7 +276,7 @@ def patterns_path(offline=False):
                 logging.debug(msg)
                 return config.PATTERNS_PATH
 
-            logging.error("patterns file not found, and cannot download in offline mode")
+            logging.error("patterns file not found, and cannot download in offline mode, try running 'rh-gitleaks refresh'")
             return None
 
         logging.info("Downloading patterns from %s", config.PATTERN_SERVER_URL)
@@ -429,6 +429,23 @@ def logout(show_msg=True):
 
     if show_msg:
         logging.info("Successfully logged out")
+
+    return 0
+
+
+def refresh(show_msg=True):
+    """
+    Update the patterns file to latest content
+
+    Returns:
+        A return code for sys.exit
+    """
+    p_path = patterns_path(offline=False)
+    if not p_path:
+        return config.BLOCKING_EXIT_CODE
+
+    if show_msg:
+        logging.info("Successfully refreshed pattern file")
 
     return 0
 
