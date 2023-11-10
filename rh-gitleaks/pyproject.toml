@@ -26,3 +26,5 @@ classifiers = [
 rh-gitleaks = "rh_gitleaks.__main__:main"
 rh-gitleaks-gh-account = "rh_gitleaks.gh_account.__main__:main"
 rh-gitleaks-gl-account = "rh_gitleaks.gl_account.__main__:main"
+
+[tool.hatch.build.hooks.custom]
