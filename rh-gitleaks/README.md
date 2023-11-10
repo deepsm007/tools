@@ -159,7 +159,7 @@ set). This is also where `rh-gitleaks login` writes the token.
 The patterns server used by the tool can also be changed by setting the
 `LEAKTK_PATTERN_SERVER_URL` env variable.
 
-### Using a different gitleaks binary
+### Using a different gitleaks executable
 
 Rh-gitleaks pulls a pre-built binary from the leaktk GitHub project. The
 project and the binaries are maintained by members of the InfoSec team. We use
@@ -168,15 +168,22 @@ that deep integrations across our whole tool chain stay compatible. There
 were was a regression with gitleaks v8 when it first came out, which stalled
 our upgrade, but that has now been fixed and we are working towards that now.
 
-If for some reason you desire to use a different gitleaks binary than the
+If for some reason you desire to use a different executable than the
 one pulled by the tool. All you have to do is:
 
 1. Make sure it is compatible with the version used by the tool
-2. Run this command to figure out where to place the binary:
+2. Run this command to figure out where to place the executable:
 
    ```
    python3 -c 'import platform; print(f"~/.cache/rh-gitleaks/gitleaks-7.6.1-{platform.system().lower()}-{platform.machine()}")'
    ```
+3. Place your custom executable at that location.
+
+For example for me it is at:
+
+```
+~/.cache/rh-gitleaks/gitleaks-7.6.1-linux-x86_64
+```
 
 ## Troubleshooting
 
