@@ -115,7 +115,12 @@ To reset your configuration, run `rh-gitleaks configure`
 To download the gitleaks binary before the first run, run `rh-gitleaks
 pre-cache`.  This is useful to include as an install step when
 installing rh-gitleaks in a container image so that it doesn't have to
-download gitleaks each time a new container starts.
+download gitleaks each time a new container starts, or when running the
+scanner in offline mode, such that it skips any automatic downloads.
+
+To refresh the gitleaks pattern configuration, run `rh-gitleaks refresh`.
+This is useful to cache the patterns when running the scanner in offline
+mode, such that it skips any automatic downloads.
 
 ## Usage (rh-gitleaks-gh-account)
 
