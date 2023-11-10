@@ -1,5 +1,6 @@
 import os
 import hashlib
+from pathlib import Path
 import time
 
 from unittest import TestCase
@@ -85,12 +86,52 @@ class RHGitleaksTest(TestCase):
             actual = rh_gitleaks.parse_args(args)
             self.assertDictEqual(actual, expected, f"test={i}")
 
+    @patch("subprocess.run")
+    @patch("pathlib.Path.exists")
+    def test_gitleaks_installed_bin(self, mock_exists, mock_run):
+        # If binary doesn't exist we should return None
+        mock_exists.return_value = False
+        mock_run.return_value.stdout = None
+
+        self.assertIsNone(rh_gitleaks.gitleaks_installed_bin())
+
+        # If binary exists, but has wrong help text we should return None
+        mock_exists.return_value = True
+        mock_run.return_value.stdout = """
+        Gitleaks scans code, past or present, for secrets
+
+Flags:
+  -b, --baseline-path string       path to baseline with issues that can be ignored
+  -c, --config string              config file path
+      --exit-code int              exit code when leaks have been encountered (default 1)
+        """
+
+        self.assertIsNone(rh_gitleaks.gitleaks_installed_bin())
+
+        # If binary exists, but has wrong help text we should return None
+        mock_exists.return_value = True
+        mock_run.return_value.stdout = """
+Usage:
+  gitleaks [OPTIONS]
+
+Application Options:
+  -p, --path=               Path to directory (repo if contains .git) or file
+  -c, --config-path=        Path to config
+      --repo-config-path=   Path to gitleaks config relative to repo root
+        """
+
+        base = os.environ["PATH"].split(os.pathsep)[0]
+        expect = str(Path(base, "gitleaks7"))
+        self.assertEqual(rh_gitleaks.gitleaks_installed_bin(), expect)
+
+    @patch("rh_gitleaks.gitleaks_installed_bin")
     @patch("requests.get")
-    def test_gitleaks_bin_path(self, mock_requests_get):
+    def test_gitleaks_bin_path(self, mock_requests_get, mock_installed_bin):
         """
         Make sure it pulls and validates a version of gitleaks
         """
         mock_requests_get.return_value.content = self.mock_resp
+        mock_installed_bin.return_value = None
         rh_gitleaks.config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM = self.mock_sha256sum
 
         with TemporaryDirectory() as tmp_dir:
@@ -158,14 +199,16 @@ class RHGitleaksTest(TestCase):
             self.assertEqual(rh_gitleaks.configure(), 0)
             self.assertEqual(rh_gitleaks.load_auth_token(), self.mock_token)
 
+    @patch("rh_gitleaks.gitleaks_installed_bin")
     @patch("requests.get")
     @patch("subprocess.run")
-    def test_run_gitleaks(self, mock_subprocess_run, mock_requests_get):
+    def test_run_gitleaks(self, mock_subprocess_run, mock_requests_get, mock_installed_bin):
         """
         Confirm the subprocess is ran properly
         """
         mock_subprocess_run.return_value.returncode = 0
         mock_requests_get.return_value.content = self.mock_resp
+        mock_installed_bin.return_value = None
         rh_gitleaks.config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM = self.mock_sha256sum
 
         with TemporaryDirectory() as tmp_dir:
