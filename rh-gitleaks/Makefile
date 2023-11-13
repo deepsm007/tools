@@ -43,7 +43,7 @@ clean:
 # helptext:
 # helptext:
 .PHONY: format
-format:
+format: setup
 	@./scripts/$@
 
 # helptext: unittest:
@@ -52,7 +52,7 @@ format:
 # helptext:
 # helptext:
 .PHONY: unittest
-unittest:
+unittest: setup
 	@echo ""
 	@echo "====================================================================="
 	@echo "Run Unit Tests"
@@ -66,7 +66,7 @@ unittest:
 # helptext:
 # helptext:
 .PHONY: coverage
-coverage:
+coverage: setup
 	@echo ""
 	@echo "====================================================================="
 	@echo "Check Test Coverage"
@@ -80,7 +80,7 @@ coverage:
 # helptext:
 # helptext:
 .PHONY: lint
-lint:
+lint: setup
 	@echo ""
 	@echo "====================================================================="
 	@echo "Run Linter"
@@ -94,7 +94,7 @@ lint:
 # helptext:
 # helptext:
 .PHONY: test
-test: setup unittest coverage lint
+test: unittest coverage lint
 
 # helptext: security-report
 # helptext:
