@@ -89,8 +89,8 @@ implications of the defaults applied by the quickstart and how apply updates!
 
 **A default install will:**
 
-* Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and
-  `rh-gitleaks-gh-account`
+* Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`,
+  `rh-gitleaks-gl-account`, and `rh-gitleaks-gh-account`
 
 * Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your
   home dir (overwriting any existing hooks due to the `--force` flag being set).
