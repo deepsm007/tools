@@ -80,7 +80,7 @@ def get_ns_repos(ns, timeout=60):
         resp = requests.get(groupsurl, timeout=timeout)
 
     if resp.status_code == 404:
-        logging.error(f"No user or group '{ns}' found on '{server}'")
+        logging.error("No user or group '%s' found on '%s'", ns, server)
         sys.exit(1)
 
     return resp
