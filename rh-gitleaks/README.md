@@ -46,7 +46,8 @@ are removed, you will need to install [the new version](../rh-pre-commit).
 
 At the end of this (assuming the defaults are applied):
 
-* `rh-gitleaks` and `rh-gitleaks-gh-account` will be installed.
+* `rh-gitleaks`, `rh-gitleaks-gh-account` and `rh-gitleaks-gl-account`
+  will be installed.
 * rh-gitleaks will be logged in and have a 2-year patterns server token
 
 
@@ -118,8 +119,8 @@ download gitleaks each time a new container starts.
 
 ## Usage (rh-gitleaks-gh-account)
 
-This is a wrapper around rh-gitleaks that runs it against all of the repos
-under an account or org.
+This is a wrapper around rh-gitleaks that runs it against all of the
+github.com repos under an account or org.
 
 If the cli tool was not installed on your path, you can also call it via:
 `python3 -m rh_gitleaks.gh_account`.
@@ -135,6 +136,35 @@ rh-gitleaks-gh-account leaktk
 ```
 
 **NOTE:** rh-gitleaks-gh-account exits when a 0 exit status even when leaks are
+found. This is meant for finding leaks across an account/org rather than
+setting up in a CI pipeline.
+
+## Usage (rh-gitleaks-gl-account)
+
+This is a wrapper around rh-gitleaks that runs it against all of the gitlab
+repos under an account or org.
+
+If the cli tool was not installed on your path, you can also call it via:
+`python3 -m rh_gitleaks.gl_account`.
+
+Once rh-gitleaks is setup, you can run `rh-gitleaks-gl-account --help` for
+more info on how to use this tool.
+
+Example, with default gitlab.com server:
+
+```sh
+# Scan all the repos under the libvirt group on gitlab.com:
+rh-gitleaks-gl-account libvirt
+```
+
+Example, with an alternative server:
+
+```sh
+# Scan all the repos under an account on GNOME gitlab
+rh-gitleaks-gl-account gitlab.gnome.org/dberrange
+```
+
+**NOTE:** rh-gitleaks-gl-account exits when a 0 exit status even when leaks are
 found. This is meant for finding leaks across an account/org rather than
 setting up in a CI pipeline.
 
@@ -199,7 +229,7 @@ it's likely that the place the scripts were installed is not on your path.
 When you run `make install`, you may see a warning like this towards the end:
 
 ```
-WARNING: The scripts rh-gitleaks and rh-gitleaks-gh-account are installed in '/home/user/.local/bin' which is not on PATH.
+WARNING: The scripts rh-gitleaks, rh-gitleaks-gh-account and rh-gitleaks-gl-account are installed in '/home/user/.local/bin' which is not on PATH.
 Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.`
 ```
 
@@ -212,3 +242,4 @@ Alternatively, you can reference the commands through their modules directly:
 
 * `rh-gitleaks` becomes `python3 -m rh_gitleaks`
 * `rh-gitleaks-gh-account` becomes `python3 -m rh_gitleaks.gh_account`
+* `rh-gitleaks-gl-account` becomes `python3 -m rh_gitleaks.gl_account`
