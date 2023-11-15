@@ -88,6 +88,47 @@ def parse_args(args):
     }
 
 
+def gitleaks_download():
+    logging.info("Downloading gitleaks-%s", config.GITLEAKS_SOURCE_ID)
+    download_url = config.GITLEAKS_BIN_DOWNLOAD_URL
+    download_sha256sum = config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM
+
+    if not (download_url and download_sha256sum):
+        logging.error("Your system (%s) is not supported", config.PLATFORM_ID)
+        return
+
+    bin_path = config.GITLEAKS_BIN_PATH
+    bin_dir = os.path.dirname(bin_path)
+
+    if not _ensure_dir(bin_dir):
+        return
+
+    try:
+        _download_file(download_url, bin_path)
+
+        logging.info("Verifying gitleaks-%s", config.GITLEAKS_SOURCE_ID)
+        if not _sha256sum_valid(bin_path, download_sha256sum):
+            raise Exception("Invalid sha256sum")
+
+        logging.info("Checksum valid (sha256:%s)", download_sha256sum)
+    except Exception as e:
+        logging.error("%s: %s not created", e, bin_path)
+
+        if os.path.isfile(bin_path):
+            os.unlink(bin_path)
+
+        return
+
+    try:
+        st = os.stat(bin_path)
+        os.chmod(bin_path, st.st_mode | stat.S_IXUSR)
+    except Exception:
+        logging.error("Could not make gitleaks executable %s", bin_path)
+
+        if os.path.isfile(bin_path):
+            os.unlink(bin_path)
+
+
 def gitleaks_bin_path():
     """
     Lazy pull the gitleaks bin if it doesn't exist and return the path.
@@ -96,49 +137,13 @@ def gitleaks_bin_path():
         None if it fails to fetch/setup the bin
         gitleaks path str if it exists or was able to be set up
     """
-    bin_path = config.GITLEAKS_BIN_PATH
-    bin_dir = os.path.dirname(bin_path)
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
+        gitleaks_download()
 
-    if not _ensure_dir(bin_dir):
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
         return None
-
-    if not os.path.isfile(bin_path):
-        logging.info("Downloading gitleaks-%s", config.GITLEAKS_SOURCE_ID)
-        download_url = config.GITLEAKS_BIN_DOWNLOAD_URL
-        download_sha256sum = config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM
-
-        if not (download_url and download_sha256sum):
-            logging.error("Your system (%s) is not supported", config.PLATFORM_ID)
-            return None
-
-        try:
-            _download_file(download_url, bin_path)
-
-            logging.info("Verifying gitleaks-%s", config.GITLEAKS_SOURCE_ID)
-            if not _sha256sum_valid(bin_path, download_sha256sum):
-                raise Exception("Invalid sha256sum")
-
-            logging.info("Checksum valid (sha256:%s)", download_sha256sum)
-        except Exception as e:
-            logging.error("%s: %s not created", e, bin_path)
-
-            if os.path.isfile(bin_path):
-                os.unlink(bin_path)
-
-            return None
-
-        try:
-            st = os.stat(bin_path)
-            os.chmod(bin_path, st.st_mode | stat.S_IXUSR)
-        except Exception:
-            logging.error("Could not make gitleaks executable %s", bin_path)
-
-            if os.path.isfile(bin_path):
-                os.unlink(bin_path)
-
-            return None
-
-    return bin_path
+        
+    return config.GITLEAKS_BIN_PATH
 
 
 def patterns_update_needed(path):
