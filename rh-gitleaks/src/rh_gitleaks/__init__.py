@@ -363,12 +363,13 @@ def pre_cache():
     a container image so that it doesn't have to download gitleaks each time a
     new container starts.
     """
-    bin_path = gitleaks_bin_path()
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
+        gitleaks_download()
 
-    if not bin_path:
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
         return 1
 
-    logging.info("Pre-cache Complete: gitleaks_bin_path=%s", bin_path)
+    logging.info("Pre-cache Complete: gitleaks_bin_path=%s", config.GITLEAKS_BIN_PATH)
     return 0
 
 
