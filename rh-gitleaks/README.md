@@ -142,7 +142,7 @@ setting up in a CI pipeline.
 ## Usage (rh-gitleaks-gl-account)
 
 This is a wrapper around rh-gitleaks that runs it against top level gitlab
-repos under an account or org. Traversing subgroups is not supported yet.
+repos under an account or org.
 
 If the cli tool was not installed on your path, you can also call it via:
 `python3 -m rh_gitleaks.gl_account`.
@@ -162,6 +162,14 @@ Example, with an alternative server:
 ```sh
 # Scan all the repos under an account on GNOME gitlab
 rh-gitleaks-gl-account gitlab.gnome.org/dberrange
+```
+
+Note that if subgroups are to be specified, the server name
+must always be included
+
+```sh
+# Scan all the repos under an account on GNOME gitlab
+rh-gitleaks-gl-account gitlab.com/redhat/centos-stream/src
 ```
 
 **NOTE:** rh-gitleaks-gl-account exits when a 0 exit status even when leaks are

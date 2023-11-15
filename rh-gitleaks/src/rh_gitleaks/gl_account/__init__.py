@@ -67,10 +67,10 @@ def prety_print_output(proc):
 
 def get_ns_repos(ns, timeout=60):
     server = "gitlab.com"
-    if "/" in ns:
-        bits = ns.split("/")
-        server = bits[0]
-        ns = bits[1]
+    slash = ns.find("/")
+    if slash != -1:
+        server = ns[0:slash]
+        ns = ns[slash+1:].replace("/", "%2F")
 
     usersurl = f"https://{server}/api/v4/users/{ns}/projects"
     groupsurl = f"https://{server}/api/v4/groups/{ns}/projects"
