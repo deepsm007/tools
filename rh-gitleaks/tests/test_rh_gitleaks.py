@@ -210,7 +210,9 @@ Application Options:
     @patch("rh_gitleaks.gitleaks_installed_bin")
     @patch("requests.get")
     @patch("subprocess.run")
-    def test_run_gitleaks(self, mock_subprocess_run, mock_requests_get, mock_installed_bin):
+    def test_run_gitleaks(
+        self, mock_subprocess_run, mock_requests_get, mock_installed_bin
+    ):
         """
         Confirm the subprocess is ran properly
         """
@@ -251,7 +253,9 @@ Application Options:
     @patch("rh_gitleaks.gitleaks_installed_bin")
     @patch("requests.get")
     @patch("subprocess.run")
-    def test_run_gitleaks_offline(self, mock_subprocess_run, mock_requests_get, mock_installed_bin):
+    def test_run_gitleaks_offline(
+        self, mock_subprocess_run, mock_requests_get, mock_installed_bin
+    ):
         """
         Confirm the subprocess is ran properly
         """
@@ -277,9 +281,11 @@ Application Options:
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
 
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
-            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), rh_gitleaks.config.BLOCKING_EXIT_CODE)
+            self.assertEqual(
+                rh_gitleaks.run_gitleaks(["--help"]),
+                rh_gitleaks.config.BLOCKING_EXIT_CODE,
+            )
             self.assertEqual(mock_subprocess_run.call_args, None)
-
 
             # Running online should fetch the missing patterns & binary
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = True
@@ -290,7 +296,7 @@ Application Options:
                 [
                     rh_gitleaks.config.GITLEAKS_BIN_PATH,
                     f"--config-path={rh_gitleaks.config.PATTERNS_PATH}",
-                    "--help"
+                    "--help",
                 ],
             )
             mock_subprocess_run.call_args = None
@@ -304,15 +310,13 @@ Application Options:
                 [
                     rh_gitleaks.config.GITLEAKS_BIN_PATH,
                     f"--config-path={rh_gitleaks.config.PATTERNS_PATH}",
-                    "--help"
+                    "--help",
                 ],
             )
             mock_subprocess_run.call_args = None
 
-
             then = time.time() - (rh_gitleaks.config.PATTERNS_REFRESH_INTERVAL + 1)
-            os.utime(rh_gitleaks.config.PATTERNS_PATH,
-                     times=(then,then))
+            os.utime(rh_gitleaks.config.PATTERNS_PATH, times=(then, then))
 
             # Running offline should still work with outdated patterns file for a while
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
@@ -324,21 +328,22 @@ Application Options:
                 [
                     rh_gitleaks.config.GITLEAKS_BIN_PATH,
                     f"--config-path={rh_gitleaks.config.PATTERNS_PATH}",
-                    "--help"
+                    "--help",
                 ],
             )
             mock_subprocess_run.call_args = None
 
-
             then = time.time() - (rh_gitleaks.config.PATTERNS_STALE_INTERVAL + 1)
-            os.utime(rh_gitleaks.config.PATTERNS_PATH,
-                     times=(then,then))
+            os.utime(rh_gitleaks.config.PATTERNS_PATH, times=(then, then))
 
             # Running offline should fail with stale patterns file
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
 
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
-            self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), rh_gitleaks.config.BLOCKING_EXIT_CODE)
+            self.assertEqual(
+                rh_gitleaks.run_gitleaks(["--help"]),
+                rh_gitleaks.config.BLOCKING_EXIT_CODE,
+            )
             self.assertEqual(mock_subprocess_run.call_args, None)
 
     @patch("requests.get")
