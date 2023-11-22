@@ -1,10 +1,10 @@
 Name: rh-gitleaks
 Summary: scan git commits for leaks
-Version: %{version}
+Version: 2.1.0
 Release: 1
 License: MIT
 Url: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools
-Source0: %{name}-%{version}.tar.gz
+Source0: %{name}-2.1.0.tar.gz
 
 BuildArch: noarch
 

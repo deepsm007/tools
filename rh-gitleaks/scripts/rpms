@@ -1,0 +1,16 @@
+#! /bin/sh
+set -ex
+
+package="rh-gitleaks"
+version="$(../scripts/tool-version rh-gitleaks)"
+src_dir="$(pwd)/rpmbuild/SOURCES"
+src="${src_dir}/${package}-${version}.tar.gz"
+
+mkdir -p "${src_dir}/${package}-${version}"
+cp -r $(ls | grep -vE '(rpmbuild|venv)') "${src_dir}/${package}-${version}"
+tar -czf "${src}" -C "${src_dir}" "${package}-${version}"
+sed "s/%{version}/${version}/g" rh-gitleaks.spec.in > rh-gitleaks.spec
+
+rpmbuild -ba \
+  --define "_topdir %(pwd)/rpmbuild" \
+  rh-gitleaks.spec
