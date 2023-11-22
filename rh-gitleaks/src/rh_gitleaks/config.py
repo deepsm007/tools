@@ -87,4 +87,7 @@ PATTERN_SERVER_PATTERNS_URL = parse.urljoin(
 REQUEST_USER_AGENT = f"rh-gitleaks/{GITLEAKS_SOURCE_ID}"
 
 # User interface behaviour settings
-LEAKTK_SCANNER_AUTOFETCH = (os.environ.get("LEAKTK_SCANNER_AUTOFETCH", "true") in ["1", "true"])
+LEAKTK_SCANNER_AUTOFETCH = os.environ.get("LEAKTK_SCANNER_AUTOFETCH", "true") in [
+    "1",
+    "true",
+]
