@@ -16,7 +16,7 @@ BuildRequires: python3-pytest
 BuildRequires: python3-requests
 BuildRequires: pyproject-rpm-macros
 
-Requires: gitleaks7
+Requires: python3-requests python3-jwt
 
 %description
 Frontend on gitleaks tool for scanning code commits
