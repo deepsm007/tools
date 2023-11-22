@@ -14,4 +14,4 @@ htmlcov/
 instance/
 venv/
 wheelhouse/
-rh-gitleaks.spec
+rpmbuild/
