@@ -219,9 +219,9 @@ def patterns_update_needed(path):
     )
 
 
-def patterns_stale(path):
+def patterns_expired(path):
     """
-    Helper to determine if the patterns are stale
+    Helper to determine if the patterns are expired
 
     Returns:
         True if the file is too old to be considered fresh
@@ -229,7 +229,7 @@ def patterns_stale(path):
 
     return (
         not os.path.isfile(path)
-        or time.time() - os.stat(path).st_mtime > config.PATTERNS_STALE_INTERVAL
+        or time.time() - os.stat(path).st_mtime > config.PATTERNS_EXPIRED_INTERVAL
     )
 
 
@@ -281,7 +281,7 @@ def patterns_path(autofetch=True):
                     "Try running 'rh-gitleaks refresh' "
                 )
 
-                if patterns_stale(config.PATTERNS_PATH):
+                if patterns_expired(config.PATTERNS_PATH):
                     logging.error(msg)
                     return None
 

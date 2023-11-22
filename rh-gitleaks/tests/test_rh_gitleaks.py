@@ -333,10 +333,10 @@ Application Options:
             )
             mock_subprocess_run.call_args = None
 
-            then = time.time() - (rh_gitleaks.config.PATTERNS_STALE_INTERVAL + 1)
+            then = time.time() - (rh_gitleaks.config.PATTERNS_EXPIRED_INTERVAL + 1)
             os.utime(rh_gitleaks.config.PATTERNS_PATH, times=(then, then))
 
-            # Running offline should fail with stale patterns file
+            # Running offline should fail with expired patterns file
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
 
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)

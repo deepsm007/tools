@@ -60,7 +60,7 @@ PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(CONFIG_DIR, "auth.jwt")
 # how often to check for new patterns
 PATTERNS_REFRESH_INTERVAL = 60 * 60 * 12
 # when to refuse to use cached patterns if refresh wasn't possible
-PATTERNS_STALE_INTERVAL = PATTERNS_REFRESH_INTERVAL * 14
+PATTERNS_EXPIRED_INTERVAL = PATTERNS_REFRESH_INTERVAL * 14
 PATTERNS_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_VERSION}-patterns.toml")
 PATTERN_SERVER_AUTH_TOKEN = os.environ.get("LEAKTK_PATTERN_SERVER_AUTH_TOKEN")
 PATTERN_SERVER_URL = os.environ.get(
