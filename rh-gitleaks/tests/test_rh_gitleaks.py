@@ -253,7 +253,7 @@ Application Options:
     @patch("rh_gitleaks.gitleaks_installed_bin")
     @patch("requests.get")
     @patch("subprocess.run")
-    def test_run_gitleaks_offline(
+    def test_run_gitleaks_with_autofetch_disabled(
         self, mock_subprocess_run, mock_requests_get, mock_installed_bin
     ):
         """
@@ -277,7 +277,7 @@ Application Options:
                 tmp_dir, "c", "auth.jwt"
             )
 
-            # Running offline should fail initially due to missing patterns & binary
+            # Disabling autofetch should fail initially due to missing patterns & binary
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
 
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
@@ -287,7 +287,7 @@ Application Options:
             )
             self.assertEqual(mock_subprocess_run.call_args, None)
 
-            # Running online should fetch the missing patterns & binary
+            # Enabling autofetch should fetch the missing patterns & binary
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = True
 
             self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
@@ -301,7 +301,7 @@ Application Options:
             )
             mock_subprocess_run.call_args = None
 
-            # Running offline again should now work due to cached patterns & binary
+            # Disabling autofetch again should now work due to cached patterns & binary
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
 
             self.assertEqual(rh_gitleaks.run_gitleaks(["--help"]), 0)
@@ -318,7 +318,7 @@ Application Options:
             then = time.time() - (rh_gitleaks.config.PATTERNS_REFRESH_INTERVAL + 1)
             os.utime(rh_gitleaks.config.PATTERNS_PATH, times=(then, then))
 
-            # Running offline should still work with outdated patterns file for a while
+            # Disabling autofetch should still work with outdated patterns file for a while
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
 
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
@@ -336,7 +336,7 @@ Application Options:
             then = time.time() - (rh_gitleaks.config.PATTERNS_EXPIRED_INTERVAL + 1)
             os.utime(rh_gitleaks.config.PATTERNS_PATH, times=(then, then))
 
-            # Running offline should fail with expired patterns file
+            # Disabling autofetch should fail with expired patterns file
             rh_gitleaks.config.LEAKTK_SCANNER_AUTOFETCH = False
 
             self.assertEqual(rh_gitleaks.configure(auth_token=self.mock_token), 0)
