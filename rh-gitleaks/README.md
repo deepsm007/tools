@@ -113,14 +113,14 @@ To remove your Pattern Server API token, run `rh-gitleaks logout`.
 To reset your configuration, run `rh-gitleaks configure`
 
 To download the gitleaks binary before the first run, run `rh-gitleaks
-pre-cache`.  This is useful to include as an install step when
-installing rh-gitleaks in a container image so that it doesn't have to
-download gitleaks each time a new container starts, or when running the
-scanner in offline mode, such that it skips any automatic downloads.
+pre-cache`.  This is useful to include as an install step when installing
+rh-gitleaks in a container image so that it doesn't have to download gitleaks
+each time a new container starts, or when running the scanner with auto-fetch
+disabled, such that it skips any automatic downloads.
 
-To refresh the gitleaks pattern configuration, run `rh-gitleaks refresh`.
-This is useful to cache the patterns when running the scanner in offline
-mode, such that it skips any automatic downloads.
+To force refresh the gitleaks pattern configuration, run `rh-gitleaks refresh`.
+This allows you to refresh the patterns when running the scanner with
+auto-fetch disabled, such that it skips any automatic downloads.
 
 ## Usage (rh-gitleaks-gh-account)
 
@@ -230,18 +230,18 @@ For example for me it is at:
 
 ### Running commit scanner in offline mode
 
-When asked to examine git commits, the leak scanner will first attempt
-to download the gitleaks binary, if no suitable binary is in ``$PATH``,
-and will also contact the pattern server to download latest leak check
-rules.
+When asked to examine git commits, the leak scanner will first attempt to
+download the gitleaks binary if no suitable binary is in `$PATH` and will also
+contact the pattern server to download latest leak check rules.
 
-If it is desired to run the git scanner in an entirely offline mode,
-such that no network connections are attempted, the auto-update
-process can be disabled by setting the environment variable
-``LEAKTK_SCANNER_AUTOFETCH`` to either ``true`` or ``1``. If being
-used in offline mode, the `rh-gitleaks refresh` command must be run
-periodically to download the latest patterns file data. The scanner
-will refuse to run if the cached patterns file is older than 1 week.
+If it is desired to run the git scanner in an entirely offline mode, such that
+no automatic network connections are attempted, the auto-fetch process can be
+disabled by setting the environment variable `LEAKTK_SCANNER_AUTOFETCH` to
+either `false` or `0`. If being used in offline mode, the `rh-gitleaks refresh`
+command must be run periodically to download the latest patterns file data. The
+scanner will refuse to run if the cached patterns file is older than 1 week.
+If no suitable binary is found on your path, you will need to run
+`rh-gitleaks pre-cache` to manually pull a supported gitleaks binary.
 
 ## Troubleshooting
 
