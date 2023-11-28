@@ -52,7 +52,7 @@ def show_help():
     return 1
 
 
-def prety_print_output(proc):
+def pretty_print_output(proc):
     """
     A callback for cleaning rh_gitleaks output
     """
@@ -97,7 +97,7 @@ def scan_namespaces(namespaces, timeout=60):
                 ("-q", f"--repo-url={repo['http_url_to_repo']}"),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
-                callback=prety_print_output,
+                callback=pretty_print_output,
             )
 
     return 0
