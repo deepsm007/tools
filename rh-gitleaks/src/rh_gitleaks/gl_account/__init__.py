@@ -65,25 +65,29 @@ def pretty_print_output(proc):
     logging.info(output)
 
 
-def get_ns_repos(ns, timeout=60):
+def get_ns_repos(ns, timeout=60, page=1, isUser=None):
     server = "gitlab.com"
-    if "/" in ns:
-        bits = ns.split("/")
-        server = bits[0]
-        ns = bits[1]
+    slash = ns.find("/")
+    if slash != -1:
+        server = ns[0:slash]
+        ns = ns[slash+1:].replace("/", "%2F")
 
-    usersurl = f"https://{server}/api/v4/users/{ns}/projects"
-    groupsurl = f"https://{server}/api/v4/groups/{ns}/projects"
+    pagination = f"per_page=20&page={page}&order_by=name&sort=asc"
+    usersurl = f"https://{server}/api/v4/users/{ns}/projects?{pagination}"
+    groupsurl = f"https://{server}/api/v4/groups/{ns}/projects?{pagination}"
 
-    resp = requests.get(usersurl, timeout=timeout)
-    if resp.status_code == 404:
+    if isUser is True or isUser is None:
+        resp = requests.get(usersurl, timeout=timeout)
+        if resp.status_code != 404:
+            return resp.json(), True
+
+    if isUser is False or isUser is None:
         resp = requests.get(groupsurl, timeout=timeout)
+        if resp.status_code != 404:
+            return resp.json(), False
 
-    if resp.status_code == 404:
-        logging.error("No user or group '%s' found on '%s'", ns, server)
-        sys.exit(1)
-
-    return resp
+    logging.error("No user or group '%s' found on '%s'", ns, server)
+    sys.exit(1)
 
 
 def scan_namespaces(namespaces, timeout=60):
@@ -91,14 +95,22 @@ def scan_namespaces(namespaces, timeout=60):
     Run rh-gitleaks on per repo per namespace
     """
     for ns in namespaces:
-        for repo in get_ns_repos(ns, timeout).json():
-            logging.info("Scanning %s", repo["http_url_to_repo"])
-            run_gitleaks(
-                ("-q", f"--repo-url={repo['http_url_to_repo']}"),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                callback=pretty_print_output,
-            )
+        page = 1
+        isUser = None
+        while True:
+            repos, isUser = get_ns_repos(ns, timeout, page, isUser)
+            for repo in repos:
+                logging.info("Scanning %s", repo["http_url_to_repo"])
+                run_gitleaks(
+                    ("-q", f"--repo-url={repo['http_url_to_repo']}"),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    callback=prety_print_output,
+                )
+
+            if len(repos) == 0:
+                break
+            page = page + 1
 
     return 0
 
