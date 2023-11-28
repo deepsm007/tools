@@ -10,6 +10,7 @@ import sys
 import time
 
 from datetime import datetime
+from pathlib import Path
 
 import jwt
 import requests
@@ -77,7 +78,7 @@ def parse_args(args):
     rh_gitleaks_args = []
 
     if len(args):
-        if args[0] in ("configure", "login", "logout", "pre-cache"):
+        if args[0] in ("configure", "login", "logout", "pre-cache", "refresh"):
             rh_gitleaks_args.append(args[0].replace("-", "_"))
         else:
             gitleaks_args = args
@@ -88,57 +89,118 @@ def parse_args(args):
     }
 
 
-def gitleaks_bin_path():
+def gitleaks_installed_bin():
     """
-    Lazy pull the gitleaks bin if it doesn't exist and return the path.
+    Look for a compatible gitleaks binary in $PATH
+
+    Returns:
+        None if no compatible binary exists in $PATH
+        gitleaks path str if it exists and is compatible
+    """
+
+    def which(binary):
+        for pathdir in os.environ.get("PATH", "").split(os.pathsep):
+            gitleaks = Path(pathdir, binary)
+            if gitleaks.exists():
+                return str(gitleaks)
+
+        return None
+
+    for binary in ["gitleaks7", "gitleaks"]:
+        gitleaks = which(binary)
+
+        if gitleaks is not None:
+            syntax = subprocess.run(  # nosec
+                [gitleaks, "--help"],
+                stdout=subprocess.PIPE,
+                shell=False,
+                check=False,
+                encoding="UTF-8",
+            ).stdout
+
+            if "--config-path=" in syntax:
+                logging.debug("Found compatible installed %s binary", gitleaks)
+                return gitleaks
+
+            logging.debug("Ignoring %s which lacks --config-path argument", gitleaks)
+
+    logging.debug("No compatible installed gitleaks binary")
+    return None
+
+
+def download_gitleaks():
+    logging.info("Downloading gitleaks-%s", config.GITLEAKS_SOURCE_ID)
+    download_url = config.GITLEAKS_BIN_DOWNLOAD_URL
+    download_sha256sum = config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM
+    bin_dir = os.path.dirname(config.GITLEAKS_BIN_PATH)
+
+    if not (download_url and download_sha256sum):
+        logging.error("Your system (%s) is not supported", config.PLATFORM_ID)
+        return
+
+    if not _ensure_dir(bin_dir):
+        return
+
+    try:
+        _download_file(download_url, config.GITLEAKS_BIN_PATH)
+
+        logging.info("Verifying gitleaks-%s", config.GITLEAKS_SOURCE_ID)
+        if not _sha256sum_valid(config.GITLEAKS_BIN_PATH, download_sha256sum):
+            raise Exception("Invalid sha256sum")
+
+        logging.info("Checksum valid (sha256:%s)", download_sha256sum)
+    except Exception as e:
+        logging.error("%s: %s not created", e, config.GITLEAKS_BIN_PATH)
+
+        if os.path.isfile(config.GITLEAKS_BIN_PATH):
+            os.unlink(config.GITLEAKS_BIN_PATH)
+
+        return
+
+    try:
+        st = os.stat(config.GITLEAKS_BIN_PATH)
+        os.chmod(config.GITLEAKS_BIN_PATH, st.st_mode | stat.S_IXUSR)
+    except Exception:
+        logging.error("Could not make gitleaks executable %s", config.GITLEAKS_BIN_PATH)
+
+        if os.path.isfile(config.GITLEAKS_BIN_PATH):
+            os.unlink(config.GITLEAKS_BIN_PATH)
+
+
+def gitleaks_bin_path(autofetch=True):
+    """
+    Try to find a suitable gitleaks binary.
+
+    If one is present in the cache that will be used preferentially.
+    The next option is to identify one in $PATH that is a compatible
+    version. As a final fallback automatically download a pre-compiled
+    binary.
 
     Returns:
         None if it fails to fetch/setup the bin
         gitleaks path str if it exists or was able to be set up
     """
-    bin_path = config.GITLEAKS_BIN_PATH
-    bin_dir = os.path.dirname(bin_path)
+    if os.path.isfile(config.GITLEAKS_BIN_PATH):
+        return config.GITLEAKS_BIN_PATH
 
-    if not _ensure_dir(bin_dir):
+    gitleaks = gitleaks_installed_bin()
+    if gitleaks is not None:
+        return gitleaks
+
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
+        if not autofetch:
+            logging.error(
+                "Gitleaks binary not found and auto-fetch is disabled. "
+                "Try running 'rh-gitleaks pre-cache'"
+            )
+            return None
+
+        download_gitleaks()
+
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
         return None
 
-    if not os.path.isfile(bin_path):
-        logging.info("Downloading gitleaks-%s", config.GITLEAKS_SOURCE_ID)
-        download_url = config.GITLEAKS_BIN_DOWNLOAD_URL
-        download_sha256sum = config.GITLEAKS_BIN_DOWNLOAD_SHA256SUM
-
-        if not (download_url and download_sha256sum):
-            logging.error("Your system (%s) is not supported", config.PLATFORM_ID)
-            return None
-
-        try:
-            _download_file(download_url, bin_path)
-
-            logging.info("Verifying gitleaks-%s", config.GITLEAKS_SOURCE_ID)
-            if not _sha256sum_valid(bin_path, download_sha256sum):
-                raise Exception("Invalid sha256sum")
-
-            logging.info("Checksum valid (sha256:%s)", download_sha256sum)
-        except Exception as e:
-            logging.error("%s: %s not created", e, bin_path)
-
-            if os.path.isfile(bin_path):
-                os.unlink(bin_path)
-
-            return None
-
-        try:
-            st = os.stat(bin_path)
-            os.chmod(bin_path, st.st_mode | stat.S_IXUSR)
-        except Exception:
-            logging.error("Could not make gitleaks executable %s", bin_path)
-
-            if os.path.isfile(bin_path):
-                os.unlink(bin_path)
-
-            return None
-
-    return bin_path
+    return config.GITLEAKS_BIN_PATH
 
 
 def patterns_update_needed(path):
@@ -152,6 +214,20 @@ def patterns_update_needed(path):
     return (
         not os.path.isfile(path)
         or time.time() - os.stat(path).st_mtime > config.PATTERNS_REFRESH_INTERVAL
+    )
+
+
+def patterns_expired(path):
+    """
+    Helper to determine if the patterns are expired
+
+    Returns:
+        True if the file is too old to be considered fresh
+    """
+
+    return (
+        not os.path.isfile(path)
+        or time.time() - os.stat(path).st_mtime > config.PATTERNS_EXPIRED_INTERVAL
     )
 
 
@@ -184,7 +260,7 @@ def load_auth_token():
         return None
 
 
-def patterns_path():
+def patterns_path(autofetch=True):
     """
     Lazy pull patterns and return the path
 
@@ -196,8 +272,27 @@ def patterns_path():
         return None
 
     if patterns_update_needed(config.PATTERNS_PATH):
-        logging.info("Downloading patterns from %s", config.PATTERN_SERVER_URL)
+        if not autofetch:
+            if os.path.exists(config.PATTERNS_PATH):
+                msg = (
+                    "Patterns file is outdated and auto-fetch is disabled. "
+                    "Try running 'rh-gitleaks refresh' "
+                )
 
+                if patterns_expired(config.PATTERNS_PATH):
+                    logging.error(msg)
+                    return None
+
+                logging.debug(msg)
+                return config.PATTERNS_PATH
+
+            logging.error(
+                "Patterns file not found and auto-fetch is disabled. "
+                "Try running 'rh-gitleaks refresh'"
+            )
+            return None
+
+        logging.info("Downloading patterns from %s", config.PATTERN_SERVER_URL)
         auth_token = load_auth_token()
         if not auth_token:
             return None
@@ -211,10 +306,7 @@ def patterns_path():
         except Exception as e:
             logging.error("Could Not Download Patterns: %s", e)
 
-    if not os.path.isfile(config.PATTERNS_PATH):
-        return None
-
-    return config.PATTERNS_PATH
+    return config.PATTERNS_PATH if os.path.isfile(config.PATTERNS_PATH) else None
 
 
 def run_gitleaks(args, callback=None, **kwargs):
@@ -224,11 +316,11 @@ def run_gitleaks(args, callback=None, **kwargs):
     Returns:
         the exit status
     """
-    bin_path = gitleaks_bin_path()
+    bin_path = gitleaks_bin_path(autofetch=config.LEAKTK_SCANNER_AUTOFETCH)
     if not bin_path:
         return config.BLOCKING_EXIT_CODE
 
-    p_path = patterns_path()
+    p_path = patterns_path(autofetch=config.LEAKTK_SCANNER_AUTOFETCH)
     if not p_path:
         return config.BLOCKING_EXIT_CODE
 
@@ -350,6 +442,23 @@ def logout(show_msg=True):
     return 0
 
 
+def refresh(show_msg=True):
+    """
+    Update the patterns file to latest content
+
+    Returns:
+        A return code for sys.exit
+    """
+    p_path = patterns_path(autofetch=True)
+    if not p_path:
+        return config.BLOCKING_EXIT_CODE
+
+    if show_msg:
+        logging.info("Successfully refreshed pattern file")
+
+    return 0
+
+
 def pre_cache():
     """
     Download the gitleaks binary if it doesn't exist
@@ -358,12 +467,13 @@ def pre_cache():
     a container image so that it doesn't have to download gitleaks each time a
     new container starts.
     """
-    bin_path = gitleaks_bin_path()
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
+        download_gitleaks()
 
-    if not bin_path:
+    if not os.path.isfile(config.GITLEAKS_BIN_PATH):
         return 1
 
-    logging.info("Pre-cache Complete: gitleaks_bin_path=%s", bin_path)
+    logging.info("Pre-cache Complete: gitleaks_bin_path=%s", config.GITLEAKS_BIN_PATH)
     return 0
 
 

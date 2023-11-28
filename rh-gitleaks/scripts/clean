@@ -8,4 +8,4 @@ find . -type f \( -name "*.log" \) -delete
 find . -type d \( -name "__pycache__" \) -delete
 find . -type d \( -name "*.egg-info" \) -prune -exec rm -rf '{}' '+'
 
-rm -rf .coverage .pytest_cache htmlcov dist build wheelhouse dependency-check-report.html
+rm -rf .coverage .pytest_cache htmlcov dist build rpmbuild wheelhouse dependency-check-report.html

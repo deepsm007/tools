@@ -1,6 +1,3 @@
-# helptext: MAKEFILE HELPTEXT
-# helptext:
-
 # helptext: setup:
 # helptext:
 # helptext: Set up the project for development
@@ -8,6 +5,15 @@
 # helptext:
 .PHONY: setup
 setup:
+	@./scripts/$@
+
+# helptext: rpms
+# helptext:
+# helptext: Create rpms for the project
+# helptext:
+# helptext:
+.PHONY: rpms
+rpms: clean
 	@./scripts/$@
 
 # helptext: build:

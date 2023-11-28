@@ -52,7 +52,7 @@ def show_help():
     return 1
 
 
-def prety_print_output(proc):
+def pretty_print_output(proc):
     """
     A callback for cleaning rh_gitleaks output
     """
