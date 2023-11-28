@@ -70,7 +70,7 @@ def get_ns_repos(ns, timeout=60, page=1, isUser=None):
     slash = ns.find("/")
     if slash != -1:
         server = ns[0:slash]
-        ns = ns[slash+1:].replace("/", "%2F")
+        ns = ns[slash + 1 :].replace("/", "%2F")
 
     pagination = f"per_page=20&page={page}&order_by=name&sort=asc"
     usersurl = f"https://{server}/api/v4/users/{ns}/projects?{pagination}"
@@ -105,7 +105,7 @@ def scan_namespaces(namespaces, timeout=60):
                     ("-q", f"--repo-url={repo['http_url_to_repo']}"),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
-                    callback=prety_print_output,
+                    callback=pretty_print_output,
                 )
 
             if len(repos) == 0:
