@@ -526,9 +526,32 @@ export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 python3 -m pip install --upgrade --user pip
 ```
 
-### Installing on MacOS <14  
+### Using an editor/IDE inside a Flatpak
 
-When attempting to install on older versions MacOS you may run into errors like 
+If your editor is running from a Flatpak and you use its built in features for
+doing git commits, you may run into issues where it can't find the rh-pre-commit
+Python package.
+
+Note: We've not experimented with troubleshooting this situation in depth
+so it may take some trial and error to get it right. You are welcome to
+contact us for [support](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/support)
+and we'll include the lessons learned in this section. Also the steps may
+be different depending which editor your using.
+
+Unverified solution:
+
+You may be able to resolve the issue by using something like Flatseal to give
+the app access to the directory where the package is installed.
+
+You can figure out where the package is installed by running:
+
+```
+python3 -c 'import rh_pre_commit; print(rh_pre_commit.__path__)'
+```
+
+### Installing on MacOS <14
+
+When attempting to install on older versions MacOS you may run into errors like
 below:
 ```
 INFO: pip is looking at multiple versions of rh-pre-commit to determine which version is compatible with other requirements. This could take a while.
@@ -537,14 +560,14 @@ ERROR: Could not find a version that satisfies the requirement pre-commit>=3.2.0
 ERROR: No matching distribution found for pre-commit>=3.2.0
 ```
 
-This is normally caused by the version of python shipped with older MacOS 
-versions as it does not meet pre-commit requirements. Python >=3.8 is a minimum 
-requirement for the version of pre-commit rh-pre-commit requires. The 
-following instructions should resolve the issue:  
+This is normally caused by the version of python shipped with older MacOS
+versions as it does not meet pre-commit requirements. Python >=3.8 is a minimum
+requirement for the version of pre-commit rh-pre-commit requires. The
+following instructions should resolve the issue:
 1. Install [Homebrew](https://github.com/Homebrew/brew/releases/), commonly referred to as brew.
-2. Use brew to install python `brew install python@3.11`  
-3. Set the new python as the system default 
-`brew link --overwrite python@3.11`  
-4. Add the users python bin to `PATH`, by adding something similar to the 
-following to your shell configuration file 
-`export PATH=PATH:/Users/<user>/Library/Python/3.11/bin`  
+2. Use brew to install python `brew install python@3.11`
+3. Set the new python as the system default
+`brew link --overwrite python@3.11`
+4. Add the users python bin to `PATH`, by adding something similar to the
+following to your shell configuration file
+`export PATH=PATH:/Users/<user>/Library/Python/3.11/bin`
