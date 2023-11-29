@@ -87,7 +87,10 @@ that runs all the commands from this section in one go. **Please still read
 through the [Manual Install section](#manual-install)** to understand the
 implications of the defaults applied by the quickstart and how apply updates!
 
-**A default install will:**
+If you need a custom install (for instance you don't want to override existing
+hooks), you can run different commands via a [manual install](#manual-install).
+
+**The quickstart will:**
 
 * Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`,
   `rh-gitleaks-gl-account`, and `rh-gitleaks-gh-account`
