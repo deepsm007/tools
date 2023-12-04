@@ -7,13 +7,22 @@
 setup:
 	@./scripts/$@
 
+# helptext: specfile
+# helptext:
+# helptext: Create the specfile for the project
+# helptext:
+# helptext:
+.PHONY: specfile
+specfile:
+	@./scripts/$@
+
 # helptext: rpms
 # helptext:
 # helptext: Create rpms for the project
 # helptext:
 # helptext:
 .PHONY: rpms
-rpms: clean
+rpms: clean specfile
 	@./scripts/$@
 
 # helptext: build:

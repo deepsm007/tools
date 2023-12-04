@@ -1,7 +1,7 @@
 #! /bin/sh
 set -ex
 
-package="rh-gitleaks"
+package="rh-pre-commit"
 version="$(../scripts/tool-version "${package}")"
 rpm_dir="$(pwd)/rpmbuild"
 srpm_dir="${rpm_dir}/SRPMS"
