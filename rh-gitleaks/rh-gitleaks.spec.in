@@ -4,13 +4,17 @@ Version: %{version}
 Release: 1
 License: MIT
 Url: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools
-Source0: %{name}-%{version}.tar.gz
+Source: {{{ git_dir_pack }}}
 
 BuildArch: noarch
 
 BuildRequires: python3
+BuildRequires: python3-devel
 BuildRequires: python3-hatchling
+BuildRequires: python3-jwt
 BuildRequires: python3-pip
+BuildRequires: python3-pytest
+BuildRequires: python3-requests
 BuildRequires: pyproject-rpm-macros
 
 Requires: python3-requests python3-jwt
@@ -19,7 +23,7 @@ Requires: python3-requests python3-jwt
 Frontend on gitleaks tool for scanning code commits
 
 %prep
-%setup
+{{{ git_dir_setup_macro }}}
 
 %build
 %pyproject_wheel
@@ -28,7 +32,7 @@ Frontend on gitleaks tool for scanning code commits
 %pyproject_install
 
 %check
-make test
+%pytest
 
 %files
 %{_bindir}/rh-gitleaks
@@ -39,4 +43,4 @@ make test
 
 %changelog
 * Wed Nov 15 2023 Daniel P. Berrangé <berrange@redhat.com> - 2.1.0-1
-- Initial package + misc tweaks by bplaxco
+- Initial package + misc tweaks by bplaxco & jpadman
