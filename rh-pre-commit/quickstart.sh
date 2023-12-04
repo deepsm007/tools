@@ -1,32 +1,34 @@
 #! /usr/bin/env bash
-#
-# rh-multi-pre-commit quickstart script
-#
-# WARNING
-#
-#   This will apply rh-multi-pre-commit to every repo in your home dir
-#   (or repo(s) dir if specified) and overwrite any existing pre-commit hooks!
-#
-# USAGE
-#
-#   ./quickstart.sh -b=[branch] -r=[repos dir] -s
-#
-# OPTIONS
-#
-#   -b branch        (optional) which branch should be installed
-#
-#   -r repo(s) dir   (required if no -f) a git repo(s) directory
-#                    (an absolute path or a path relative
-#                    to the current working directory)
-#                    to enable the tool in
-#
-#   -s               (optional) include sign-off hook (Default: false)
-#
-#   -f               (optional) force the script to run in the home directory $HOME
-#
-#   -h               print this help message
-#
 set -eo pipefail
+
+print_usage() {
+  echo "rh-multi-pre-commit quickstart script
+
+WARNING
+
+  This will apply rh-multi-pre-commit to every repo in your home dir
+  (or repo(s) dir if specified) and overwrite any existing pre-commit hooks!
+
+USAGE
+
+  ./quickstart.sh -b=[branch] -r=[repos dir] -s
+
+OPTIONS
+
+  -b branch        (optional) which branch should be installed
+
+  -r repo(s) dir   (required if no -f) a git repo(s) directory
+                   (an absolute path or a path relative
+                   to the current working directory)
+                   to enable the tool in
+
+  -s               (optional) include sign-off hook (Default: false)
+
+  -f               (optional) force the script to run in the home directory \${HOME}
+
+  -h               print this help message"
+}
+
 
 # Helpers
 # =======
@@ -36,26 +38,31 @@ if ! type tput >/dev/null 2>&1; then
         return 0
     }
 fi
+
 log_info() {
     local CYAN=$(tput setaf 6)
     local NC=$(tput sgr0)
-    echo "${CYAN}[INFO   ]${NC} $*" 1>&2
+    echo "${CYAN}[INFO]${NC} $*" 1>&2
 }
+
 log_warning() {
     local YELLOW=$(tput setaf 3)
     local NC=$(tput sgr0)
     echo "${YELLOW}[WARNING]${NC} $*" 1>&2
 }
+
 log_error() {
     local RED=$(tput setaf 1)
     local NC=$(tput sgr0)
-    echo "${RED}[ERROR  ]${NC} $*" 1>&2
+    echo "${RED}[ERROR]${NC} $*" 1>&2
 }
+
 log_success() {
     local GREEN=$(tput setaf 2)
     local NC=$(tput sgr0)
     echo "${GREEN}[SUCCESS]${NC} $*" 1>&2
 }
+
 log_title() {
     local GREEN=$(tput setaf 2)
     local BOLD=$(tput bold)
@@ -63,24 +70,10 @@ log_title() {
     echo 1>&2
     echo "${GREEN}${BOLD}---- $* ----${NC}" 1>&2
 }
-h_run() {
-    local ORANGE=$(tput setaf 3)
-    local NC=$(tput sgr0)
-    echo "${ORANGE}\$${NC} $*" 1>&2
-    eval "$*"
-}
 
 # Input validation
 # ================
 ORIGINAL_ARGS=("$@")
-
-print_usage() {
-  local number_of_lines_with_usage_help=28
-  local top_offset=2
-  local column_offset=3
-  local total_lines_length=$((number_of_lines_with_usage_help - top_offset))
-  head -n ${number_of_lines_with_usage_help} "$0" | tail -n ${total_lines_length} | cut -c ${column_offset}-
-}
 
 while getopts ":b:r:sfh" flag
 do
@@ -90,7 +83,7 @@ do
     s) signoff='True';;
     f) force_user_home='True';;
     h) print_usage; exit 0;;
-    *) echo "Invalid option."; head -n 17 "$0"; exit 1;;
+    *) log_error "Invalid option: $1"; print_usage; exit 1;;
   esac
 done
 
@@ -125,7 +118,6 @@ then
   log_warning "You can cancel this by pressing Ctrl+C"
   log_warning "The script will continue in 10 seconds..."
   sleep 10
-
   repos_dir="${HOME}"
 fi
 
@@ -214,3 +206,6 @@ if [[ -n "${signoff}" ]]
 then
   python3 -m rh_pre_commit.multi --hook-type commit-msg install --force --path "${repos_dir}"
 fi
+
+set +x
+log_success "Install complete!"
