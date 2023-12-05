@@ -103,31 +103,24 @@ class RHGitleaksTest(TestCase):
 
         self.assertIsNone(rh_gitleaks.gitleaks_installed_bin())
 
-        # If binary exists, but has wrong help text we should return None
+        # If a gitleaks binary exists, but has wrong help text we should return None
+        rh_gitleaks.config.GITLEAKS_BIN_NAMES = ["gitleaks"]
         mock_exists.return_value = True
-        mock_run.return_value.stdout = """
-        Gitleaks scans code, past or present, for secrets
-
-Flags:
-  -b, --baseline-path string       path to baseline with issues that can be ignored
-  -c, --config string              config file path
-      --exit-code int              exit code when leaks have been encountered (default 1)
-        """
-
+        mock_run.return_value.stdout = "wrong help text"
         self.assertIsNone(rh_gitleaks.gitleaks_installed_bin())
 
-        # If binary exists, but has wrong help text we should return None
+        # If binary exists, and has correct help text we should use it
+        rh_gitleaks.config.GITLEAKS_BIN_NAMES = ["gitleaks"]
         mock_exists.return_value = True
-        mock_run.return_value.stdout = """
-Usage:
-  gitleaks [OPTIONS]
+        mock_run.return_value.stdout = "--config-path="
+        base = os.environ["PATH"].split(os.pathsep)[0]
+        expect = str(Path(base, "gitleaks"))
+        self.assertEqual(rh_gitleaks.gitleaks_installed_bin(), expect)
 
-Application Options:
-  -p, --path=               Path to directory (repo if contains .git) or file
-  -c, --config-path=        Path to config
-      --repo-config-path=   Path to gitleaks config relative to repo root
-        """
-
+        # If a gitleaks7 binary exists, trust that it's good
+        rh_gitleaks.config.GITLEAKS_BIN_NAMES = ["gitleaks7", "gitleaks"]
+        mock_exists.return_value = True
+        mock_run.return_value.stdout = "whatever; doesn't matter"
         base = os.environ["PATH"].split(os.pathsep)[0]
         expect = str(Path(base, "gitleaks7"))
         self.assertEqual(rh_gitleaks.gitleaks_installed_bin(), expect)
