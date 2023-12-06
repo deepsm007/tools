@@ -248,6 +248,16 @@ section.
 Before starting the install make sure the [system requirements](#requirements)
 are met.
 
+Also this set up assumes that you are using pre-commit.com's pre-commit hook
+manager. Make sure you've followed their
+[installation instructions](https://pre-commit.com/#install) including the
+`pre-commit install` step in your repo first.
+
+There are other ways to run
+a local `.pre-commit-config.yaml` using this toolchain, but that's out of scope
+for these specific instructions. For more information see
+[this section of the FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_pre_commit_faq#what-is-the-difference-between-rh-pre-commit-and-rh-multi-pre-commit-)
+
 Rh-pre-commit can be configured directly in an existing `.pre-commit-config.yaml`
 or by creating a new on in your repo as follows.
 
@@ -526,9 +536,9 @@ export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 python3 -m pip install --upgrade --user pip
 ```
 
-### Installing on MacOS <14  
+### Installing on MacOS <14
 
-When attempting to install on older versions MacOS you may run into errors like 
+When attempting to install on older versions MacOS you may run into errors like
 below:
 ```
 INFO: pip is looking at multiple versions of rh-pre-commit to determine which version is compatible with other requirements. This could take a while.
@@ -537,14 +547,14 @@ ERROR: Could not find a version that satisfies the requirement pre-commit>=3.2.0
 ERROR: No matching distribution found for pre-commit>=3.2.0
 ```
 
-This is normally caused by the version of python shipped with older MacOS 
-versions as it does not meet pre-commit requirements. Python >=3.8 is a minimum 
-requirement for the version of pre-commit rh-pre-commit requires. The 
-following instructions should resolve the issue:  
+This is normally caused by the version of python shipped with older MacOS
+versions as it does not meet pre-commit requirements. Python >=3.8 is a minimum
+requirement for the version of pre-commit rh-pre-commit requires. The
+following instructions should resolve the issue:
 1. Install [Homebrew](https://github.com/Homebrew/brew/releases/), commonly referred to as brew.
-2. Use brew to install python `brew install python@3.11`  
-3. Set the new python as the system default 
-`brew link --overwrite python@3.11`  
-4. Add the users python bin to `PATH`, by adding something similar to the 
-following to your shell configuration file 
-`export PATH=PATH:/Users/<user>/Library/Python/3.11/bin`  
+2. Use brew to install python `brew install python@3.11`
+3. Set the new python as the system default
+`brew link --overwrite python@3.11`
+4. Add the users python bin to `PATH`, by adding something similar to the
+following to your shell configuration file
+`export PATH=PATH:/Users/<user>/Library/Python/3.11/bin`
