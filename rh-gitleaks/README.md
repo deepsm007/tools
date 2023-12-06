@@ -141,7 +141,7 @@ setting up in a CI pipeline.
 
 ## Usage (rh-gitleaks-gl-account)
 
-This is a wrapper around rh-gitleaks that runs it against top level gitlab
+This is a wrapper around rh-gitleaks that runs it against all of the gitlab
 repos under an account or org.
 
 If the cli tool was not installed on your path, you can also call it via:
