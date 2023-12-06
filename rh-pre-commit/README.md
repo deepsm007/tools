@@ -117,7 +117,8 @@ hooks), you can run different commands via a [manual install](#manual-install).
 
 * You can use `-r` to specify which repos the hook should be installed in
 
-* You can use `-f` to force the script to run in the entire `${HOME}` directory and install the hook in all git repos under it
+* You can use `-f` to force the script to run in the entire `${HOME}` directory
+  and install the hook in all git repos under it
 
 **Examples:**
 
