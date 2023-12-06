@@ -536,6 +536,29 @@ export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 python3 -m pip install --upgrade --user pip
 ```
 
+### Using an editor/IDE inside a Flatpak
+
+If your editor is running from a Flatpak and you use its built in features for
+doing git commits, you may run into issues where it can't find the rh-pre-commit
+Python package.
+
+Note: We've not experimented with troubleshooting this situation in depth
+so it may take some trial and error to get it right. You are welcome to
+contact us for [support](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/support)
+and we'll include the lessons learned in this section. Also the steps may
+be different depending which editor your using.
+
+Unverified solution:
+
+You may be able to resolve the issue by using something like Flatseal to give
+the app access to the directory where the package is installed.
+
+You can figure out where the package is installed by running:
+
+```
+python3 -c 'import rh_pre_commit; print(rh_pre_commit.__path__)'
+```
+
 ### Installing on MacOS <14
 
 When attempting to install on older versions MacOS you may run into errors like
