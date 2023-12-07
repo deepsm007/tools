@@ -363,3 +363,16 @@ class RHGitleaksTest(TestCase):
             self.assertFalse(Path(rh_gitleaks.config.PATTERNS_PATH).exists())
             self.assertEqual(rh_gitleaks.refresh(), 0)
             self.assertTrue(Path(rh_gitleaks.config.PATTERNS_PATH).exists())
+
+            # Test that refresh forces a pull
+            with open(rh_gitleaks.config.PATTERNS_PATH, "w", encoding="UTF-8") as file:
+                file.write("foooo")
+
+            with open(rh_gitleaks.config.PATTERNS_PATH, encoding="UTF-8") as file:
+                self.assertIn("foooo", file.read())
+
+            # This should force a refresh
+            self.assertEqual(rh_gitleaks.refresh(), 0)
+
+            with open(rh_gitleaks.config.PATTERNS_PATH, encoding="UTF-8") as file:
+                self.assertNotIn("foooo", file.read())

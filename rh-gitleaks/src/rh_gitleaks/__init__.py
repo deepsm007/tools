@@ -264,7 +264,7 @@ def load_auth_token():
         return None
 
 
-def patterns_path(autofetch=True):
+def patterns_path(autofetch=True, force_refresh=False):
     """
     Lazy pull patterns and return the path
 
@@ -275,7 +275,7 @@ def patterns_path(autofetch=True):
     if not _ensure_dir(os.path.dirname(config.PATTERNS_PATH)):
         return None
 
-    if patterns_update_needed(config.PATTERNS_PATH):
+    if force_refresh or patterns_update_needed(config.PATTERNS_PATH):
         if not autofetch:
             if os.path.exists(config.PATTERNS_PATH):
                 msg = (
@@ -453,7 +453,7 @@ def refresh(show_msg=True):
     Returns:
         A return code for sys.exit
     """
-    p_path = patterns_path(autofetch=True)
+    p_path = patterns_path(autofetch=True, force_refresh=True)
     if not p_path:
         return config.BLOCKING_EXIT_CODE
 

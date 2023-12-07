@@ -253,6 +253,16 @@ section.
 Before starting the install make sure the [system requirements](#requirements)
 are met.
 
+Also this set up assumes that you are using pre-commit.com's pre-commit hook
+manager. Make sure you've followed their
+[installation instructions](https://pre-commit.com/#install) including the
+`pre-commit install` step in your repo first.
+
+There are other ways to run
+a local `.pre-commit-config.yaml` using this toolchain, but that's out of scope
+for these specific instructions. For more information see
+[this section of the FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_pre_commit_faq#what-is-the-difference-between-rh-pre-commit-and-rh-multi-pre-commit-)
+
 Rh-pre-commit can be configured directly in an existing `.pre-commit-config.yaml`
 or by creating a new on in your repo as follows.
 
