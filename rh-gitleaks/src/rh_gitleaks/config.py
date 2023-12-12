@@ -21,6 +21,7 @@ CACHE_DIR = os.path.join(XDG_CACHE_HOME, "rh-gitleaks")
 BLOCKING_EXIT_CODE = 418
 
 # Gitleaks Settings
+GITLEAKS_BIN_NAMES = ["gitleaks7", "gitleaks"]
 GITLEAKS_VERSION = "7.6.1"
 GITLEAKS_SOURCE_ID = f"{GITLEAKS_VERSION}-{PLATFORM_ID}"
 GITLEAKS_BIN_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_SOURCE_ID}")

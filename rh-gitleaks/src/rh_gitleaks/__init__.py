@@ -106,10 +106,14 @@ def gitleaks_installed_bin():
 
         return None
 
-    for binary in ["gitleaks7", "gitleaks"]:
+    for binary in config.GITLEAKS_BIN_NAMES:
         gitleaks = which(binary)
 
         if gitleaks is not None:
+            if gitleaks.endswith("gitleaks7"):
+                logging.debug("Found compatible installed %s binary", gitleaks)
+                return gitleaks
+
             syntax = subprocess.run(  # nosec
                 [gitleaks, "--help"],
                 stdout=subprocess.PIPE,
