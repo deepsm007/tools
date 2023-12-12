@@ -1,6 +1,6 @@
 Name: rh-pre-commit
 Summary: Wrapper around pre-commit for global configuration
-Version: 2.0.3
+Version: 2.1.0
 Release: 1
 License: MIT
 Url: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools
