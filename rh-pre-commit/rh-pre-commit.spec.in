@@ -47,6 +47,8 @@ Tooling
 %{python3_sitelib}/rh_pre_commit/
 
 %changelog
+* Wed Dec 13 2023 Braxton Plaxco <bplaxco@redhat.com> - 2.2.0-1
+- Change how unknown version is displayed for consistency
+
 * Mon Nov 27 2023 Joshua Padman <jpadman@redhat.com> - 2.1.0-1
 - Initial package for rpkg & copr
-

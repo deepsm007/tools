@@ -1,6 +1,6 @@
 Name: rh-gitleaks
 Summary: scan git commits for leaks
-Version: 2.1.0
+Version: 2.2.0
 Release: 1
 License: MIT
 Url: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools
@@ -42,5 +42,8 @@ Frontend on gitleaks tool for scanning code commits
 %{python3_sitelib}/rh_gitleaks/
 
 %changelog
+* Wed Dec 13 2023 Braxton Plaxco <bplaxco@redhat.com> - 2.2.0-1
+- Require leaktk-gitleaks7 package and update the user agent string
+
 * Wed Nov 15 2023 Daniel P. Berrangé <berrange@redhat.com> - 2.1.0-1
 - Initial package + misc tweaks by bplaxco & jpadman
