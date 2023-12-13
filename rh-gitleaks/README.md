@@ -50,6 +50,9 @@ At the end of this (assuming the defaults are applied):
   will be installed.
 * rh-gitleaks will be logged in and have a 2-year patterns server token
 
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_gitleaks_faq)
+for more information about the tool.
 
 **Pull a fresh copy of the repo**
 
@@ -90,6 +93,12 @@ instead of going to the server to get token.
 Please follow the
 [LeakTK Changelog blog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
 for all important updates.
+
+## FAQ
+
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_gitleaks_faq)
+for more information about the tool.
 
 ## Usage (rh-gitleaks)
 

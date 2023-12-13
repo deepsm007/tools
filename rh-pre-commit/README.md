@@ -74,6 +74,9 @@ choose will be determined by your requirements.
 3. [Pre-Commit-Config Install](#pre-commit-config-install) - If you already have pre-commit installed on your
    repo you can add this project to you `.pre-commit-config.yaml` file.
 
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_pre_commit_faq)
+for more information about the tool.
 
 ## Installation & Updating
 
@@ -348,6 +351,12 @@ for handling false positives.
 Please follow the
 [LeakTK Changelog blog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
 for all important updates.
+
+## FAQ
+
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_pre_commit_faq)
+for more information about the tool.
 
 ## rh-multi-pre-commit vs rh-pre-commit
 
