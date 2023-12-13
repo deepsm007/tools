@@ -1,6 +1,7 @@
 import os
 import platform
 
+from importlib import metadata
 from urllib import parse
 
 # XDG Folder Info
@@ -19,6 +20,12 @@ CACHE_DIR = os.path.join(XDG_CACHE_HOME, "rh-gitleaks")
 
 # Return this exit code to indicate that automation shouldn't continue
 BLOCKING_EXIT_CODE = 418
+
+# Rh-Gitleaks Details
+try:
+    RH_GITLEAKS_VERSION = metadata.version("rh_gitleaks")
+except Exception:
+    RH_GITLEAKS_VERSION = "unknown"
 
 # Gitleaks Settings
 GITLEAKS_BIN_NAMES = ["gitleaks7", "gitleaks"]
@@ -85,7 +92,9 @@ PATTERN_SERVER_PATTERNS_URL = parse.urljoin(
 )
 
 # Request Settings
-REQUEST_USER_AGENT = f"rh-gitleaks/{GITLEAKS_SOURCE_ID}"
+REQUEST_USER_AGENT = (
+    f"rh-gitleaks/{RH_GITLEAKS_VERSION} ({PLATFORM_SYSTEM} {PLATFORM_MACHINE})"
+)
 
 # User interface behaviour settings
 LEAKTK_SCANNER_AUTOFETCH = os.environ.get("LEAKTK_SCANNER_AUTOFETCH", "true") in [

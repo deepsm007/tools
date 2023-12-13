@@ -80,6 +80,7 @@ fi
 """,
 }
 
+# pylint: disable=line-too-long
 RH_MULTI_CONIFG = f"""\
 # ID: 9f88c2cc-2e1f-4891-abdb-61773940d11f
 
