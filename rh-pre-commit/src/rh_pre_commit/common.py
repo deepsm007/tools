@@ -329,4 +329,4 @@ def version():
     try:
         return metadata.version("rh_pre_commit")
     except Exception:
-        return "UNKNOWN"
+        return "unknown"
