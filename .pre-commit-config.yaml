@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
-    rev: rh-pre-commit-2.0.2
+    rev: rh-pre-commit-2.1.0
     hooks:
       # If you have never ran this hook on your system before, it will prompt you to
       # log in and you will need to try again.
