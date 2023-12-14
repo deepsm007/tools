@@ -136,7 +136,7 @@ flags work.
 # This runs the quickstart against the main branch without enabling sign off
 # and installs it in every repo under your home directory (i.e. the default):
 
-./quickstart.sh
+./quickstart.sh -f
 
 # This runs the quickstart against the main branch without enabling sign off
 # and assumes your projects are under a `Workspace` directory:
