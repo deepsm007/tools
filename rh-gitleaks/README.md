@@ -46,9 +46,20 @@ are removed, you will need to install [the new version](../rh-pre-commit).
 
 At the end of this (assuming the defaults are applied):
 
-* `rh-gitleaks` and `rh-gitleaks-gh-account` will be installed.
+* `rh-gitleaks`, `rh-gitleaks-gh-account` and `rh-gitleaks-gl-account`
+  will be installed.
 * rh-gitleaks will be logged in and have a 2-year patterns server token
 
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_gitleaks_faq)
+for more information about the tool.
+
+**(Optional) RPM based install**
+
+We have begun support for RPM based installs. The instructions for doing
+an RPM based install can be found in [this guide](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/leaktk_rpm_installation).
+The guide also lists which systems we support. If you've installed the RPMs,
+you can skip to the **Configure the tools step** below.
 
 **Pull a fresh copy of the repo**
 
@@ -68,6 +79,8 @@ cd /tmp/infosec-tools/rh-gitleaks
 # This installs the tools but you will still need to configure them
 make install
 ```
+
+**Configure the tools step**
 
 To have the tool walk you through the configuration:
 
@@ -89,6 +102,12 @@ instead of going to the server to get token.
 Please follow the
 [LeakTK Changelog blog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
 for all important updates.
+
+## FAQ
+
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_gitleaks_faq)
+for more information about the tool.
 
 ## Usage (rh-gitleaks)
 
@@ -112,14 +131,19 @@ To remove your Pattern Server API token, run `rh-gitleaks logout`.
 To reset your configuration, run `rh-gitleaks configure`
 
 To download the gitleaks binary before the first run, run `rh-gitleaks
-pre-cache`.  This is useful to include as an install step when
-installing rh-gitleaks in a container image so that it doesn't have to
-download gitleaks each time a new container starts.
+pre-cache`.  This is useful to include as an install step when installing
+rh-gitleaks in a container image so that it doesn't have to download gitleaks
+each time a new container starts, or when running the scanner with auto-fetch
+disabled, such that it skips any automatic downloads.
+
+To force refresh the gitleaks pattern configuration, run `rh-gitleaks refresh`.
+This allows you to refresh the patterns when running the scanner with
+auto-fetch disabled, such that it skips any automatic downloads.
 
 ## Usage (rh-gitleaks-gh-account)
 
-This is a wrapper around rh-gitleaks that runs it against all of the repos
-under an account or org.
+This is a wrapper around rh-gitleaks that runs it against all of the
+github.com repos under an account or org.
 
 If the cli tool was not installed on your path, you can also call it via:
 `python3 -m rh_gitleaks.gh_account`.
@@ -135,6 +159,44 @@ rh-gitleaks-gh-account leaktk
 ```
 
 **NOTE:** rh-gitleaks-gh-account exits when a 0 exit status even when leaks are
+found. This is meant for finding leaks across an account/org rather than
+setting up in a CI pipeline.
+
+## Usage (rh-gitleaks-gl-account)
+
+This is a wrapper around rh-gitleaks that runs it against top level gitlab
+repos immediately under a namespace. It does not support recursivly scanning
+sub-groups yet.
+
+If the cli tool was not installed on your path, you can also call it via:
+`python3 -m rh_gitleaks.gl_account`.
+
+Once rh-gitleaks is setup, you can run `rh-gitleaks-gl-account --help` for
+more info on how to use this tool.
+
+Example, with default gitlab.com server:
+
+```sh
+# Scan all the repos immediately under the libvirt group on gitlab.com:
+rh-gitleaks-gl-account libvirt
+```
+
+Example, with an alternative server:
+
+```sh
+# Scan all the repos immediately under an account on GNOME gitlab
+rh-gitleaks-gl-account gitlab.gnome.org/dberrange
+```
+
+Note that if subgroups are to be specified, the server name
+must always be included
+
+```sh
+# Scan all the repos immediately under an account on GNOME gitlab
+rh-gitleaks-gl-account gitlab.com/redhat/centos-stream/src
+```
+
+**NOTE:** rh-gitleaks-gl-account exits when a 0 exit status even when leaks are
 found. This is meant for finding leaks across an account/org rather than
 setting up in a CI pipeline.
 
@@ -185,6 +247,21 @@ For example for me it is at:
 ~/.cache/rh-gitleaks/gitleaks-7.6.1-linux-x86_64
 ```
 
+### Running commit scanner in offline mode
+
+When asked to examine git commits, the leak scanner will first attempt to
+download the gitleaks binary if no suitable binary is in `$PATH` and will also
+contact the pattern server to download latest leak check rules.
+
+If it is desired to run the git scanner in an entirely offline mode, such that
+no automatic network connections are attempted, the auto-fetch process can be
+disabled by setting the environment variable `LEAKTK_SCANNER_AUTOFETCH` to
+either `false` or `0`. If being used in offline mode, the `rh-gitleaks refresh`
+command must be run periodically to download the latest patterns file data. The
+scanner will refuse to run if the cached patterns file is older than 1 week.
+If no suitable binary is found on your path, you will need to run
+`rh-gitleaks pre-cache` to manually pull a supported gitleaks binary.
+
 ## Troubleshooting
 
 This section covers some basic troubleshooting steps. If you still need help,
@@ -199,7 +276,7 @@ it's likely that the place the scripts were installed is not on your path.
 When you run `make install`, you may see a warning like this towards the end:
 
 ```
-WARNING: The scripts rh-gitleaks and rh-gitleaks-gh-account are installed in '/home/user/.local/bin' which is not on PATH.
+WARNING: The scripts rh-gitleaks, rh-gitleaks-gh-account and rh-gitleaks-gl-account are installed in '/home/user/.local/bin' which is not on PATH.
 Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.`
 ```
 
@@ -212,3 +289,4 @@ Alternatively, you can reference the commands through their modules directly:
 
 * `rh-gitleaks` becomes `python3 -m rh_gitleaks`
 * `rh-gitleaks-gh-account` becomes `python3 -m rh_gitleaks.gh_account`
+* `rh-gitleaks-gl-account` becomes `python3 -m rh_gitleaks.gl_account`

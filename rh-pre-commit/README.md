@@ -74,6 +74,9 @@ choose will be determined by your requirements.
 3. [Pre-Commit-Config Install](#pre-commit-config-install) - If you already have pre-commit installed on your
    repo you can add this project to you `.pre-commit-config.yaml` file.
 
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_pre_commit_faq)
+for more information about the tool.
 
 ## Installation & Updating
 
@@ -87,10 +90,17 @@ that runs all the commands from this section in one go. **Please still read
 through the [Manual Install section](#manual-install)** to understand the
 implications of the defaults applied by the quickstart and how apply updates!
 
-**A default install will:**
+If you need a custom install (for instance you don't want to override existing
+hooks), you can run different commands via a [manual install](#manual-install).
 
-* Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`, and
-  `rh-gitleaks-gh-account`
+**The quickstart will:**
+
+* Set up the `@infosec-public/leaktk` internal copr repo if running on a
+  supported dnf-enabled system. This allows you to get automatic future updates
+  when doing dnf updates on the VPN.
+
+* Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`,
+  `rh-gitleaks-gl-account`, and `rh-gitleaks-gh-account`
 
 * Set `rh-multi-pre-commit` as the pre-commit hook for all the repos under your
   home dir (overwriting any existing hooks due to the `--force` flag being set).
@@ -112,8 +122,10 @@ implications of the defaults applied by the quickstart and how apply updates!
 
 * You can use `-b` to specify a different branch (the default is `main`)
 
-* You can use `-r` to specify which repos the hook should be installed in (
-  the default is `${HOME}`).
+* You can use `-r` to specify which repos the hook should be installed in
+
+* You can use `-f` to force the script to run in the entire `${HOME}` directory
+  and install the hook in all git repos under it
 
 **Examples:**
 
@@ -145,6 +157,14 @@ Unless the
 [changelog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
 says to, you will not need to run the configuration steps
 again during an update—just the steps up to and including `make install`.
+
+**(Optional) RPM based install**
+
+We have begun support for RPM based installs. The instructions for doing
+an RPM based install can be found in [this guide](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/leaktk_rpm_installation).
+The guide also lists which systems we support. The RPM based install is already
+covered in the quickstart.sh if your system supports it. If you've installed
+the RPMs, you can skip to the **Configure the tools step** below.
 
 **Pull a fresh copy of the repo**
 
@@ -273,7 +293,7 @@ Here is an example `.pre-commit-config.yaml`:
 ---
 repos:
   - repo: https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
-    rev: rh-pre-commit-2.0.3
+    rev: rh-pre-commit-2.1.0
     hooks:
       # If you have not run this hook on your system before, it may prompt you to
       # log in for patterns, and you will need to try again.
@@ -343,6 +363,12 @@ for handling false positives.
 Please follow the
 [LeakTK Changelog blog](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_changelog/)
 for all important updates.
+
+## FAQ
+
+You can also check out the
+[FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_pre_commit_faq)
+for more information about the tool.
 
 ## rh-multi-pre-commit vs rh-pre-commit
 
@@ -477,7 +503,7 @@ git config --bool rh-pre-commit.commit-msg.signOff true
 The output of this task is appended to the COMMIT-MSG during commit, and looks
 like the following:
 ```
-    rh-pre-commit.version: 2.0.3
+    rh-pre-commit.version: 2.1.0
     rh-pre-commit.check-secrets: ENABLED
 ```
 
@@ -534,6 +560,29 @@ system's CA bundle was able to resolve it.
 ```sh
 export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 python3 -m pip install --upgrade --user pip
+```
+
+### Using an editor/IDE inside a Flatpak
+
+If your editor is running from a Flatpak and you use its built in features for
+doing git commits, you may run into issues where it can't find the rh-pre-commit
+Python package.
+
+Note: We've not experimented with troubleshooting this situation in depth
+so it may take some trial and error to get it right. You are welcome to
+contact us for [support](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/support)
+and we'll include the lessons learned in this section. Also the steps may
+be different depending which editor your using.
+
+Unverified solution:
+
+You may be able to resolve the issue by using something like Flatseal to give
+the app access to the directory where the package is installed.
+
+You can figure out where the package is installed by running:
+
+```
+python3 -c 'import rh_pre_commit; print(rh_pre_commit.__path__)'
 ```
 
 ### Installing on MacOS <14

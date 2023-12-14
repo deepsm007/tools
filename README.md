@@ -11,7 +11,7 @@ automation.
 
 ## Installing The Tools
 
-This repo contains multiple projects. To install the project, `cd` into that project's 
+This repo contains multiple projects. To install the project, `cd` into that project's
 folder and follow the install steps in its README.md.
 
 

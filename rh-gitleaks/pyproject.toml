@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "rh-gitleaks"
 # When changing this make sure that "../scripts/tool-version rh-gitleaks"
 # reports the correct value
-version = "2.0.1"
+version = "2.1.0"
 description = "A wrapper around gitleaks to integrate with Red Hat patterns"
 authors = [{ name="Red Hat InfoSec", email="infosec@redhat.com" }]
 readme = "README.md"
@@ -25,3 +25,4 @@ classifiers = [
 [project.scripts]
 rh-gitleaks = "rh_gitleaks.__main__:main"
 rh-gitleaks-gh-account = "rh_gitleaks.gh_account.__main__:main"
+rh-gitleaks-gl-account = "rh_gitleaks.gl_account.__main__:main"
