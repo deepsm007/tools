@@ -158,7 +158,7 @@ Unless the
 says to, you will not need to run the configuration steps
 again during an update—just the steps up to and including `make install`.
 
-**(Options) RPM based install**
+**(Optional) RPM based install**
 
 We have begun support for RPM based installs. The instructions for doing
 an RPM based install can be found in [this guide](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/leaktk_rpm_installation).

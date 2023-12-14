@@ -54,7 +54,7 @@ You can also check out the
 [FAQ](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_concepts/rh_gitleaks_faq)
 for more information about the tool.
 
-**(Options) RPM based install**
+**(Optional) RPM based install**
 
 We have begun support for RPM based installs. The instructions for doing
 an RPM based install can be found in [this guide](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/leaktk_rpm_installation).
