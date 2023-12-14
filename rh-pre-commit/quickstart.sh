@@ -189,17 +189,17 @@ python3 -m pip install --upgrade --user pip
 python3 ../scripts/uninstall-legacy-tools
 
 # Install the tools
-if dnf copr help > /dev/null 2>&1
+# If it's a platform we support in the quickstart, try a DNF install
+if grep -E 'PLATFORM_ID="platform:f(38|39|4.)"' /etc/os-release > /dev/null 2>&1
 then
   set +x
   echo -e '\n'
-  log_info 'DNF command detected'
+  log_info 'Platform supporting system packages detected'
   log_title 'Installing system packages...'
   log_warning 'You will be prompted along the way'
   log_info 'If a mistake is made the quickstart can be re-ran'
   sleep 5 # Give them time to read the prompt note
   set -x
-  sudo dnf install dnf-plugins-core
   if sudo dnf copr enable copr.devel.redhat.com/@infosec-public/leaktk
   then
     sudo dnf install rh-pre-commit
