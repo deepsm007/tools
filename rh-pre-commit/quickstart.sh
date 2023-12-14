@@ -189,8 +189,36 @@ python3 -m pip install --upgrade --user pip
 python3 ../scripts/uninstall-legacy-tools
 
 # Install the tools
-make install
+if dnf copr help > /dev/null 2>&1
+then
+  set +x
+  echo -e '\n'
+  log_info 'DNF command detected'
+  log_title 'Installing system packages (this will require sudo)'
+  log_warning 'You will be prompted along the way'
+  set -x
+  sudo dnf install dnf-plugins-core
+  if sudo dnf copr enable copr.devel.redhat.com/@infosec-public/leaktk
+  then
+    sudo dnf install rh-pre-commit
+  else
+    set +x
+    log_error "Could not enable copr repo"
+    log_warning "Falling back on a source based install"
+    log_warning "You can cancel this by pressing Ctrl+C"
+    log_warning "The script will continue in 10 seconds..."
+    sleep 10
+    set -x
+    make install
+  fi
+else
+  make install
+fi
 
+set +x
+echo -e '\n'
+log_title 'Configuring packages'
+set -x
 # Configure it with the default settings
 python3 -m rh_pre_commit.multi configure --configure-git-template --force
 
