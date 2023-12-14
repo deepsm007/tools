@@ -196,11 +196,31 @@ then
   log_info 'DNF command detected'
   log_title 'Installing system packages (this will require sudo)'
   log_warning 'You will be prompted along the way'
+  sleep 5 # Give them time to read the prompt note
   set -x
   sudo dnf install dnf-plugins-core
   if sudo dnf copr enable copr.devel.redhat.com/@infosec-public/leaktk
   then
     sudo dnf install rh-pre-commit
+    set +x
+    # Uninstall local versions of the packages
+    log_info "Uninstalling local versions of rh-gitleaks and rh-pre-commit..."
+    sleep 5 # Added to give folks a chance to see the message
+    # Uninstall local rh-gitleaks
+    if ! python3 -m pip uninstall -y rh-gitleaks > /dev/null 2>&1
+    then
+      log_warning "An existing local version of rh-gitleaks was either not installed or could not be uninstalled"
+    else
+      log_success "Local version of rh-gitleaks uninstalled"
+    fi
+    # Uninstall local rh-pre-commit
+    if ! python3 -m pip uninstall -y rh-pre-commit > /dev/null 2>&1
+    then
+      log_warning "An existing local version of rh-pre-commit was either not installed or could not be uninstalled"
+    else
+      log_success "Local version of rh-pre-commit uninstalled"
+    fi
+    set -x
   else
     set +x
     log_error "Could not enable copr repo"
