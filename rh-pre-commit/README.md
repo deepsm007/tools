@@ -95,6 +95,10 @@ hooks), you can run different commands via a [manual install](#manual-install).
 
 **The quickstart will:**
 
+* Set up the `@infosec-public/leaktk` internal copr repo if running on a
+  supported dnf-enabled system. This allows you to get automatic future updates
+  when doing dnf updates on the VPN.
+
 * Install `rh-pre-commit`, `rh-multi-pre-commit`, `rh-gitleaks`,
   `rh-gitleaks-gl-account`, and `rh-gitleaks-gh-account`
 
