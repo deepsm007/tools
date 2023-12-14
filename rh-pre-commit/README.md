@@ -158,6 +158,14 @@ Unless the
 says to, you will not need to run the configuration steps
 again during an update—just the steps up to and including `make install`.
 
+**(Options) RPM based install**
+
+We have begun support for RPM based installs. The instructions for doing
+an RPM based install can be found in [this guide](https://source.redhat.com/departments/it/it-information-security/leaktk/leaktk_guides/leaktk_rpm_installation).
+The guide also lists which systems we support. The RPM based install is already
+covered in the quickstart.sh if your system supports it. If you've installed
+the RPMs, you can skip to the **Configure the tools step** below.
+
 **Pull a fresh copy of the repo**
 
 ```sh
