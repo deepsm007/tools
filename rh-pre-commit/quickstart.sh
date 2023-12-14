@@ -194,8 +194,9 @@ then
   set +x
   echo -e '\n'
   log_info 'DNF command detected'
-  log_title 'Installing system packages (this will require sudo)'
+  log_title 'Installing system packages...'
   log_warning 'You will be prompted along the way'
+  log_info 'If a mistake is made the quickstart can be re-ran'
   sleep 5 # Give them time to read the prompt note
   set -x
   sudo dnf install dnf-plugins-core
