@@ -64,10 +64,10 @@ you can skip to the **Configure the tools step** below.
 **Pull a fresh copy of the repo**
 
 ```sh
-rm -rf /tmp/infosec-tools
-git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git /tmp/infosec-tools
+cd "$(mktemp -d)"
+git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
 # The rest of the commands assume you are in this subfolder of the repo
-cd /tmp/infosec-tools/rh-gitleaks
+cd ./tools/rh-gitleaks
 ```
 
 **Install/Update the tools**

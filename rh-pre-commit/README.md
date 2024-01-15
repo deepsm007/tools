@@ -169,10 +169,10 @@ the RPMs, you can skip to the **Configure the tools step** below.
 **Pull a fresh copy of the repo**
 
 ```sh
-rm -rf /tmp/infosec-tools
-git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git /tmp/infosec-tools
+cd "$(mktemp -d)"
+git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
 # The rest of the commands assume you are in this subfolder of the repo
-cd /tmp/infosec-tools/rh-pre-commit
+cd ./tools/rh-pre-commit
 ```
 
 **Install/Update the tools**
@@ -330,11 +330,10 @@ This applies to the quickstart and manual steps, but a slightly modified
 version of this could still work in a repo containing a .pre-commit-config.yaml
 
 ```sh
-rm -rf /tmp/test-pre-commit && mkdir /tmp/test-pre-commit
-cd /tmp/test-pre-commit
+cd "$(mktemp -d)"
 git init
 echo 'secret="EdnBsJW59yS6bGxhXa5+KkgCr1HKFv5g"' > secret
-git add secret &&
+git add secret
 git commit
 ```
 

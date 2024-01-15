@@ -163,9 +163,9 @@ log_info "  ${repos_dir}"
 set -xeo pipefail
 
 # Pull a fresh copy of the repo
-rm -rf /tmp/infosec-tools
+cd "$(mktemp -d)"
 set +e
-git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git /tmp/infosec-tools
+git clone https://gitlab.corp.redhat.com/infosec-public/developer-workbench/tools.git
 if [[ $? -ne 0 ]]
 then
   set +x
@@ -174,7 +174,7 @@ then
   exit 1
 fi
 set -e
-cd /tmp/infosec-tools/rh-pre-commit
+cd ./tools/rh-pre-commit
 
 # Checkout a branch if it was specified
 if [[ -n "${branch}" ]]
