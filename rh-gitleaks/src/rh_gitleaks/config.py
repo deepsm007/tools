@@ -29,31 +29,33 @@ except Exception:
 
 # Gitleaks Settings
 GITLEAKS_BIN_NAMES = ["gitleaks7", "gitleaks"]
-GITLEAKS_VERSION = "7.6.1"
-GITLEAKS_SOURCE_ID = f"{GITLEAKS_VERSION}-{PLATFORM_ID}"
-GITLEAKS_BIN_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_SOURCE_ID}")
+GITLEAKS_PATTERN_VERSION= "7.6.1"
+LEAKTK_GITLEAKS7_VERSION = "2.0.1"
+GITLEAKS_SOURCE_ID = f"leaktk-gitleaks7-{LEAKTK_GITLEAKS7_VERSION}-{PLATFORM_ID}"
+GITLEAKS_BIN_PATH = os.path.join(CACHE_DIR, GITLEAKS_SOURCE_ID)
 GITLEAKS_SUPPORTED_VERSIONS = {
-    "7.6.1-linux-x86_64": {
+    "leaktk-gitleaks7-2.0.1-linux-x86_64": {
         # pylint: disable=line-too-long
-        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-linux-x86_64",
-        "sha256": "ab3d667982b2bfb00e846bd7b751c640216d2bbe0f71e2c53c4514ca415d99ec",
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/leaktk-gitleaks7-2.0.1-linux-x86_64",
+        "sha256": "a579fe7739018c761d04ab2079b6da7768f396744e5ae14c1f2f6a129b5e4cd0",
     },
-    "7.6.1-darwin-x86_64": {
+    "leaktk-gitleaks7-2.0.1-darwin-x86_64": {
         # pylint: disable=line-too-long
-        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-darwin-x86_64",
-        "sha256": "5e51a33beb6f358970815ecbbc40c6c28fb785ef6342da9a689713f99fece54f",
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/leaktk-gitleaks7-2.0.1-darwin-x86_64",
+        "sha256": "a621e3e7ab1325056ea95d4a99044b71707dd3ac9952415d3400997715e25bfb",
     },
-    "7.6.1-darwin-arm64": {
+    "leaktk-gitleaks7-2.0.1-darwin-arm64": {
         # pylint: disable=line-too-long
-        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-darwin-arm64",
-        "sha256": "eb875959e5994007069490855080bb14657318e5b98cf14da39c2c5480a9f2b3",
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/leaktk-gitleaks7-2.0.1-darwin-arm64",
+        "sha256": "2ce695e7a53360f960f0dba7a0811b65922a1f9cc80bb059638a906405c8077a",
     },
-    "7.6.1-linux-aarch64": {
+    "leaktk-gitleaks7-2.0.1-linux-aarch64": {
         # pylint: disable=line-too-long
-        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/gitleaks-7.6.1-linux-arm64",
-        "sha256": "573393745bc8871e55337ee61814faaad97f4de716b56bd113f94761d75878d0",
+        "url": "https://raw.githubusercontent.com/leaktk/bin/main/bin/leaktk-gitleaks7-2.0.1-linux-arm64",
+        "sha256": "dc9d6386387c77c2ba33c789063b138eb80a02754290cbf2de7af5788e47941c",
     },
 }
+
 GITLEAKS_BIN_DOWNLOAD_URL = GITLEAKS_SUPPORTED_VERSIONS.get(
     GITLEAKS_SOURCE_ID,
     {},
@@ -69,7 +71,7 @@ PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(CONFIG_DIR, "auth.jwt")
 PATTERNS_REFRESH_INTERVAL = 60 * 60 * 12
 # when to refuse to use cached patterns if refresh wasn't possible
 PATTERNS_EXPIRED_INTERVAL = PATTERNS_REFRESH_INTERVAL * 14
-PATTERNS_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_VERSION}-patterns.toml")
+PATTERNS_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_PATTERN_VERSION}-patterns.toml")
 PATTERN_SERVER_AUTH_TOKEN = os.environ.get("LEAKTK_PATTERN_SERVER_AUTH_TOKEN")
 PATTERN_SERVER_URL = os.environ.get(
     "LEAKTK_PATTERN_SERVER_URL",
@@ -88,7 +90,7 @@ PATTERN_SERVER_TOKEN_URL = parse.urljoin(
 )
 PATTERN_SERVER_PATTERNS_URL = parse.urljoin(
     PATTERN_SERVER_URL,
-    f"patterns/gitleaks/{GITLEAKS_VERSION}",
+    f"patterns/gitleaks/{GITLEAKS_PATTERN_VERSION}",
 )
 
 # Request Settings
