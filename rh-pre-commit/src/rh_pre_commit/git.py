@@ -30,6 +30,21 @@ def config(name, value=None, flags=None):
     )
 
 
+def common_dir(cwd=None):
+    args = ["rev-parse", "--git-common-dir"]
+
+    return (
+        run(
+            *args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            cwd=cwd,
+        )
+        .stdout.decode("UTF-8")
+        .strip()
+    )
+
+
 def init_template_dir(value=None):
     """
     Get/set the init template dir

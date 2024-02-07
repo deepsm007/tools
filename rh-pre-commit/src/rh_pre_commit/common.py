@@ -79,37 +79,23 @@ def create_parser(prog):
     return parser
 
 
-def search_gitdir(gitfile_path):
-    """
-    Read the contents of a .git file and return the gitdir value if it exists
-    """
-    try:
-        with open(gitfile_path, encoding="UTF-8") as gitfile:
-            return GITDIR_RE.search(gitfile.read()).group(1)
-    except Exception:
-        return None
-
-
 def find_repos(prefix):
     """
     Find all git repos under a given path.
 
-    Returns a tuple generator: gen<(RepoType, GitDir)> where:
+    Returns a tuple generator: gen<GitDir> where:
         GitDir := "/path/to/the/.git/folder"
-        RepoType := ("M"|"R") where:
-            M - Module
-            R - Regular repo
     """
     target = f"{os.path.sep}.git"
 
     for path, _, files in os.walk(prefix):
         if path.endswith(target):
-            yield ("R", path)
+            yield path
 
         elif ".git" in files:
-            modpath = search_gitdir(os.path.join(path, ".git"))
-            if modpath:
-                yield ("M", os.path.join(path, modpath))
+            common_dir = git.common_dir(cwd=path)
+            if common_dir:
+                yield common_dir
 
 
 def update(_):
@@ -134,12 +120,12 @@ def update(_):
 
 def list_repos(args):
     """
-    A handler that lists all of the repos that would be impacted by the change
+    A handler that lists all the repos that would be impacted by the change
     """
-    repos = sorted(find_repos(args.path), key=lambda r: r[1])
+    repos = sorted(find_repos(args.path))
 
-    for repo_type, repo_path in repos:
-        logging.info("%s %s", repo_type, repo_path)
+    for repo_path in repos:
+        logging.info("%s", repo_path)
 
     return 0
 
@@ -196,7 +182,7 @@ def install(args, content):
     """
     status = 0
 
-    for _, repo_path in find_repos(args.path):
+    for repo_path in find_repos(args.path):
         if install_hook(args, repo_path, content) != 0:
             # Set the status but keep installing it in the other repos
             status = 1
@@ -285,9 +271,7 @@ def hook_installed(hook_type, repo_path=os.path.join(os.getcwd(), ".git")):
     # Handle submodules
     if os.path.isfile(repo_path):
         try:
-            repo_path = os.path.join(
-                os.path.dirname(repo_path), search_gitdir(repo_path)
-            )
+            repo_path = git.common_dir(cwd=os.path.dirname(repo_path))
         except Exception as e:
             logging.error(e)
             return False
