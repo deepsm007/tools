@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from rh_pre_commit import common
 from rh_pre_commit import templates
+from src.rh_pre_commit import git
 
 PRE_COMMIT_CONFIG_YAML = """
 ---
@@ -39,6 +40,79 @@ repos:
 
 class CommonTest(TestCase):
     hook_types = list(templates.RH_PRE_COMMIT_HOOKS)
+
+    def setUp(self):
+        self.tmp_dir = TemporaryDirectory()  # pylint: disable=R1732
+
+        # In CICD the git user is not configured - this will only set it up if user.name is empty
+        if not git.config("user.name", flags=["global"]).stdout.decode("UTF-8").strip():
+            git.config("user.name", "rh-pre-commit-test", ["global"])
+            git.config(
+                "user.email", "infosec-alerts+rh-pre-commit-test@redhat.com", ["global"]
+            )
+
+        test_submod = "test-submodule"
+        test_worktree = "test-worktree"
+
+        deep_repo_path = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
+        wt_main_repo_path = os.path.join(self.tmp_dir.name, "wt-test")
+        test_repo_path = os.path.join(self.tmp_dir.name, "test")
+        repo_for_submod_path = os.path.join(self.tmp_dir.name, test_submod)
+        self.repo_for_worktree_path = os.path.join(
+            self.tmp_dir.name, test_worktree, ".git"
+        )
+
+        # Create and init normal git repositories, including adding files, so they are not empty
+        self.expected = [
+            deep_repo_path,
+            wt_main_repo_path,
+            test_repo_path,
+            repo_for_submod_path,
+        ]
+        for i, d in enumerate(self.expected):
+            os.makedirs(d)
+            git.run("init", "--template=", cwd=d)
+            with open(d + "/1", "w", encoding="UTF-8") as f:
+                f.write("Contents")
+            git.run(*["add", "-A"], cwd=d)
+            git.run(*["commit", "--no-gpg-sign", "-m", "message"], cwd=d)
+            self.expected[i] = os.path.join(d, ".git")
+
+        # Create a submodule
+        self.submodule_repo_path = os.path.join(
+            test_repo_path, ".git", "modules", test_submod
+        )
+        self.expected.append(self.submodule_repo_path)
+
+        git.run(
+            *[
+                "-c",
+                "protocol.file.allow=always",
+                "submodule",
+                "add",
+                "../" + test_submod,
+            ],
+            cwd=test_repo_path,
+        )
+
+        git.run(
+            *[
+                "-c",
+                "protocol.file.allow=always",
+                "worktree",
+                "add",
+                "-b",
+                "worktree",
+                "../" + test_worktree,
+            ],
+            cwd=wt_main_repo_path,
+        )
+        # We will expect this repository to be found twice as a worktree points back to its
+        # parent git repository folder.
+        self.expected.append(os.path.join(wt_main_repo_path, ".git"))
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
 
     def test_create_parser(self):
         """
@@ -102,49 +176,33 @@ class CommonTest(TestCase):
         """
         Find repos under a given structure
         """
-        with TemporaryDirectory() as tmp_dir:
-            expected = [
-                ("R", os.path.join(tmp_dir, "foo", "bar", "baz", ".git")),
-                ("R", os.path.join(tmp_dir, ".git")),
-                ("R", os.path.join(tmp_dir, "test", ".git")),
-            ]
+        # On Mac /var/folders is under /private/var/folders git links the full address, so
+        # we strip it to match what we are creating.
+        mac_private_tmp = "/private"
+        common_dirs = list(common.find_repos(self.tmp_dir.name))
+        for i, d in enumerate(common_dirs):
+            if d.startswith(mac_private_tmp):
+                common_dirs[i] = d[len(mac_private_tmp) :]
 
-            for d in expected:
-                os.makedirs(d[1])
-                os.makedirs(d[1] + "-not-git")
-
-            # Have a file named .git
-            file_test = os.path.join(tmp_dir, "git-file")
-            gitfile_path = os.path.join(file_test, ".git")
-
-            os.makedirs(file_test)
-            with open(gitfile_path, "w", encoding="UTF-8") as gitfile:
-                gitfile.write("gitdir: ../.git/modules/git-file")
-
-            expected.append(("M", os.path.join(file_test, "../.git/modules/git-file")))
-
-            self.assertEqual(sorted(expected), sorted(common.find_repos(tmp_dir)))
+        self.assertEqual(sorted(self.expected), sorted(common_dirs))
 
     @patch("logging.info")
     @patch("rh_pre_commit.common.find_repos")
     def test_list_repos(self, mock_find_repos, mock_logging_info):
         repos = [
-            ("M", "/home/user/repo/.git/modules/foo"),
-            ("R", "/home/user/repo/.git"),
+            "/home/user/repo/.git/modules/foo",
+            "/home/user/repo/.git",
         ]
 
         mock_find_repos.return_value = repos
 
         common.list_repos(Namespace(path="/home/user"))
 
-        for i, repo in enumerate(sorted(repos, key=lambda r: r[1])):
+        for i, repo in enumerate(sorted(repos)):
             call = mock_logging_info.call_args_list[i]
 
-            # Check the type
-            self.assertEqual(call.args[1], repo[0])
-
             # Check the path
-            self.assertEqual(call.args[2], repo[1])
+            self.assertEqual(call.args[1], repo)
 
     def test_hook_installed_git_folder(self):
         hook_type = "pre-commit"
@@ -202,26 +260,21 @@ class CommonTest(TestCase):
     def test_hook_installed_git_file(self):
         hook_type = "pre-commit"
 
-        # It should work with a .git file too (e.g. submodule repo)
-        with TemporaryDirectory() as tmp_dir:
-            args = Namespace(hook_type=hook_type, force=True, path=tmp_dir)
-            project_dir = os.path.join(tmp_dir, "project")
-            repo_path = os.path.join(project_dir, ".git")
-            module_repo_path = os.path.join(repo_path, "modules", "submodule")
-            submodule_dir = os.path.join(project_dir, "submodule")
-            submodule_gitfile_path = os.path.join(submodule_dir, ".git")
+        args = Namespace(hook_type=hook_type, force=True, path=self.tmp_dir.name)
 
-            os.makedirs(submodule_dir)
-            os.makedirs(module_repo_path)
+        # Submodule - It has to be the right content
+        common.install(args, "bar")
+        self.assertFalse(common.hook_installed(hook_type, self.submodule_repo_path))
+        # Worktree - It has to be the right content
+        common.install(args, "bar")
+        self.assertFalse(common.hook_installed(hook_type, self.repo_for_worktree_path))
 
-            with open(submodule_gitfile_path, "w", encoding="UTF-8") as gitfile:
-                gitfile.write("gitdir: ../.git/modules/submodule")
+        # Submodule - If it contains rh-pre-commit it's good
+        status = common.install(args, templates.RH_PRE_COMMIT_HOOKS[hook_type])
+        self.assertEqual(status, 0)
+        self.assertTrue(common.hook_installed(hook_type, self.submodule_repo_path))
 
-            # It has to be the right content
-            common.install(args, "bar")
-            self.assertFalse(common.hook_installed(hook_type, submodule_gitfile_path))
-
-            # If it contains rh-pre-commit it's good
-            status = common.install(args, templates.RH_PRE_COMMIT_HOOKS[hook_type])
-            self.assertEqual(status, 0)
-            self.assertTrue(common.hook_installed(hook_type, submodule_gitfile_path))
+        # Worktree - If it contains rh-pre-commit it's good
+        status = common.install(args, templates.RH_PRE_COMMIT_HOOKS[hook_type])
+        self.assertEqual(status, 0)
+        self.assertTrue(common.hook_installed(hook_type, self.repo_for_worktree_path))

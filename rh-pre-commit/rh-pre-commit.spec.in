@@ -47,6 +47,9 @@ Tooling
 %{python3_sitelib}/rh_pre_commit/
 
 %changelog
+* Thu Feb 8 2024 Braxton Plaxco <bplaxco@redhat.com> - 2.2.0-1
+- Change how unknown version is displayed for consistency
+- Resolved "Rh-pre-commit.commit-msg fails with worktrees" issue 17
+
 * Mon Nov 27 2023 Joshua Padman <jpadman@redhat.com> - 2.1.0-1
 - Initial package for rpkg & copr
-
