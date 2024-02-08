@@ -42,8 +42,10 @@ Frontend on gitleaks tool for scanning code commits
 %{python3_sitelib}/rh_gitleaks/
 
 %changelog
-* Wed Dec 13 2023 Braxton Plaxco <bplaxco@redhat.com> - 2.2.0-1
-- Require leaktk-gitleaks7 package and update the user agent string
+* Thu Feb 8 2024 Braxton Plaxco <bplaxco@redhat.com> - 2.2.0-1
+- Require leaktk-gitleaks7 package
+- Updated the github.com/leaktk/bin binary location and hashes
+- Updated the user agent string
 
 * Wed Nov 15 2023 Daniel P. Berrangé <berrange@redhat.com> - 2.1.0-1
 - Initial package + misc tweaks by bplaxco & jpadman
