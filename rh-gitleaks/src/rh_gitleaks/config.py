@@ -29,7 +29,7 @@ except Exception:
 
 # Gitleaks Settings
 GITLEAKS_BIN_NAMES = ["gitleaks7", "gitleaks"]
-GITLEAKS_PATTERN_VERSION= "7.6.1"
+GITLEAKS_PATTERN_VERSION = "7.6.1"
 LEAKTK_GITLEAKS7_VERSION = "2.0.1"
 GITLEAKS_SOURCE_ID = f"leaktk-gitleaks7-{LEAKTK_GITLEAKS7_VERSION}-{PLATFORM_ID}"
 GITLEAKS_BIN_PATH = os.path.join(CACHE_DIR, GITLEAKS_SOURCE_ID)
@@ -71,7 +71,9 @@ PATTERN_SERVER_AUTH_TOKEN_PATH = os.path.join(CONFIG_DIR, "auth.jwt")
 PATTERNS_REFRESH_INTERVAL = 60 * 60 * 12
 # when to refuse to use cached patterns if refresh wasn't possible
 PATTERNS_EXPIRED_INTERVAL = PATTERNS_REFRESH_INTERVAL * 14
-PATTERNS_PATH = os.path.join(CACHE_DIR, f"gitleaks-{GITLEAKS_PATTERN_VERSION}-patterns.toml")
+PATTERNS_PATH = os.path.join(
+    CACHE_DIR, f"gitleaks-{GITLEAKS_PATTERN_VERSION}-patterns.toml"
+)
 PATTERN_SERVER_AUTH_TOKEN = os.environ.get("LEAKTK_PATTERN_SERVER_AUTH_TOKEN")
 PATTERN_SERVER_URL = os.environ.get(
     "LEAKTK_PATTERN_SERVER_URL",

@@ -1,6 +1,7 @@
 """
 Common functions between rh-pre-commit and rh-multi-pre-commit
 """
+
 import logging
 import os
 import re
