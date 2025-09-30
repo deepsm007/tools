@@ -1,9 +1,10 @@
 #!/bin/bash
 # AWS Cluster Deprovision Script
 # Usage: 
-#   ./aws.sh                    # Uses default AWS profile/credentials
-#   ./aws.sh --profile myprofile # Uses specified AWS profile
-#   AWS_PROFILE=myprofile ./aws.sh # Uses profile from environment variable
+#   ./aws.sh                         # Uses defaults (72 hours ago cutoff)
+#   ./aws.sh --profile myprofile     # Uses specified AWS profile
+#   ./aws.sh --cutoff "24 hours ago" # Custom age cutoff for cleanup
+#   ./aws.sh --profile myprofile --cutoff "1 week ago" # Combined options
 #
 # Environment variables (with defaults):
 #   ARTIFACTS=/tmp/artifacts                    # Directory for logs and metadata
@@ -16,12 +17,46 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# AWS Profile handling
+# Command line argument parsing
 AWS_PROFILE="${AWS_PROFILE:-}"
-if [[ $# -gt 0 && "$1" == "--profile" ]]; then
-    AWS_PROFILE="$2"
-    shift 2
-fi
+CUTOFF_TIME=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --profile)
+            AWS_PROFILE="$2"
+            shift 2
+            ;;
+        --cutoff)
+            CUTOFF_TIME="$2"
+            shift 2
+            ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --profile PROFILE    Use specified AWS profile"
+            echo "  --cutoff TIME        Age cutoff for cleanup (e.g., '24 hours ago', '1 week ago')"
+            echo "  --help, -h          Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                              # Default cleanup (72 hours ago)"
+            echo "  $0 --cutoff '24 hours ago'      # Clean resources older than 24 hours"
+            echo "  $0 --profile prod --cutoff '1 week ago'"
+            echo ""
+            echo "Environment variables:"
+            echo "  ARTIFACTS                     Directory for logs (default: /tmp/artifacts)"
+            echo "  AWS_PROFILE                   AWS profile to use"
+            echo "  CLUSTER_TTL                   Default age cutoff (default: '72 hours ago')"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Use --help for usage information" >&2
+            exit 1
+            ;;
+    esac
+done
 
 # Helper function to run AWS CLI commands with profile support
 function aws_cmd() {
@@ -154,12 +189,14 @@ function deprovision() {
     fi
 }
 
-# HYPERSHIFT CLUSTER CLEANUP (72h cutoff)
+# HYPERSHIFT CLUSTER CLEANUP (configurable cutoff)
 had_failure=0
 # Check if hostedcluster resource type exists before attempting cleanup
 if oc api-resources | grep -q "hostedclusters"; then
-    echo "Hypershift hostedcluster resource found, checking for old clusters..."
-    hostedclusters="$(oc get hostedcluster -n clusters -o json 2>/dev/null | jq -r --argjson timestamp 259200 '.items[] | select (.metadata.creationTimestamp | sub("\\..*";"Z") | sub("\\s";"T") | fromdate < now - $timestamp).metadata.name' 2>/dev/null || true)"
+    echo "Hypershift hostedcluster resource found, checking for old clusters (older than ${CLUSTER_TTL})..."
+    # Convert cutoff time to seconds ago for jq timestamp comparison
+    cutoff_seconds=$(( $(date +%s) - $(date -d "${CLUSTER_TTL}" +%s) ))
+    hostedclusters="$(oc get hostedcluster -n clusters -o json 2>/dev/null | jq -r --argjson timestamp ${cutoff_seconds} '.items[] | select (.metadata.creationTimestamp | sub("\\..*";"Z") | sub("\\s";"T") | fromdate < now - $timestamp).metadata.name' 2>/dev/null || true)"
     for hostedcluster in $hostedclusters; do
         if [[ -n "$hostedcluster" ]]; then
             echo "Destroying hostedcluster: $hostedcluster"
@@ -200,7 +237,16 @@ echo "Dependency check complete."
 # MAIN CLUSTER DEPROVISION LOGIC
 # Set default values for environment variables if not already set
 ARTIFACTS="${ARTIFACTS:-/tmp/artifacts}"
-CLUSTER_TTL="${CLUSTER_TTL:-72 hours ago}"
+
+# Use command line cutoff if provided, otherwise use environment variable, otherwise default
+if [[ -n "${CUTOFF_TIME}" ]]; then
+    CLUSTER_TTL="${CUTOFF_TIME}"
+    echo "Using command line cutoff: ${CLUSTER_TTL}"
+else
+    CLUSTER_TTL="${CLUSTER_TTL:-72 hours ago}"
+    echo "Using default cutoff: ${CLUSTER_TTL}"
+fi
+
 AWS_SHARED_CREDENTIALS_FILE="${AWS_SHARED_CREDENTIALS_FILE:-${HOME}/.aws/credentials}"
 HYPERSHIFT_BASE_DOMAIN="${HYPERSHIFT_BASE_DOMAIN:-origin-ci-int-aws.dev.rhcloud.com}"
 
@@ -221,25 +267,69 @@ exec 2> >(tee -a "${LOGFILE}" >&2)
 aws_cluster_age_cutoff="$(TZ=":Africa/Abidjan" date --date="${CLUSTER_TTL}" '+%Y-%m-%dT%H:%M+0000')"
 echo "deprovisioning clusters with an expirationDate before ${aws_cluster_age_cutoff} in AWS ..."
 
-for region in $( aws_cmd ec2 describe-regions --region us-east-1 --query "Regions[].{Name:RegionName}" --output text ); do
+# Test AWS credentials before proceeding
+echo "Testing AWS credentials and connectivity..."
+if ! aws_cmd sts get-caller-identity >/dev/null 2>&1; then
+    echo "ERROR: AWS credentials test failed. Please check your AWS configuration." >&2
+    echo "Make sure you have valid AWS credentials configured." >&2
+    echo "You can configure them using:" >&2
+    echo "  - aws configure" >&2
+    echo "  - AWS_PROFILE environment variable" >&2
+    echo "  - --profile command line argument" >&2
+    exit 1
+fi
+
+echo "AWS credentials verified. Discovering regions..."
+regions=$(aws_cmd ec2 describe-regions --region us-east-1 --query "Regions[].{Name:RegionName}" --output text 2>/dev/null || echo "")
+if [[ -z "$regions" ]]; then
+    echo "ERROR: Failed to retrieve AWS regions. Check your AWS permissions." >&2
+    exit 1
+fi
+
+echo "Found $(echo $regions | wc -w) AWS regions to check."
+
+for region in $regions; do
     echo "deprovisioning in AWS region ${region} ..."
-    aws_cmd ec2 describe-vpcs --output json --region ${region} | jq --arg date "${aws_cluster_age_cutoff}" -r '.Vpcs[] | select(.Tags[]? | select(.Key == "expirationDate" and .Value < $date)) | .Tags[]? | select((.Key | startswith("kubernetes.io/cluster/")) and (.Value == "owned")) | .Key' > /tmp/clusters
+    # Clear previous clusters file and get VPCs for this region
+    > /tmp/clusters
+    if aws_cmd ec2 describe-vpcs --output json --region ${region} 2>/dev/null | jq --arg date "${aws_cluster_age_cutoff}" -r '.Vpcs[] | select(.Tags[]? | select(.Key == "expirationDate" and .Value < $date)) | .Tags[]? | select((.Key | startswith("kubernetes.io/cluster/")) and (.Value == "owned")) | .Key' > /tmp/clusters 2>/dev/null; then
+        cluster_count=$(wc -l < /tmp/clusters)
+        if [[ $cluster_count -gt 0 ]]; then
+            echo "Found $cluster_count clusters to deprovision in region ${region}"
+        else
+            echo "No expired clusters found in region ${region}"
+        fi
+    else
+        echo "Warning: Failed to query VPCs in region ${region}, skipping..."
+        continue
+    fi
+    
     while read cluster; do
-        workdir="${logdir}/${cluster:22}"
-        mkdir -p "${workdir}"
-        cat <<-EOF >"${workdir}/metadata.json"
-        {
-            "aws":{
-                "region":"${region}",
-                "identifier":[
-                    {"${cluster}": "owned"}
-                ]
+        if [[ -n "$cluster" ]]; then
+            workdir="${logdir}/${cluster:22}"
+            mkdir -p "${workdir}"
+            cat <<-EOF >"${workdir}/metadata.json"
+            {
+                "aws":{
+                    "region":"${region}",
+                    "identifier":[
+                        {"${cluster}": "owned"}
+                    ]
+                }
             }
-        }
 EOF
-        echo "will deprovision AWS cluster ${cluster} in region ${region}"
+            echo "will deprovision AWS cluster ${cluster} in region ${region}"
+        fi
     done < /tmp/clusters
 done
+
+echo "Region discovery completed."
+total_clusters=$(find "${logdir}" -mindepth 1 -maxdepth 1 -type d | wc -l)
+echo "Total clusters identified for deprovision: ${total_clusters}"
+
+if [[ $total_clusters -eq 0 ]]; then
+    echo "No clusters found for deprovision. Proceeding to IAM cleanup only."
+fi
 
 # Check if openshift-install is available
 if command -v openshift-install >/dev/null 2>&1; then
@@ -256,9 +346,9 @@ done
 
 wait
 
-# IAM USER CLEANUP (ci-op-* users older than 72h) - run after all cluster deprovisions complete
-echo "Cleaning up old IAM users..."
-cutoff="$(date -u -d '72 hours ago' --iso-8601=seconds)"
+# IAM USER CLEANUP (ci-op-* users older than cutoff time) - run after all cluster deprovisions complete
+echo "Cleaning up old IAM users (older than ${CLUSTER_TTL})..."
+cutoff="$(date -u -d "${CLUSTER_TTL}" --iso-8601=seconds)"
 aws_cmd iam list-users --query "Users[?starts_with(UserName, 'ci-op-') && CreateDate < '${cutoff}'].UserName" --output text | tr '\t' '\n' | while read -r user; do
     if [[ -n "$user" ]]; then
         echo "Cleaning IAM user: $user"
