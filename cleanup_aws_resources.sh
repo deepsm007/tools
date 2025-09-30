@@ -138,7 +138,12 @@ function deprovision() {
         timeout --signal=SIGQUIT 30m hypershift destroy infra aws --aws-creds "${AWS_SHARED_CREDENTIALS_FILE}" --infra-id "${INFRA_ID}" --base-domain "${HYPERSHIFT_BASE_DOMAIN}" --region "${REGION}" || touch "${WORKDIR}/failure"
         timeout --signal=SIGQUIT 30m hypershift destroy iam aws --aws-creds "${AWS_SHARED_CREDENTIALS_FILE}" --infra-id "${INFRA_ID}" --region "${REGION}" || touch "${WORKDIR}/failure"
     else
-        timeout --signal=SIGQUIT 60m openshift-install --dir "${WORKDIR}" --log-level error destroy cluster && touch "${WORKDIR}/success" || touch "${WORKDIR}/failure"
+        if command -v openshift-install >/dev/null 2>&1; then
+            timeout --signal=SIGQUIT 60m openshift-install --dir "${WORKDIR}" --log-level error destroy cluster && touch "${WORKDIR}/success" || touch "${WORKDIR}/failure"
+        else
+            echo "Warning: openshift-install not found, skipping standard cluster destroy for ${WORKDIR##*/}"
+            touch "${WORKDIR}/failure"
+        fi
     fi
 
     # Failsafe: if cluster destroy failed, clean VPCs and Route53
@@ -166,6 +171,32 @@ else
 fi
 if [[ $had_failure -ne 0 ]]; then exit $had_failure; fi
 
+# DEPENDENCY CHECKS
+echo "Checking required dependencies..."
+missing_deps=0
+
+# Check for required commands
+for cmd in aws jq date find; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "ERROR: Required command '$cmd' not found in PATH" >&2
+        missing_deps=$((missing_deps + 1))
+    fi
+done
+
+# Check for optional commands  
+for cmd in openshift-install hypershift oc; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "WARNING: Optional command '$cmd' not found in PATH" >&2
+    fi
+done
+
+if [[ $missing_deps -gt 0 ]]; then
+    echo "ERROR: $missing_deps required dependencies missing. Exiting." >&2
+    exit 1
+fi
+
+echo "Dependency check complete."
+
 # MAIN CLUSTER DEPROVISION LOGIC
 # Set default values for environment variables if not already set
 ARTIFACTS="${ARTIFACTS:-/tmp/artifacts}"
@@ -175,6 +206,17 @@ HYPERSHIFT_BASE_DOMAIN="${HYPERSHIFT_BASE_DOMAIN:-origin-ci-int-aws.dev.rhcloud.
 
 logdir="${ARTIFACTS}/deprovision"
 mkdir -p "${logdir}"
+
+# Set up logging to file
+LOGFILE="${ARTIFACTS}/aws-deprovision-$(date +%Y%m%d-%H%M%S).log"
+echo "AWS Deprovision Script started at $(date)" >&2
+echo "Logging to: ${LOGFILE}" >&2
+echo "Use 'tail -f ${LOGFILE}' to follow progress" >&2
+echo "=======================================" >&2
+
+# Redirect stdout to log file, keep stderr for important messages
+exec 1> >(tee -a "${LOGFILE}")
+exec 2> >(tee -a "${LOGFILE}" >&2)
 
 aws_cluster_age_cutoff="$(TZ=":Africa/Abidjan" date --date="${CLUSTER_TTL}" '+%Y-%m-%dT%H:%M+0000')"
 echo "deprovisioning clusters with an expirationDate before ${aws_cluster_age_cutoff} in AWS ..."
@@ -199,7 +241,13 @@ EOF
     done < /tmp/clusters
 done
 
-openshift-install version
+# Check if openshift-install is available
+if command -v openshift-install >/dev/null 2>&1; then
+    echo "Using openshift-install version:"
+    openshift-install version
+else
+    echo "Warning: openshift-install not found in PATH. Cluster destruction will use force cleanup methods."
+fi
 
 clusters=$( find "${logdir}" -mindepth 1 -type d )
 for workdir in $(shuf <<< ${clusters}); do
