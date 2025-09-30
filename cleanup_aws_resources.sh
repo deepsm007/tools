@@ -116,33 +116,301 @@ function force_cleanup_vpc() {
         echo "Cleaning VPC $vpc"
 
         # Delete NAT gateways
+        echo "Cleaning up NAT gateways for VPC $vpc"
         for nat in $(aws_cmd ec2 describe-nat-gateways --region "$region" --filter Name=vpc-id,Values=$vpc --query 'NatGateways[].NatGatewayId' --output text || true); do
+            echo "Deleting NAT gateway $nat"
             retry aws_cmd ec2 delete-nat-gateway --region "$region" --nat-gateway-id "$nat" || true
         done
 
         # Detach and delete IGWs
+        echo "Cleaning up IGWs for VPC $vpc"
         for igw in $(aws_cmd ec2 describe-internet-gateways --region "$region" --filter Name=attachment.vpc-id,Values=$vpc --query 'InternetGateways[].InternetGatewayId' --output text || true); do
+            echo "Detaching and deleting IGW $igw"
             retry aws_cmd ec2 detach-internet-gateway --region "$region" --internet-gateway-id "$igw" --vpc-id "$vpc" || true
             retry aws_cmd ec2 delete-internet-gateway --region "$region" --internet-gateway-id "$igw" || true
         done
 
-        # Delete subnets
-        for subnet in $(aws_cmd ec2 describe-subnets --region "$region" --filter Name=vpc-id,Values=$vpc --query 'Subnets[].SubnetId' --output text || true); do
-            retry aws_cmd ec2 delete-subnet --region "$region" --subnet-id "$subnet" || true
+        # Delete VPC endpoints
+        echo "Cleaning up VPC endpoints for VPC $vpc"
+        for vpce in $(aws_cmd ec2 describe-vpc-endpoints --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'VpcEndpoints[].VpcEndpointId' --output text || true); do
+            echo "Deleting VPC endpoint $vpce"
+            retry aws_cmd ec2 delete-vpc-endpoint --region "$region" --vpc-endpoint-id "$vpce" || true
         done
 
-        # Delete route tables (except main)
-        for rtb in $(aws_cmd ec2 describe-route-tables --region "$region" --filter Name=vpc-id,Values=$vpc --query 'RouteTables[].RouteTableId' --output text || true); do
+        # Delete VPC peering connections
+        echo "Cleaning up VPC peering connections for VPC $vpc"
+        for pcx in $(aws_cmd ec2 describe-vpc-peering-connections --region "$region" --filters "Name=requester-vpc-info.vpc-id,Values=$vpc" "Name=status-code,Values=active,pending-acceptance" --query 'VpcPeeringConnections[].VpcPeeringConnectionId' --output text || true); do
+            echo "Deleting VPC peering connection $pcx"
+            retry aws_cmd ec2 delete-vpc-peering-connection --region "$region" --vpc-peering-connection-id "$pcx" || true
+        done
+        for pcx in $(aws_cmd ec2 describe-vpc-peering-connections --region "$region" --filters "Name=accepter-vpc-info.vpc-id,Values=$vpc" "Name=status-code,Values=active,pending-acceptance" --query 'VpcPeeringConnections[].VpcPeeringConnectionId' --output text || true); do
+            echo "Deleting VPC peering connection $pcx"
+            retry aws_cmd ec2 delete-vpc-peering-connection --region "$region" --vpc-peering-connection-id "$pcx" || true
+        done
+
+        # Delete ENIs (Elastic Network Interfaces) that might prevent subnet deletion
+        echo "Cleaning up ENIs for VPC $vpc"
+        # First pass: delete available ENIs
+        for eni in $(aws_cmd ec2 describe-network-interfaces --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'NetworkInterfaces[?Status==`available`].NetworkInterfaceId' --output text || true); do
+            if [[ -n "$eni" && "$eni" != "None" ]]; then
+                echo "Deleting available ENI $eni"
+                retry aws_cmd ec2 delete-network-interface --region "$region" --network-interface-id "$eni" || true
+            fi
+        done
+        
+        # Second pass: force detach and delete in-use ENIs (except those managed by AWS services)
+        for eni in $(aws_cmd ec2 describe-network-interfaces --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'NetworkInterfaces[?Status==`in-use` && !starts_with(Description, `ELB`) && !starts_with(Description, `AWS`) && !starts_with(Description, `RDSNetworkInterface`)].NetworkInterfaceId' --output text || true); do
+            if [[ -n "$eni" && "$eni" != "None" ]]; then
+                echo "Force detaching and deleting in-use ENI $eni"
+                
+                # Get attachment info
+                attachment_id=$(aws_cmd ec2 describe-network-interfaces --region "$region" --network-interface-ids "$eni" --query 'NetworkInterfaces[0].Attachment.AttachmentId' --output text 2>/dev/null || true)
+                if [[ -n "$attachment_id" && "$attachment_id" != "None" && "$attachment_id" != "null" ]]; then
+                    echo "Detaching ENI $eni (attachment: $attachment_id)"
+                    aws_cmd ec2 detach-network-interface --region "$region" --attachment-id "$attachment_id" --force || true
+                    sleep 5  # Wait for detachment
+                fi
+                
+                retry aws_cmd ec2 delete-network-interface --region "$region" --network-interface-id "$eni" || true
+            fi
+        done
+
+        # Delete subnets with comprehensive cleanup
+        echo "Cleaning up subnets for VPC $vpc"
+        for subnet in $(aws_cmd ec2 describe-subnets --region "$region" --filter Name=vpc-id,Values=$vpc --query 'Subnets[].SubnetId' --output text || true); do
+            if [[ -n "$subnet" && "$subnet" != "None" ]]; then
+                echo "Processing subnet $subnet"
+                
+                # Check for remaining ENIs in this subnet and clean them up
+                for eni in $(aws_cmd ec2 describe-network-interfaces --region "$region" --filters "Name=subnet-id,Values=$subnet" --query 'NetworkInterfaces[].NetworkInterfaceId' --output text || true); do
+                    if [[ -n "$eni" && "$eni" != "None" ]]; then
+                        echo "Found remaining ENI $eni in subnet $subnet, cleaning up..."
+                        eni_description=$(aws_cmd ec2 describe-network-interfaces --region "$region" --network-interface-ids "$eni" --query 'NetworkInterfaces[0].Description' --output text 2>/dev/null || echo "")
+                        echo "ENI description: $eni_description"
+                        
+                        # Skip AWS-managed ENIs that shouldn't be manually deleted
+                        if [[ "$eni_description" =~ ^(ELB|AWS|RDSNetworkInterface|ElastiCache|Lambda) ]]; then
+                            echo "Skipping AWS-managed ENI $eni"
+                            continue
+                        fi
+                        
+                        # Get attachment info and detach if needed
+                        attachment_id=$(aws_cmd ec2 describe-network-interfaces --region "$region" --network-interface-ids "$eni" --query 'NetworkInterfaces[0].Attachment.AttachmentId' --output text 2>/dev/null || true)
+                        if [[ -n "$attachment_id" && "$attachment_id" != "None" && "$attachment_id" != "null" ]]; then
+                            echo "Force detaching ENI $eni from subnet $subnet"
+                            aws_cmd ec2 detach-network-interface --region "$region" --attachment-id "$attachment_id" --force || true
+                            sleep 3
+                        fi
+                        
+                        echo "Deleting ENI $eni"
+                        retry aws_cmd ec2 delete-network-interface --region "$region" --network-interface-id "$eni" || true
+                    fi
+                done
+                
+                echo "Deleting subnet $subnet"
+                if ! retry aws_cmd ec2 delete-subnet --region "$region" --subnet-id "$subnet"; then
+                    echo "Failed to delete subnet $subnet, checking dependencies..."
+                    aws_cmd ec2 describe-network-interfaces --region "$region" --filters "Name=subnet-id,Values=$subnet" --query 'NetworkInterfaces[].{Id:NetworkInterfaceId,Status:Status,Description:Description,InstanceId:Attachment.InstanceId}' --output table || true
+                fi
+            fi
+        done
+
+        # Delete route tables (except main) - handle dependencies first
+        echo "Cleaning up route tables for VPC $vpc"
+        for rtb in $(aws_cmd ec2 describe-route-tables --region "$region" --filter Name=vpc-id,Values=$vpc --query 'RouteTables[?Associations[0].Main!=`true`].RouteTableId' --output text || true); do
+            echo "Processing route table $rtb"
+            
+            # Disassociate all subnet associations
+            for assoc in $(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[].Associations[?Main!=`true`].RouteTableAssociationId' --output text || true); do
+                echo "Disassociating route table association $assoc"
+                retry aws_cmd ec2 disassociate-route-table --region "$region" --association-id "$assoc" || true
+            done
+            
+            # Delete custom routes (keep only local route)
+            for route in $(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[].Routes[?GatewayId!=`local` && Origin==`CreateRoute`].DestinationCidrBlock' --output text || true); do
+                echo "Deleting route $route from route table $rtb"
+                retry aws_cmd ec2 delete-route --region "$region" --route-table-id "$rtb" --destination-cidr-block "$route" || true
+            done
+            
+            # Delete IPv6 custom routes if any
+            for route in $(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[].Routes[?GatewayId!=`local` && Origin==`CreateRoute`].DestinationIpv6CidrBlock' --output text || true); do
+                if [[ -n "$route" && "$route" != "None" ]]; then
+                    echo "Deleting IPv6 route $route from route table $rtb"
+                    retry aws_cmd ec2 delete-route --region "$region" --route-table-id "$rtb" --destination-ipv6-cidr-block "$route" || true
+                fi
+            done
+            
+            # Now try to delete the route table
+            echo "Deleting route table $rtb"
             retry aws_cmd ec2 delete-route-table --region "$region" --route-table-id "$rtb" || true
         done
 
-        # Delete security groups (except default)
+        # Delete security groups (except default) - handle cross-references
+        echo "Cleaning up security groups for VPC $vpc"
+        
+        # First, remove all ingress and egress rules that reference other security groups
         for sg in $(aws_cmd ec2 describe-security-groups --region "$region" --filter Name=vpc-id,Values=$vpc --query 'SecurityGroups[?GroupName!=`default`].GroupId' --output text || true); do
+            echo "Cleaning rules for security group $sg"
+            
+            # Get and revoke ingress rules
+            ingress_rules=$(aws_cmd ec2 describe-security-groups --region "$region" --group-ids "$sg" --query 'SecurityGroups[].IpPermissions' --output json || echo '[]')
+            if [[ "$ingress_rules" != "[]" && "$ingress_rules" != "null" ]]; then
+                echo "Revoking ingress rules for security group $sg"
+                aws_cmd ec2 revoke-security-group-ingress --region "$region" --group-id "$sg" --ip-permissions "$ingress_rules" || true
+            fi
+            
+            # Get and revoke egress rules (except the default allow-all rule)
+            egress_rules=$(aws_cmd ec2 describe-security-groups --region "$region" --group-ids "$sg" --query 'SecurityGroups[].IpPermissionsEgress[?!(IpProtocol==`-1` && IpRanges[0].CidrIp==`0.0.0.0/0`)]' --output json || echo '[]')
+            if [[ "$egress_rules" != "[]" && "$egress_rules" != "null" ]]; then
+                echo "Revoking egress rules for security group $sg"
+                aws_cmd ec2 revoke-security-group-egress --region "$region" --group-id "$sg" --ip-permissions "$egress_rules" || true
+            fi
+        done
+        
+        # Now delete the security groups
+        for sg in $(aws_cmd ec2 describe-security-groups --region "$region" --filter Name=vpc-id,Values=$vpc --query 'SecurityGroups[?GroupName!=`default`].GroupId' --output text || true); do
+            echo "Deleting security group $sg"
             retry aws_cmd ec2 delete-security-group --region "$region" --group-id "$sg" || true
         done
 
+        # Additional dependency cleanup before VPC deletion
+        echo "Performing additional dependency cleanup for VPC $vpc"
+        
+        # Delete Load Balancers (ELB, ALB, NLB)
+        echo "Cleaning up load balancers for VPC $vpc"
+        for elb in $(aws_cmd elb describe-load-balancers --region "$region" --query "LoadBalancerDescriptions[?VPCId=='$vpc'].LoadBalancerName" --output text 2>/dev/null || true); do
+            if [[ -n "$elb" && "$elb" != "None" ]]; then
+                echo "Deleting classic load balancer $elb"
+                retry aws_cmd elb delete-load-balancer --region "$region" --load-balancer-name "$elb" || true
+            fi
+        done
+        
+        for alb in $(aws_cmd elbv2 describe-load-balancers --region "$region" --query "LoadBalancers[?VpcId=='$vpc'].LoadBalancerArn" --output text 2>/dev/null || true); do
+            if [[ -n "$alb" && "$alb" != "None" ]]; then
+                echo "Deleting ALB/NLB $alb"
+                retry aws_cmd elbv2 delete-load-balancer --region "$region" --load-balancer-arn "$alb" || true
+            fi
+        done
+        
+        # Delete RDS subnet groups
+        echo "Cleaning up RDS subnet groups for VPC $vpc"
+        for sg in $(aws_cmd rds describe-db-subnet-groups --region "$region" --query "DBSubnetGroups[?VpcId=='$vpc'].DBSubnetGroupName" --output text 2>/dev/null || true); do
+            if [[ -n "$sg" && "$sg" != "None" ]]; then
+                echo "Deleting RDS subnet group $sg"
+                retry aws_cmd rds delete-db-subnet-group --region "$region" --db-subnet-group-name "$sg" || true
+            fi
+        done
+        
+        # Delete ElastiCache subnet groups
+        echo "Cleaning up ElastiCache subnet groups for VPC $vpc"
+        for csg in $(aws_cmd elasticache describe-cache-subnet-groups --region "$region" --query "CacheSubnetGroups[?VpcId=='$vpc'].CacheSubnetGroupName" --output text 2>/dev/null || true); do
+            if [[ -n "$csg" && "$csg" != "None" ]]; then
+                echo "Deleting ElastiCache subnet group $csg"
+                retry aws_cmd elasticache delete-cache-subnet-group --region "$region" --cache-subnet-group-name "$csg" || true
+            fi
+        done
+        
+        # Delete EFS mount targets
+        echo "Cleaning up EFS mount targets for VPC $vpc"
+        for mt in $(aws_cmd efs describe-mount-targets --region "$region" --query "MountTargets[?VpcId=='$vpc'].MountTargetId" --output text 2>/dev/null || true); do
+            if [[ -n "$mt" && "$mt" != "None" ]]; then
+                echo "Deleting EFS mount target $mt"
+                retry aws_cmd efs delete-mount-target --region "$region" --mount-target-id "$mt" || true
+            fi
+        done
+        
+        # Delete VPN gateways
+        echo "Cleaning up VPN gateways for VPC $vpc"
+        for vgw in $(aws_cmd ec2 describe-vpn-gateways --region "$region" --filters "Name=attachment.vpc-id,Values=$vpc" --query 'VpnGateways[].VpnGatewayId' --output text || true); do
+            if [[ -n "$vgw" && "$vgw" != "None" ]]; then
+                echo "Detaching VPN gateway $vgw from VPC $vpc"
+                retry aws_cmd ec2 detach-vpn-gateway --region "$region" --vpn-gateway-id "$vgw" --vpc-id "$vpc" || true
+            fi
+        done
+        
+        # Delete Network ACLs (except default)
+        echo "Cleaning up Network ACLs for VPC $vpc"
+        for nacl in $(aws_cmd ec2 describe-network-acls --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'NetworkAcls[?IsDefault!=`true`].NetworkAclId' --output text || true); do
+            if [[ -n "$nacl" && "$nacl" != "None" ]]; then
+                echo "Deleting Network ACL $nacl"
+                retry aws_cmd ec2 delete-network-acl --region "$region" --network-acl-id "$nacl" || true
+            fi
+        done
+        
+        # Wait for async deletions to complete
+        echo "Waiting for async resource deletions to complete..."
+        sleep 15
+        
+        # Final comprehensive dependency check
+        echo "Performing final dependency check for VPC $vpc"
+        
+        # Check for any remaining ENIs
+        remaining_enis=$(aws_cmd ec2 describe-network-interfaces --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'NetworkInterfaces[].NetworkInterfaceId' --output text || true)
+        if [[ -n "$remaining_enis" && "$remaining_enis" != "None" ]]; then
+            echo "WARNING: Found remaining ENIs in VPC $vpc:"
+            aws_cmd ec2 describe-network-interfaces --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'NetworkInterfaces[].{Id:NetworkInterfaceId,Status:Status,Description:Description,InstanceId:Attachment.InstanceId,SubnetId:SubnetId}' --output table || true
+            
+            # Final attempt to clean up remaining ENIs
+            for eni in $remaining_enis; do
+                if [[ -n "$eni" && "$eni" != "None" ]]; then
+                    echo "Final cleanup attempt for ENI $eni"
+                    attachment_id=$(aws_cmd ec2 describe-network-interfaces --region "$region" --network-interface-ids "$eni" --query 'NetworkInterfaces[0].Attachment.AttachmentId' --output text 2>/dev/null || true)
+                    if [[ -n "$attachment_id" && "$attachment_id" != "None" && "$attachment_id" != "null" ]]; then
+                        aws_cmd ec2 detach-network-interface --region "$region" --attachment-id "$attachment_id" --force || true
+                        sleep 5
+                    fi
+                    aws_cmd ec2 delete-network-interface --region "$region" --network-interface-id "$eni" || true
+                fi
+            done
+            sleep 5
+        fi
+        
+        # Check for remaining subnets
+        remaining_subnets=$(aws_cmd ec2 describe-subnets --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'Subnets[].SubnetId' --output text || true)
+        if [[ -n "$remaining_subnets" && "$remaining_subnets" != "None" ]]; then
+            echo "WARNING: Found remaining subnets in VPC $vpc: $remaining_subnets"
+            for subnet in $remaining_subnets; do
+                if [[ -n "$subnet" && "$subnet" != "None" ]]; then
+                    echo "Final cleanup attempt for subnet $subnet"
+                    aws_cmd ec2 delete-subnet --region "$region" --subnet-id "$subnet" || true
+                fi
+            done
+            sleep 3
+        fi
+        
         # Finally delete the VPC
-        retry aws_cmd ec2 delete-vpc --region "$region" --vpc-id "$vpc" || true
+        echo "Attempting final VPC deletion: $vpc"
+        if retry aws_cmd ec2 delete-vpc --region "$region" --vpc-id "$vpc"; then
+            echo "✓ Successfully deleted VPC $vpc"
+        else
+            echo "✗ Failed to delete VPC $vpc - listing remaining dependencies for manual cleanup"
+            echo "========== REMAINING DEPENDENCIES FOR VPC $vpc =========="
+            
+            echo "Network Interfaces:"
+            aws_cmd ec2 describe-network-interfaces --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'NetworkInterfaces[].{Id:NetworkInterfaceId,Status:Status,Description:Description,InstanceId:Attachment.InstanceId,SubnetId:SubnetId}' --output table || true
+            
+            echo "Subnets:"
+            aws_cmd ec2 describe-subnets --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'Subnets[].{SubnetId:SubnetId,State:State,AvailabilityZone:AvailabilityZone}' --output table || true
+            
+            echo "Route Tables:"
+            aws_cmd ec2 describe-route-tables --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'RouteTables[].{RouteTableId:RouteTableId,Main:Associations[0].Main,AssociationCount:length(Associations)}' --output table || true
+            
+            echo "Security Groups:"
+            aws_cmd ec2 describe-security-groups --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'SecurityGroups[].{GroupId:GroupId,GroupName:GroupName,Description:Description}' --output table || true
+            
+            echo "Internet Gateways:"
+            aws_cmd ec2 describe-internet-gateways --region "$region" --filters "Name=attachment.vpc-id,Values=$vpc" --query 'InternetGateways[].{Id:InternetGatewayId,State:Attachments[0].State}' --output table || true
+            
+            echo "NAT Gateways:"
+            aws_cmd ec2 describe-nat-gateways --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'NatGateways[].{Id:NatGatewayId,State:State,SubnetId:SubnetId}' --output table || true
+            
+            echo "VPC Endpoints:"
+            aws_cmd ec2 describe-vpc-endpoints --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'VpcEndpoints[].{Id:VpcEndpointId,State:State,ServiceName:ServiceName}' --output table || true
+            
+            echo "========== END DEPENDENCY LIST =========="
+        fi
+        echo "Completed cleanup for VPC $vpc"
+        echo "========================================"
     done
 }
 
