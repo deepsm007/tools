@@ -217,32 +217,94 @@ function force_cleanup_vpc() {
 
         # Delete route tables (except main) - handle dependencies first
         echo "Cleaning up route tables for VPC $vpc"
-        for rtb in $(aws_cmd ec2 describe-route-tables --region "$region" --filter Name=vpc-id,Values=$vpc --query 'RouteTables[?Associations[0].Main!=`true`].RouteTableId' --output text || true); do
-            echo "Processing route table $rtb"
-            
-            # Disassociate all subnet associations
-            for assoc in $(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[].Associations[?Main!=`true`].RouteTableAssociationId' --output text || true); do
-                echo "Disassociating route table association $assoc"
-                retry aws_cmd ec2 disassociate-route-table --region "$region" --association-id "$assoc" || true
-            done
-            
-            # Delete custom routes (keep only local route)
-            for route in $(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[].Routes[?GatewayId!=`local` && Origin==`CreateRoute`].DestinationCidrBlock' --output text || true); do
-                echo "Deleting route $route from route table $rtb"
-                retry aws_cmd ec2 delete-route --region "$region" --route-table-id "$rtb" --destination-cidr-block "$route" || true
-            done
-            
-            # Delete IPv6 custom routes if any
-            for route in $(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[].Routes[?GatewayId!=`local` && Origin==`CreateRoute`].DestinationIpv6CidrBlock' --output text || true); do
-                if [[ -n "$route" && "$route" != "None" ]]; then
-                    echo "Deleting IPv6 route $route from route table $rtb"
-                    retry aws_cmd ec2 delete-route --region "$region" --route-table-id "$rtb" --destination-ipv6-cidr-block "$route" || true
+        
+        # Get all route tables for this VPC
+        all_route_tables=$(aws_cmd ec2 describe-route-tables --region "$region" --filters "Name=vpc-id,Values=$vpc" --query 'RouteTables[].RouteTableId' --output text || true)
+        
+        for rtb in $all_route_tables; do
+            if [[ -n "$rtb" && "$rtb" != "None" ]]; then
+                echo "Checking route table $rtb"
+                
+                # Check if this is the main route table (cannot be deleted)
+                is_main=$(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[0].Associations[?Main==`true`] | length(@)' --output text 2>/dev/null || echo "0")
+                
+                if [[ "$is_main" -gt 0 ]]; then
+                    echo "Skipping main route table $rtb"
+                    continue
                 fi
-            done
-            
-            # Now try to delete the route table
-            echo "Deleting route table $rtb"
-            retry aws_cmd ec2 delete-route-table --region "$region" --route-table-id "$rtb" || true
+                
+                echo "Processing non-main route table $rtb"
+                
+                # Get detailed route table info for debugging
+                echo "Route table $rtb details:"
+                aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[0].{Routes:Routes[].{Destination:DestinationCidrBlock,DestinationIPv6:DestinationIpv6CidrBlock,Gateway:GatewayId,Origin:Origin,State:State},Associations:Associations[].{AssociationId:RouteTableAssociationId,SubnetId:SubnetId,Main:Main}}' --output json || true
+                
+                # Step 1: Disassociate all subnet associations
+                echo "Disassociating subnet associations for route table $rtb"
+                associations=$(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[0].Associations[?Main!=`true` && SubnetId!=null].RouteTableAssociationId' --output text 2>/dev/null || true)
+                
+                for assoc in $associations; do
+                    if [[ -n "$assoc" && "$assoc" != "None" ]]; then
+                        echo "Disassociating route table association $assoc"
+                        if retry aws_cmd ec2 disassociate-route-table --region "$region" --association-id "$assoc"; then
+                            echo "✓ Successfully disassociated $assoc"
+                        else
+                            echo "✗ Failed to disassociate $assoc"
+                        fi
+                    fi
+                done
+                
+                # Step 2: Delete all custom routes (non-local, non-propagated)
+                echo "Deleting custom routes from route table $rtb"
+                
+                # Delete IPv4 routes
+                ipv4_routes=$(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[0].Routes[?Origin==`CreateRoute` && DestinationCidrBlock!=null].DestinationCidrBlock' --output text 2>/dev/null || true)
+                for route in $ipv4_routes; do
+                    if [[ -n "$route" && "$route" != "None" ]]; then
+                        echo "Deleting IPv4 route $route from route table $rtb"
+                        if retry aws_cmd ec2 delete-route --region "$region" --route-table-id "$rtb" --destination-cidr-block "$route"; then
+                            echo "✓ Successfully deleted route $route"
+                        else
+                            echo "✗ Failed to delete route $route"
+                        fi
+                    fi
+                done
+                
+                # Delete IPv6 routes
+                ipv6_routes=$(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[0].Routes[?Origin==`CreateRoute` && DestinationIpv6CidrBlock!=null].DestinationIpv6CidrBlock' --output text 2>/dev/null || true)
+                for route in $ipv6_routes; do
+                    if [[ -n "$route" && "$route" != "None" ]]; then
+                        echo "Deleting IPv6 route $route from route table $rtb"
+                        if retry aws_cmd ec2 delete-route --region "$region" --route-table-id "$rtb" --destination-ipv6-cidr-block "$route"; then
+                            echo "✓ Successfully deleted IPv6 route $route"
+                        else
+                            echo "✗ Failed to delete IPv6 route $route"
+                        fi
+                    fi
+                done
+                
+                # Delete prefix list routes
+                prefix_routes=$(aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[0].Routes[?Origin==`CreateRoute` && DestinationPrefixListId!=null].DestinationPrefixListId' --output text 2>/dev/null || true)
+                for route in $prefix_routes; do
+                    if [[ -n "$route" && "$route" != "None" ]]; then
+                        echo "Deleting prefix list route $route from route table $rtb"
+                        retry aws_cmd ec2 delete-route --region "$region" --route-table-id "$rtb" --destination-prefix-list-id "$route" || true
+                    fi
+                done
+                
+                # Wait a moment for route deletions to propagate
+                sleep 3
+                
+                # Step 3: Try to delete the route table
+                echo "Attempting to delete route table $rtb"
+                if retry aws_cmd ec2 delete-route-table --region "$region" --route-table-id "$rtb"; then
+                    echo "✓ Successfully deleted route table $rtb"
+                else
+                    echo "✗ Failed to delete route table $rtb - checking remaining dependencies"
+                    echo "Remaining dependencies for route table $rtb:"
+                    aws_cmd ec2 describe-route-tables --region "$region" --route-table-ids "$rtb" --query 'RouteTables[0].{Routes:Routes,Associations:Associations}' --output json || true
+                fi
+            fi
         done
 
         # Delete security groups (except default) - handle cross-references
