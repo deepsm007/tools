@@ -4,6 +4,13 @@
 #   ./aws.sh                    # Uses default AWS profile/credentials
 #   ./aws.sh --profile myprofile # Uses specified AWS profile
 #   AWS_PROFILE=myprofile ./aws.sh # Uses profile from environment variable
+#
+# Environment variables (with defaults):
+#   ARTIFACTS=/tmp/artifacts                    # Directory for logs and metadata
+#   CLUSTER_TTL="72 hours ago"                  # Age cutoff for cluster cleanup
+#   AWS_PROFILE=""                              # AWS profile to use (optional)
+#   AWS_SHARED_CREDENTIALS_FILE=~/.aws/credentials # AWS credentials file
+#   HYPERSHIFT_BASE_DOMAIN=origin-ci-int-aws.dev.rhcloud.com # Hypershift domain
 
 set -o errexit
 set -o nounset
@@ -160,6 +167,12 @@ fi
 if [[ $had_failure -ne 0 ]]; then exit $had_failure; fi
 
 # MAIN CLUSTER DEPROVISION LOGIC
+# Set default values for environment variables if not already set
+ARTIFACTS="${ARTIFACTS:-/tmp/artifacts}"
+CLUSTER_TTL="${CLUSTER_TTL:-72 hours ago}"
+AWS_SHARED_CREDENTIALS_FILE="${AWS_SHARED_CREDENTIALS_FILE:-${HOME}/.aws/credentials}"
+HYPERSHIFT_BASE_DOMAIN="${HYPERSHIFT_BASE_DOMAIN:-origin-ci-int-aws.dev.rhcloud.com}"
+
 logdir="${ARTIFACTS}/deprovision"
 mkdir -p "${logdir}"
 
