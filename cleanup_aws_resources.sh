@@ -144,10 +144,19 @@ function deprovision() {
 
 # HYPERSHIFT CLUSTER CLEANUP (72h cutoff)
 had_failure=0
-hostedclusters="$(oc get hostedcluster -n clusters -o json | jq -r --argjson timestamp 259200 '.items[] | select (.metadata.creationTimestamp | sub("\\..*";"Z") | sub("\\s";"T") | fromdate < now - $timestamp).metadata.name')"
-for hostedcluster in $hostedclusters; do
-    hypershift destroy cluster aws --aws-creds "${AWS_SHARED_CREDENTIALS_FILE}" --namespace clusters --name "${hostedcluster}" || had_failure=$((had_failure+1))
-done
+# Check if hostedcluster resource type exists before attempting cleanup
+if oc api-resources | grep -q "hostedclusters"; then
+    echo "Hypershift hostedcluster resource found, checking for old clusters..."
+    hostedclusters="$(oc get hostedcluster -n clusters -o json 2>/dev/null | jq -r --argjson timestamp 259200 '.items[] | select (.metadata.creationTimestamp | sub("\\..*";"Z") | sub("\\s";"T") | fromdate < now - $timestamp).metadata.name' 2>/dev/null || true)"
+    for hostedcluster in $hostedclusters; do
+        if [[ -n "$hostedcluster" ]]; then
+            echo "Destroying hostedcluster: $hostedcluster"
+            hypershift destroy cluster aws --aws-creds "${AWS_SHARED_CREDENTIALS_FILE}" --namespace clusters --name "${hostedcluster}" || had_failure=$((had_failure+1))
+        fi
+    done
+else
+    echo "Hypershift hostedcluster resource not found, skipping hypershift cleanup..."
+fi
 if [[ $had_failure -ne 0 ]]; then exit $had_failure; fi
 
 # MAIN CLUSTER DEPROVISION LOGIC
