@@ -22,7 +22,7 @@ echo "----------------------------------"
 IFS=',' read -r -a SG_ARRAY <<< "$SAFEGUARD_SGS"
 
 get_creation_time_epoch() {
-  # Converts ISO8601 to epoch seconds (works on macOS/Linux)
+  # Converts ISO8601 to epoch seconds
   date -d "$1" +%s 2>/dev/null || gdate -d "$1" +%s
 }
 
