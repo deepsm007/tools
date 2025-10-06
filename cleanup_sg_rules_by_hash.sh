@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Cleanup orphaned NLB rules from Security Groups (ingress + egress)
 # Usage:
-# ./cleanup_orphaned_sg_rules_full.sh sg-xxxxxx,sg-yyyyyy dry-run|delete my-aws-profile
+# ./cleanup_sg_rules_by_hash.sh sg-xxxxxx,sg-yyyyyy dry-run|delete my-aws-profile
 
 set -euo pipefail
 
 TARGET_SGS="${1:?Error: Please provide a comma-separated list of SG IDs as the first argument.}"
-DRY_RUN="${2:-true}"        # "true" for dry-run, "false" to delete
+DRY_RUN="${2:-dry-run}"     # "dry-run" for dry-run, "delete" to delete
 AWS_PROFILE="${3:-default}" # AWS CLI profile
 
 echo "=== Starting Orphaned SG Rule Cleanup (Ingress + Egress) ==="
@@ -42,29 +42,33 @@ cleanup_rules() {
     --region "$region" --group-ids "$sg_id" \
     --query "SecurityGroups[].${permission_type}" --output json)
 
-  echo "$rules_json" | jq -c '.[]' | while read -r rule; do
-    descs=$(echo "$rule" | jq -r '.IpRanges[].Description? // empty, .Ipv6Ranges[].Description? // empty')
-    for desc in $descs; do
-      if [[ "$desc" == *"kubernetes.io/rule/nlb/client="* ]]; then
-        hash=$(extract_hash_from_desc "$desc")
-        if [[ -n "$hash" ]]; then
-          if ! lb_exists "$hash" "$region"; then
-            echo "→ Orphaned $permission_type rule found in SG $sg_id (hash: $hash, desc: $desc)"
-            if [[ "$DRY_RUN" == "false" ]]; then
-              if [[ "$permission_type" == "IpPermissions" ]]; then
-                aws --profile "$AWS_PROFILE" ec2 revoke-security-group-ingress \
-                  --region "$region" --group-id "$sg_id" --ip-permissions "$(echo "$rule" | jq -c '.')"
+  echo "$rules_json" | jq -c '.[]' | while read -r rule_array; do
+    # Each rule_array contains multiple rules, so we need to iterate through them
+    echo "$rule_array" | jq -c '.[]' | while read -r rule; do
+      # Extract descriptions from both IPv4 and IPv6 ranges, handling cases where arrays might be empty or missing
+      descs=$(echo "$rule" | jq -r '(.IpRanges[]? // empty | .Description? // empty), (.Ipv6Ranges[]? // empty | .Description? // empty)')
+      for desc in $descs; do
+        if [[ "$desc" == *"kubernetes.io/rule/nlb/client="* ]]; then
+          hash=$(extract_hash_from_desc "$desc")
+          if [[ -n "$hash" ]]; then
+            if ! lb_exists "$hash" "$region"; then
+              echo "→ Orphaned $permission_type rule found in SG $sg_id (hash: $hash, desc: $desc)"
+              if [[ "$DRY_RUN" == "delete" ]]; then
+                if [[ "$permission_type" == "IpPermissions" ]]; then
+                  aws --profile "$AWS_PROFILE" ec2 revoke-security-group-ingress \
+                    --region "$region" --group-id "$sg_id" --ip-permissions "$(echo "$rule" | jq -c '.')"
+                else
+                  aws --profile "$AWS_PROFILE" ec2 revoke-security-group-egress \
+                    --region "$region" --group-id "$sg_id" --ip-permissions "$(echo "$rule" | jq -c '.')"
+                fi
+                echo "Deleted orphaned $permission_type rule for SG $sg_id"
               else
-                aws --profile "$AWS_PROFILE" ec2 revoke-security-group-egress \
-                  --region "$region" --group-id "$sg_id" --ip-permissions "$(echo "$rule" | jq -c '.')"
+                echo "Dry run — would delete orphaned $permission_type rule: $desc"
               fi
-              echo "Deleted orphaned $permission_type rule for SG $sg_id"
-            else
-              echo "Dry run — would delete orphaned $permission_type rule: $desc"
             fi
           fi
         fi
-      fi
+      done
     done
   done
 }
