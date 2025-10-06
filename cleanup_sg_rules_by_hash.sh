@@ -24,7 +24,7 @@ extract_hash_from_desc() {
 
 lb_exists() {
   local hash="$1"
-  local region="$2"
+  local region="us-east-1"
   local exists
   exists=$(aws --profile "$AWS_PROFILE" elbv2 describe-load-balancers \
     --region "$region" \
