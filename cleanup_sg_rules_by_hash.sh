@@ -54,8 +54,16 @@ cleanup_region() {
   for sg_name in "${SG_NAMES[@]}"; do
     local sg_id
     sg_id=$(aws --profile "$AWS_PROFILE" ec2 describe-security-groups \
-      --region "$region" --filters "Name=group-name,Values=$sg_name" \
-      --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || echo "")
+  --region "$region" \
+  --filters "Name=group-name,Values=$sg_name" "Name=vpc-id,Values=$(aws --profile "$AWS_PROFILE" ec2 describe-vpcs --region "$region" --query 'Vpcs[].VpcId' --output text)" \
+  --query "SecurityGroups[?GroupName=='$sg_name'].GroupId | [0]" --output text 2>/dev/null)
+
+# Debug logging (optional)
+if [[ "$sg_id" == "None" || -z "$sg_id" ]]; then
+  echo "⚠️  Security group '$sg_name' not found in region '$region'"
+else
+  echo "✅ Found SG '$sg_name' ($sg_id) in region '$region'"
+fi
 
     if [[ -z "$sg_id" || "$sg_id" == "None" ]]; then
       echo "⚠️  SG '$sg_name' not found in $region"
