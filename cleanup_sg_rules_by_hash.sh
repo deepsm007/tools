@@ -1,119 +1,86 @@
 #!/usr/bin/env bash
-# Cleanup orphaned security group rules referring to non-existent Load Balancers
-# Dry Run --> ./cleanup_sg_rules_by_hash.sh sg-abc123, sg-xyz-456
-#   ./cleanup_sg_rules_by_hash.sh sg-abc123, sg-xyz-456 false myprofile
-#
+# Cleanup orphaned NLB rules from Security Groups
+# Usage:
+# ./cleanup_orphaned_sg_rules.sh sg-xxxxxx,sg-yyyyyy dry-run|delete my-aws-profile
 
 set -euo pipefail
 
-TARGET_SGS="${1:?Error: Please provide a comma-separated list of target security group names as the first argument.}"  # e.g. sg1,sg2  # Comma-separated SG names
-DRY_RUN="${2:-true}"                                                        # Default dry run
-AWS_PROFILE="${3:-default}"                                                 # AWS profile
-REGIONS=("us-east-1" "us-east-2" "us-west-1" "us-west-2")
+TARGET_SGS="${1:?Error: Please provide a comma-separated list of SG IDs as the first argument.}"
+DRY_RUN="${2:-true}"        # "true" for dry-run, "false" to delete
+AWS_PROFILE="${3:-default}" # AWS CLI profile
 
-echo "=== Cleanup Orphaned SG Rules ==="
+echo "=== Starting Orphaned SG Rule Cleanup ==="
 echo "Target SGs: $TARGET_SGS"
 echo "Dry Run: $DRY_RUN"
 echo "AWS Profile: $AWS_PROFILE"
-echo "Regions: ${REGIONS[*]}"
-echo "----------------------------------"
+echo "----------------------------------------"
 
-IFS=',' read -r -a SG_NAMES <<< "$TARGET_SGS"
+IFS=',' read -r -a SG_IDS <<< "$TARGET_SGS"
 
 extract_hash_from_desc() {
   local desc="$1"
   echo "$desc" | grep -oE 'client=[a-z0-9]+' | cut -d'=' -f2
 }
 
-# Check if Load Balancer exists
 lb_exists() {
-  local hash=$1
-  local region=$2
-  local exists=false
-
-  # Search all NLB/ALBs names and ARNs for hash
-  local found
-  found=$(aws --profile "$AWS_PROFILE" elbv2 describe-load-balancers --region "$region" \
-    --query "LoadBalancers[?contains(LoadBalancerName, \`${hash}\`) == `true`].LoadBalancerName" \
+  local hash="$1"
+  local region="$2"
+  local exists
+  exists=$(aws --profile "$AWS_PROFILE" elbv2 describe-load-balancers \
+    --region "$region" \
+    --query "LoadBalancers[?contains(LoadBalancerName, \`${hash}\`) == \`true\`].LoadBalancerName" \
     --output text 2>/dev/null || echo "")
-
-  if [[ -n "$found" ]]; then
-    exists=true
-  fi
-
-  echo "$exists"
+  [[ -n "$exists" ]]
 }
 
-# Cleanup rules
-cleanup_region() {
-  local region=$1
-  echo ""
-  echo ">>> Checking region: $region ..."
-  echo "--------------------------------"
 
-  for sg_name in "${SG_NAMES[@]}"; do
-    local sg_id
-    sg_id=$(aws --profile "$AWS_PROFILE" ec2 describe-security-groups \
-  --region "$region" \
-  --filters "Name=group-name,Values=$sg_name" "Name=vpc-id,Values=$(aws --profile "$AWS_PROFILE" ec2 describe-vpcs --region "$region" --query 'Vpcs[].VpcId' --output text)" \
-  --query "SecurityGroups[?GroupName=='$sg_name'].GroupId | [0]" --output text 2>/dev/null)
+for sg_id in "${SG_IDS[@]}"; do
+  found_region=""
 
-# Debug logging (optional)
-if [[ "$sg_id" == "None" || -z "$sg_id" ]]; then
-  echo "⚠️  Security group '$sg_name' not found in region '$region'"
-else
-  echo "✅ Found SG '$sg_name' ($sg_id) in region '$region'"
-fi
-
-    if [[ -z "$sg_id" || "$sg_id" == "None" ]]; then
-      echo "⚠️  SG '$sg_name' not found in $region"
-      continue
+  # Auto-detect region for SG
+  for region in $(aws ec2 describe-regions --query 'Regions[].RegionName' --output text --profile "$AWS_PROFILE"); do
+    sg_check=$(aws --profile "$AWS_PROFILE" ec2 describe-security-groups \
+      --region "$region" --group-ids "$sg_id" \
+      --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null || echo "")
+    if [[ "$sg_check" != "None" && -n "$sg_check" ]]; then
+      found_region="$region"
+      echo "✅ Found SG $sg_id in region $region"
+      break
     fi
+  done
 
-    echo "Inspecting SG: $sg_name ($sg_id)"
+  if [[ -z "$found_region" ]]; then
+    echo "❌ SG $sg_id not found in any region for profile $AWS_PROFILE"
+    continue
+  fi
 
-    # Get all ingress rules
-    local ingress_json
-    ingress_json=$(aws --profile "$AWS_PROFILE" ec2 describe-security-groups \
-      --region "$region" --group-ids "$sg_id" --query "SecurityGroups[].IpPermissions" --output json)
+  # Get all ingress rules
+  ingress_json=$(aws --profile "$AWS_PROFILE" ec2 describe-security-groups \
+    --region "$found_region" --group-ids "$sg_id" \
+    --query "SecurityGroups[].IpPermissions" --output json)
 
-    # Loop through each rule
-    echo "$ingress_json" | jq -c '.[]' | while read -r rule; do
-      local descs
-      descs=$(echo "$rule" | jq -r '.IpRanges[].Description? // empty')
-
-      for desc in $descs; do
-        if [[ "$desc" == *"kubernetes.io/rule/nlb/client="* ]]; then
-          local hash
-          hash=$(extract_hash_from_desc "$desc")
-          if [[ -n "$hash" ]]; then
-            local exists
-            exists=$(lb_exists "$hash" "$region")
-            if [[ "$exists" == "false" ]]; then
-              echo "→ Orphaned rule found in $sg_name (hash: $hash, desc: $desc)"
-
-              if [[ "$DRY_RUN" == "false" ]]; then
-                echo "Deleting rule with description: $desc"
-                aws --profile "$AWS_PROFILE" ec2 revoke-security-group-ingress \
-                  --region "$region" \
-                  --group-id "$sg_id" \
-                  --ip-permissions "[$rule]" >/dev/null 2>&1 || \
-                  echo "Failed to delete rule from $sg_name"
-              else
-                echo "Dry run — would delete rule: $desc"
-              fi
+  # Loop through each rule
+  echo "$ingress_json" | jq -c '.[]' | while read -r rule; do
+    descs=$(echo "$rule" | jq -r '.IpRanges[].Description? // empty')
+    for desc in $descs; do
+      if [[ "$desc" == *"kubernetes.io/rule/nlb/client="* ]]; then
+        hash=$(extract_hash_from_desc "$desc")
+        if [[ -n "$hash" ]]; then
+          if ! lb_exists "$hash" "$found_region"; then
+            echo "→ Orphaned rule found in SG $sg_id (hash: $hash, desc: $desc)"
+            if [[ "$DRY_RUN" == "false" ]]; then
+              aws --profile "$AWS_PROFILE" ec2 revoke-security-group-ingress \
+                --region "$found_region" --group-id "$sg_id" --ip-permissions "[$rule]"
+              echo "Deleted orphaned rule for SG $sg_id"
+            else
+              echo "Dry run — would delete orphaned rule for SG $sg_id"
             fi
           fi
         fi
-      done
+      fi
     done
   done
-}
-
-
-for region in "${REGIONS[@]}"; do
-  cleanup_region "$region"
 done
 
 echo ""
-echo "=== SG Rule Cleanup Complete ✅ ==="
+echo "=== Orphaned SG Rule Cleanup Complete ✅ ==="
