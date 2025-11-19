@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/getlantern/deepcopy"
@@ -61,6 +62,51 @@ type SecretConfig struct {
 	To   []SecretContext        `json:"to"`
 }
 
+// secretConfigForMarshal is used to avoid infinite recursion in MarshalYAML
+type secretConfigForMarshal struct {
+	From map[string]ItemContext `json:"from"`
+	To   []SecretContext        `json:"to"`
+}
+
+// MarshalYAML ensures deterministic ordering of map keys in the From field
+func (s *SecretConfig) MarshalYAML() (interface{}, error) {
+	// Sort From map keys and DockerConfigJSONData slices
+	sortedFrom := make(map[string]ItemContext)
+	keys := make([]string, 0, len(s.From))
+	for k := range s.From {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		itemCtx := s.From[k]
+		// Sort DockerConfigJSONData slice
+		dockerData := make([]DockerConfigJSONData, len(itemCtx.DockerConfigJSONData))
+		copy(dockerData, itemCtx.DockerConfigJSONData)
+		sort.Slice(dockerData, func(i, j int) bool {
+			if dockerData[i].RegistryURL != dockerData[j].RegistryURL {
+				return dockerData[i].RegistryURL < dockerData[j].RegistryURL
+			}
+			if dockerData[i].Item != dockerData[j].Item {
+				return dockerData[i].Item < dockerData[j].Item
+			}
+			return dockerData[i].AuthField < dockerData[j].AuthField
+		})
+
+		sortedFrom[k] = ItemContext{
+			Item:                 itemCtx.Item,
+			Field:                itemCtx.Field,
+			DockerConfigJSONData: dockerData,
+			Base64Decode:         itemCtx.Base64Decode,
+		}
+	}
+
+	return &secretConfigForMarshal{
+		From: sortedFrom,
+		To:   s.To,
+	}, nil
+}
+
 // LoadConfigFromFile renders a Config object loaded from the given file
 func LoadConfigFromFile(file string, config *Config) error {
 	bytes, err := gzip.ReadFileMaybeGZIP(file)
@@ -77,6 +123,68 @@ func SaveConfigToFile(file string, config *Config) error {
 		return err
 	}
 	return os.WriteFile(file, bytes, 0644)
+}
+
+// configForMarshal is used to avoid infinite recursion in MarshalYAML
+type configForMarshal struct {
+	VaultDPTPPrefix           string              `json:"vault_dptp_prefix,omitempty"`
+	ClusterGroups             map[string][]string `json:"cluster_groups,omitempty"`
+	Secrets                   []SecretConfig      `json:"secret_configs"`
+	UserSecretsTargetClusters []string            `json:"user_secrets_target_clusters,omitempty"`
+}
+
+// MarshalYAML ensures deterministic ordering of map keys and slices
+func (c *Config) MarshalYAML() (interface{}, error) {
+	// Sort ClusterGroups map keys
+	sortedClusterGroups := make(map[string][]string)
+	clusterGroupKeys := make([]string, 0, len(c.ClusterGroups))
+	for k := range c.ClusterGroups {
+		clusterGroupKeys = append(clusterGroupKeys, k)
+	}
+	sort.Strings(clusterGroupKeys)
+	for _, k := range clusterGroupKeys {
+		clusters := make([]string, len(c.ClusterGroups[k]))
+		copy(clusters, c.ClusterGroups[k])
+		sort.Strings(clusters)
+		sortedClusterGroups[k] = clusters
+	}
+
+	// Sort Secrets slice and UserSecretsTargetClusters
+	secrets := make([]SecretConfig, len(c.Secrets))
+	copy(secrets, c.Secrets)
+	sort.Slice(secrets, func(i, j int) bool {
+		// Sort by first To entry's Cluster, then Namespace, then Name
+		// This groups secrets by cluster, making the output more organized
+		if len(secrets[i].To) == 0 && len(secrets[j].To) == 0 {
+			return false
+		}
+		if len(secrets[i].To) == 0 {
+			return true
+		}
+		if len(secrets[j].To) == 0 {
+			return false
+		}
+		toI := secrets[i].To[0]
+		toJ := secrets[j].To[0]
+		if toI.Cluster != toJ.Cluster {
+			return toI.Cluster < toJ.Cluster
+		}
+		if toI.Namespace != toJ.Namespace {
+			return toI.Namespace < toJ.Namespace
+		}
+		return toI.Name < toJ.Name
+	})
+
+	userSecretsTargetClusters := make([]string, len(c.UserSecretsTargetClusters))
+	copy(userSecretsTargetClusters, c.UserSecretsTargetClusters)
+	sort.Strings(userSecretsTargetClusters)
+
+	return &configForMarshal{
+		VaultDPTPPrefix:           c.VaultDPTPPrefix,
+		ClusterGroups:             sortedClusterGroups,
+		Secrets:                   secrets,
+		UserSecretsTargetClusters: userSecretsTargetClusters,
+	}, nil
 }
 
 // Config is what we version in our repository
