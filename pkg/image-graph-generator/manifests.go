@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -156,6 +157,11 @@ func (o *Operator) AddManifestImages() error {
 				}
 			}
 		}
+
+		// Sort Parents by Name for deterministic ordering
+		sort.Slice(imageRef.Parents, func(i, j int) bool {
+			return imageRef.Parents[i].Name < imageRef.Parents[j].Name
+		})
 
 		if id, ok := o.images[name]; !ok {
 			if err := o.addImageRef(imageRef); err != nil {

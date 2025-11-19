@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sort"
 
 	"github.com/sirupsen/logrus"
 
@@ -84,6 +85,16 @@ func (o *Operator) UpdateImage(image api.ProjectDirectoryImageBuildStepConfigura
 		}
 	}
 
+	// Sort Parents by Name for deterministic ordering
+	sort.Slice(imageRef.Parents, func(i, j int) bool {
+		return imageRef.Parents[i].Name < imageRef.Parents[j].Name
+	})
+
+	// Sort Branches by ID for deterministic ordering
+	sort.Slice(imageRef.Branches, func(i, j int) bool {
+		return imageRef.Branches[i].ID < imageRef.Branches[j].ID
+	})
+
 	if id, ok := o.images[imageName]; ok {
 		if err := o.updateImageRef(imageRef, id); err != nil {
 			return err
@@ -113,13 +124,26 @@ func (o *Operator) addImageRef(image *ImageRef) error {
 	}
 
 	if len(image.Branches) > 0 {
+		// Sort Branches by ID for deterministic ordering
+		sortedBranches := make([]BranchRef, len(image.Branches))
+		copy(sortedBranches, image.Branches)
+		sort.Slice(sortedBranches, func(i, j int) bool {
+			return sortedBranches[i].ID < sortedBranches[j].ID
+		})
 		input["branches"] = map[string]interface{}{
-			"id": image.Branches[0].ID,
+			"id": sortedBranches[0].ID,
 		}
 	}
 
+	// Sort Parents by Name for deterministic ordering
+	sortedParents := make([]ImageRef, len(image.Parents))
+	copy(sortedParents, image.Parents)
+	sort.Slice(sortedParents, func(i, j int) bool {
+		return sortedParents[i].Name < sortedParents[j].Name
+	})
+
 	var parents []interface{}
-	for _, parent := range image.Parents {
+	for _, parent := range sortedParents {
 		p := map[string]interface{}{
 			"name":           parent.Name,
 			"imageStreamRef": parent.ImageStreamRef,
@@ -177,13 +201,24 @@ func (o *Operator) updateImageRef(newImage *ImageRef, id string) error {
 		patch["source"] = newImage.Source
 	}
 	if len(newImage.Branches) > 0 {
+		// Sort Branches by ID for deterministic ordering
+		sort.Slice(newImage.Branches, func(i, j int) bool {
+			return newImage.Branches[i].ID < newImage.Branches[j].ID
+		})
 		patch["branches"] = map[string]interface{}{
 			"id": newImage.Branches[0].ID,
 		}
 	}
 
+	// Sort Parents by Name for deterministic ordering
+	sortedParents := make([]ImageRef, len(newImage.Parents))
+	copy(sortedParents, newImage.Parents)
+	sort.Slice(sortedParents, func(i, j int) bool {
+		return sortedParents[i].Name < sortedParents[j].Name
+	})
+
 	var parents []interface{}
-	for _, parent := range newImage.Parents {
+	for _, parent := range sortedParents {
 		p := map[string]interface{}{
 			"name":           parent.Name,
 			"imageStreamRef": parent.ImageStreamRef,
