@@ -160,9 +160,6 @@ sequenceDiagram
     Endpoints->>Pod: Return Pod IPs
     Pod->>CoreDNS: DNS Response
     Pod->>TargetPod: Connect to Pod IP
-    
-    style CoreDNS fill:#e1f5ff
-    style Service fill:#fff4e1
 ```
 
 ## Debugging Strategies
@@ -381,9 +378,6 @@ sequenceDiagram
     CRIO->>Pod: Start Pod
     Pod->>Kubelet: Running Status
     Kubelet->>API: Update Pod Status
-    
-    style Scheduler fill:#e1f5ff
-    style Kubelet fill:#fff4e1
 ```
 
 ### How Services Work
@@ -404,9 +398,6 @@ sequenceDiagram
     KubeProxy->>TargetPod: Forward to Pod
     TargetPod->>KubeProxy: Response
     KubeProxy->>Pod: Response
-    
-    style KubeProxy fill:#e1f5ff
-    style Service fill:#fff4e1
 ```
 
 ### How Routes Work
@@ -431,9 +422,6 @@ sequenceDiagram
     Service->>HAProxy: Response
     HAProxy->>Router: Response
     Router->>User: HTTP Response
-    
-    style Router fill:#e1f5ff
-    style HAProxy fill:#fff4e1
 ```
 
 ## Navigation Commands

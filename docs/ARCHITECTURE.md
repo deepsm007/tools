@@ -218,9 +218,6 @@ sequenceDiagram
     API->>Controller: Resource Change Event
     Controller->>API: Update Resource
     API->>Client: Response
-    
-    style API fill:#e1f5ff
-    style etcd fill:#fff4e1
 ```
 
 ### API Group Structure

@@ -75,9 +75,6 @@ sequenceDiagram
     Kubelet->>API: Update Status
     API->>etcd: Store Status
     etcd->>Controller: Status Event
-    
-    style Controller fill:#e1f5ff
-    style etcd fill:#fff4e1
 ```
 
 ## Network Component Interactions
@@ -144,9 +141,6 @@ sequenceDiagram
     KubeProxy->>TargetPod: Forward to Pod
     TargetPod->>KubeProxy: Response
     KubeProxy->>Pod: Response
-    
-    style CoreDNS fill:#e1f5ff
-    style KubeProxy fill:#fff4e1
 ```
 
 ## Build and Image Interactions
@@ -174,9 +168,6 @@ sequenceDiagram
     BuildPod->>API: Update Build Status
     API->>ImageStream: Update ImageStream
     ImageStream->>API: ImageStream Updated
-    
-    style BuildController fill:#e1f5ff
-    style BuildPod fill:#fff4e1
 ```
 
 ### Image Stream Interactions
@@ -239,9 +230,6 @@ sequenceDiagram
     ReplicaSet->>API: ReplicaSet Status
     API->>DeploymentController: ReplicaSet Status
     DeploymentController->>API: Deployment Status
-    
-    style DeploymentController fill:#e1f5ff
-    style ReplicaSet fill:#fff4e1
 ```
 
 ## Storage Interactions
@@ -267,9 +255,6 @@ sequenceDiagram
     Kubelet->>Storage: Mount Volume
     Storage->>Kubelet: Volume Mounted
     Kubelet->>Pod: Volume Available
-    
-    style Provisioner fill:#e1f5ff
-    style Storage fill:#fff4e1
 ```
 
 ## Authentication and Authorization Flow
@@ -294,9 +279,6 @@ sequenceDiagram
     API->>Resource: Process Request
     Resource->>API: Response
     API->>User: Response
-    
-    style OAuth fill:#e1f5ff
-    style RBAC fill:#fff4e1
 ```
 
 ## Monitoring and Observability Interactions

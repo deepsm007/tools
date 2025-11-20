@@ -176,9 +176,6 @@ sequenceDiagram
     API->>Controller: Event Notification
     Controller->>API: Reconcile
     API->>Client: Response
-    
-    style API fill:#e1f5ff
-    style etcd fill:#fff4e1
 ```
 
 ### OpenShift API Extensions
