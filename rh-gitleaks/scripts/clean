@@ -1,4 +1,0 @@
-#! /bin/bash
-set -exo pipefail
-
-git clean -dfX

@@ -1,27 +1,24 @@
-# InfoSec Developer Tools
+# OpenShift Documentation
 
-Tools to aid development across InfoSec. Here, a tool is defined as something
-that can be run on a dev's laptop rather than as a service on a remote server.
-It is also possible that CI/CD processes may also consume the tools for
-automation.
+Comprehensive documentation for understanding OpenShift architecture, components, networking, APIs, and how to navigate and debug OpenShift clusters.
 
-## Contents
+## Documentation Index
 
-[[_TOC_]]
+See [docs/README.md](docs/README.md) for the complete documentation index.
 
-## Installing The Tools
+### Quick Start
 
-This repo contains multiple projects. To install the project, `cd` into that project's
-folder and follow the install steps in its README.md.
+- **[Overview](docs/OPENSHIFT_OVERVIEW.md)** - High-level overview of OpenShift
+- **[Architecture](docs/ARCHITECTURE.md)** - System architecture and component diagrams
+- **[Network and API Guide](docs/NETWORK_API_GUIDE.md)** - Networking and API architecture
+- **[Component Interactions](docs/COMPONENT_INTERACTIONS.md)** - How components interact
+- **[Navigation and Debugging](docs/NAVIGATION_DEBUGGING.md)** - How to navigate and debug
+- **[Setup Guide](docs/SETUP.md)** - Setting up access and navigation
+- **[Usage Guide](docs/USAGE.md)** - Practical examples and operations
+- **[FAQ](docs/FAQ.md)** - Frequently asked questions
+- **[Summaries](docs/SUMMARIES.md)** - Technical summaries at different levels
 
+## External Resources
 
-## Contributing
-
-Don't see what you're looking for, is something broken, have an idea?
-See the [CONTRIBUTING.md](./CONTRIBUTING.md) file for information on how to
-report problems and help out.
-
-## OpenShift Documentation
-
-Comprehensive OpenShift documentation is available in the [docs/](docs/) directory.
-See [docs/README.md](docs/README.md) for the documentation index.
+- [OpenShift Documentation](https://docs.openshift.com/) - Official OpenShift documentation
+- [Kubernetes Documentation](https://kubernetes.io/docs/) - Kubernetes documentation

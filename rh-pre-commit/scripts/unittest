@@ -1,5 +1,0 @@
-#! /bin/sh
-set -ex
-
-source ./scripts/common
-$COVERAGE run --branch --source=./src/ -m unittest

@@ -1,7 +1,0 @@
-IPython
-bandit
-black
-coverage
-pylint
-wheel
-build

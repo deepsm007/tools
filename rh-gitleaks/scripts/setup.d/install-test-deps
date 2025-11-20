@@ -1,5 +1,0 @@
-#! /bin/sh
-
-for req_file in $(find ./tests/ -name requirements.txt); do
-  $PIP_INSTALL -r $req_file;
-done

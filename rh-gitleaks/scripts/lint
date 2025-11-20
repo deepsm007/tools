@@ -1,6 +1,0 @@
-#! /bin/sh
-set -ex
-
-source ./scripts/common
-$PYLINT ./scripts/ ./src/ ./tests/
-$BANDIT -r ./src/

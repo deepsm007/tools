@@ -1,4 +1,0 @@
-[allowlist]
-paths = [
-  '''rh-pre-commit\/tests\/integration''',
-]

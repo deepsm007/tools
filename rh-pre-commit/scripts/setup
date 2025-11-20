@@ -1,9 +1,0 @@
-#! /bin/sh
-set -ex
-
-source ./scripts/common
-
-for setup_script in $(ls ./scripts/setup.d/*); do
-  echo "Running: $setup_script"
-  $setup_script
-done

@@ -1,7 +1,0 @@
-#! /bin/sh
-set -ex
-
-package="rh-gitleaks"
-version="$(../scripts/tool-version "${package}")"
-
-sed "s/%{version}/${version}/g" "${package}.spec.in" > "${package}.spec"

@@ -1,5 +1,0 @@
-#! /bin/sh
-set -ex
-
-source ./scripts/common
-$PYTHON -m build
