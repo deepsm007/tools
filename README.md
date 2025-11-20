@@ -1,4 +1,4 @@
-# CI Tools Repository
+# Documentation and Tools Repository
 
 A collection of tools and documentation for managing cloud infrastructure, cleaning up resources, and understanding cloud architectures. This repository contains automation scripts for AWS resource cleanup and comprehensive documentation for AWS, Azure, GCP, and OpenShift platforms.
 
